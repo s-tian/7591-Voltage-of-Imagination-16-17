@@ -1,4 +1,6 @@
-# ftc_app
+# Voltage of Imagination Code 16-17!
+All of our code will be updated in this repo.
+
 FTC Android Studio project to create FTC Robot Controller app.
 
 This is the FTC SDK that can be used to create an FTC Robot Controller app, with custom op modes.
