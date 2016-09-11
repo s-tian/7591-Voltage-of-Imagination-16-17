@@ -24,6 +24,7 @@ public class MecanumDrive extends LinearOpMode {
         frontRight = hardwareMap.dcMotor.get("frontRight");
         backLeft = hardwareMap.dcMotor.get("backLeft");
         backRight = hardwareMap.dcMotor.get("backRight");
+
         backRight.setDirection(DcMotorSimple.Direction.REVERSE);
         frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -33,8 +34,11 @@ public class MecanumDrive extends LinearOpMode {
         while(opModeIsActive()) {
 
             double joy1Y = -gamepad1.left_stick_y;
+            joy1Y = Math.abs(joy1Y) > 0.15 ? joy1Y*3/4: 0;
             double joy1X = gamepad1.left_stick_x;
+            joy1X = Math.abs(joy1X) > 0.15 ? joy1X*3/4: 0;
             double joy2X = gamepad1.right_stick_x;
+            joy2X = Math.abs(joy2X) > 0.15 ? joy2X*3/4: 0;
 
             frontLeft.setPower(Math.min(1, joy1Y + joy2X + joy1X));
             backLeft.setPower(Math.min(1, joy1Y + joy2X - joy1X));
