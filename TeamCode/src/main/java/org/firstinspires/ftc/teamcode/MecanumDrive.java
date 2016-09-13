@@ -44,7 +44,7 @@ public class MecanumDrive extends LinearOpMode {
             backLeft.setPower(Math.min(1, joy1Y + joy2X - joy1X));
             frontRight.setPower(Math.min(1, joy1Y - joy2X - joy1X));
             backRight.setPower(Math.min(1, joy1Y - joy2X + joy1X));
-        }
 
+        }
     }
 }
