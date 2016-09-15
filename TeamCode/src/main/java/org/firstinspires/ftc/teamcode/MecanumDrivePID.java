@@ -19,7 +19,6 @@ public class MecanumDrivePID extends LinearOpMode {
     ModernRoboticsI2cGyro gyro;
 
 
-
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -38,69 +37,74 @@ public class MecanumDrivePID extends LinearOpMode {
         backRight.setDirection(DcMotorSimple.Direction.REVERSE);
         frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        gyro.resetZAxisIntegrator();
+        int base = gyro.getIntegratedZValue();
+
         waitForStart();
         while(opModeIsActive()) {
 
             double joy1Y = -gamepad1.left_stick_y;
-            joy1Y = Math.abs(joy1Y) > 0.15 ? joy1Y*3/4: 0;
             double joy1X = gamepad1.left_stick_x;
-            joy1X = Math.abs(joy1X) > 0.15 ? joy1X*3/4: 0;
             double joy2X = gamepad1.right_stick_x;
-            joy2X = Math.abs(joy2X) > 0.15 ? joy2X*3/4: 0;
-            int gyroValue = gyro.getIntegratedZValue();
 
-            if((joy1X > 0 || joy1Y > 0) && joy2X == 0) {        //Lock on to the current gyro reading
-                gyro.resetZAxisIntegrator();
-                double KP = 0.03f;
-                double KD = 0.00001f;
-                double KI = 0.00000000001f;
+            if((Math.abs(joy1X) > 0.05 || Math.abs(joy1Y) > 0.05) && joy2X == 0 && opModeIsActive()) {        //Lock on to the current gyro reading
+                double KP = 0.025;
+                double KD = 0.0001;
+                double KI = 0;
                 double I = 0;
                 double D;
                 double P;
                 long lastTime = System.currentTimeMillis();
                 int prevErr = 0;
-
-                while((joy1X > 0 || joy1Y > 0) && joy2X == 0) {
+                base = -gyro.getIntegratedZValue();
+                while((Math.abs(joy1X) > 0 || Math.abs(joy1Y) > 0) && joy2X == 0) {
                     //Update joystick to make sure that the action is still occurring
-
-                    joy1Y = -gamepad1.left_stick_y;
-                    joy1Y = Math.abs(joy1Y) > 0.15 ? joy1Y*3/4: 0;
-                    joy1X = gamepad1.left_stick_x;
-                    joy1X = Math.abs(joy1X) > 0.15 ? joy1X*3/4: 0;
-                    joy2X = gamepad1.right_stick_x;
-                    joy2X = Math.abs(joy2X) > 0.15 ? joy2X*3/4: 0;
+                    joy1Y = -gamepad1.left_stick_y*2/3;
+                    joy1X = gamepad1.left_stick_x*2/3;
+                    joy2X = gamepad1.right_stick_x*2/3;
                     long currentTime = System.currentTimeMillis();
                     double delta = currentTime-lastTime;
 
-                    int err = -gyro.getHeading();
+                    int err = -gyro.getIntegratedZValue() - base;
                     P = err*KP;
                     I += err*delta*KI;
+                    if (delta == 0) {
+                        delta = 1;
+                    }
                     D = (err-prevErr)/delta*KD;
-                    System.out.println("P: " + P + "I: " + I + "D: " + D);
-
+                    System.out.println("P: " + P + "I:  " + I + "D: " + D);
+                    telemetry.addData("Gyro: ", err);
+                    telemetry.update();
                     double output = P + I + D;
-                    frontLeft.setPower(range(joy1Y + joy2X + joy1X + output));
-                    backLeft.setPower(range(joy1Y + joy2X - joy1X - output));
-                    frontRight.setPower(range(joy1Y - joy2X - joy1X - output));
-                    backRight.setPower(range(joy1Y - joy2X + joy1X + output));
+                    frontLeft.setPower(crange(joy1Y + joy2X + joy1X + output));
+                    backLeft.setPower(crange(joy1Y + joy2X - joy1X));
+                    frontRight.setPower(crange(joy1Y - joy2X - joy1X));
+                    backRight.setPower(crange(joy1Y - joy2X + joy1X + output));
 
                     prevErr = err;
                     lastTime = currentTime;
                 }
 
+            } else if(Math.abs(joy2X) > 0){
+                frontLeft.setPower(crange(joy1Y + joy2X + joy1X));
+                backLeft.setPower(crange(joy1Y + joy2X - joy1X));
+                frontRight.setPower(crange(joy1Y - joy2X - joy1X));
+                backRight.setPower(crange(joy1Y - joy2X + joy1X));
             } else {
-                frontLeft.setPower(joy2X);
-                backLeft.setPower(joy2X);
-                frontRight.setPower(-joy2X);
-                backRight.setPower(-joy2X);
+                frontLeft.setPower(0);
+                backLeft.setPower(0);
+                frontRight.setPower(0);
+                backRight.setPower(0);
             }
-
-
-
         }
     }
 
-    private double range(double x) {
-        return Math.max(-1, Math.min(1, x));
+    private double crange(double x) {
+        if (x < -1){
+            return -1;
+        } else if (x > 1) {
+            return 1;
+        }
+        return x;
     }
 }
