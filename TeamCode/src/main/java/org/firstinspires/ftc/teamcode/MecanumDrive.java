@@ -37,7 +37,6 @@ public class MecanumDrive extends LinearOpMode {
 
         waitForStart();
         while(opModeIsActive()) {
-
             double joy1Y = -gamepad1.left_stick_y;
             joy1Y = Math.abs(joy1Y) > 0.15 ? joy1Y*3/4: 0;
             double joy1X = gamepad1.left_stick_x;
@@ -45,10 +44,10 @@ public class MecanumDrive extends LinearOpMode {
             double joy2X = gamepad1.right_stick_x;
             joy2X = Math.abs(joy2X) > 0.15 ? joy2X*3/4: 0;
 
-            frontLeft.setPower(Math.min(1, joy1Y + joy2X + joy1X));
-            backLeft.setPower(Math.min(1, joy1Y + joy2X - joy1X));
-            frontRight.setPower(Math.min(1, joy1Y - joy2X - joy1X));
-            backRight.setPower(Math.min(1, joy1Y - joy2X + joy1X));
+            frontLeft.setPower(Math.max(-1, Math.min(1, joy1Y + joy2X + joy1X)));
+            backLeft.setPower(Math.max(-1, Math.min(1, joy1Y + joy2X - joy1X)));
+            frontRight.setPower(Math.max(-1, Math.min(1, joy1Y - joy2X - joy1X)));
+            backRight.setPower(Math.max(-1, Math.min(1, joy1Y - joy2X + joy1X)));
 
         }
     }

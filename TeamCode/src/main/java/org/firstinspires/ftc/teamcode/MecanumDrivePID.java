@@ -47,9 +47,10 @@ public class MecanumDrivePID extends LinearOpMode {
             double joy1X = gamepad1.left_stick_x;
             double joy2X = gamepad1.right_stick_x;
 
-            if((Math.abs(joy1X) > 0.05 || Math.abs(joy1Y) > 0.05) && joy2X == 0 && opModeIsActive()) {        //Lock on to the current gyro reading
-                double KP = 0.025;
-                double KD = 0.0001;
+            if((Math.abs(joy1X) > 0.05 || Math.abs(joy1Y) > 0.05) && joy2X == 0 && opModeIsActive()) {
+
+                double KP = 0.01;
+                double KD = 0.001;
                 double KI = 0;
                 double I = 0;
                 double D;
@@ -57,35 +58,33 @@ public class MecanumDrivePID extends LinearOpMode {
                 long lastTime = System.currentTimeMillis();
                 int prevErr = 0;
                 base = -gyro.getIntegratedZValue();
-                while((Math.abs(joy1X) > 0 || Math.abs(joy1Y) > 0) && joy2X == 0) {
+                while(opModeIsActive() && (Math.abs(joy1X) > 0 || Math.abs(joy1Y) > 0) && joy2X == 0) {
                     //Update joystick to make sure that the action is still occurring
-                    joy1Y = -gamepad1.left_stick_y*2/3;
-                    joy1X = gamepad1.left_stick_x*2/3;
-                    joy2X = gamepad1.right_stick_x*2/3;
-                    long currentTime = System.currentTimeMillis();
-                    double delta = currentTime-lastTime;
+                    joy1Y = -gamepad1.left_stick_y*3/4;
+                    joy1X = gamepad1.left_stick_x*3/4;
+                    joy2X = gamepad1.right_stick_x*3/4;
+                    //long currentTime = System.currentTimeMillis();
+                    //double delta = currentTime-lastTime;
 
                     int err = -gyro.getIntegratedZValue() - base;
+                    System.out.println(err);
                     P = err*KP;
-                    I += err*delta*KI;
-                    if (delta == 0) {
-                        delta = 1;
-                    }
-                    D = (err-prevErr)/delta*KD;
-                    System.out.println("P: " + P + "I:  " + I + "D: " + D);
-                    telemetry.addData("Gyro: ", err);
-                    telemetry.update();
-                    double output = P + I + D;
-                    frontLeft.setPower(crange(joy1Y + joy2X + joy1X + output));
-                    backLeft.setPower(crange(joy1Y + joy2X - joy1X));
-                    frontRight.setPower(crange(joy1Y - joy2X - joy1X));
-                    backRight.setPower(crange(joy1Y - joy2X + joy1X + output));
-
-                    prevErr = err;
-                    lastTime = currentTime;
+//                    I += err*delta*KI;
+//                    if (delta == 0) {
+//                        delta = 1;
+//                    }
+//                    D = (err-prevErr)/delta*KD;
+//                    double output = P + I + D;
+                    frontLeft.setPower(crange(joy1Y + joy1X - P));
+                    backLeft.setPower(crange(joy1Y - joy1X - P));
+                    frontRight.setPower(crange(joy1Y - joy1X + P));
+                    backRight.setPower(crange(joy1Y + joy1X + P));
+                    System.out.println("FL: " + (joy1Y + joy1X - P) + " BL: " + (joy1Y - joy1X - P) + " FR: " + (joy1Y - joy1X + P) + " BR: " + (joy1Y + joy1X + P));
+//                    prevErr = err;
+//                    lastTime = currentTime;
                 }
 
-            } else if(Math.abs(joy2X) > 0){
+            } else if(Math.abs(joy2X) > 0) {
                 frontLeft.setPower(crange(joy1Y + joy2X + joy1X));
                 backLeft.setPower(crange(joy1Y + joy2X - joy1X));
                 frontRight.setPower(crange(joy1Y - joy2X - joy1X));
@@ -100,11 +99,7 @@ public class MecanumDrivePID extends LinearOpMode {
     }
 
     private double crange(double x) {
-        if (x < -1){
-            return -1;
-        } else if (x > 1) {
-            return 1;
-        }
-        return x;
+        return Math.min(1, Math.max(-1, x));
     }
+
 }
