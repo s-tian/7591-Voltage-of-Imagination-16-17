@@ -14,18 +14,19 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 public class ShooterTest extends LinearOpMode {
 
-    DcMotor shooter;
+    DcMotor motorA, motorB;
 
 
     @Override
     public void runOpMode() throws InterruptedException {
 
-        shooter = hardwareMap.dcMotor.get("shooter");
-        shooter.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorA = hardwareMap.dcMotor.get("motorA");
+        motorB = hardwareMap.dcMotor.get("motorB");
+        motorA.setDirection(DcMotorSimple.Direction.REVERSE);
         waitForStart();
         while(opModeIsActive()) {
-            shooter.setPower(-gamepad1.left_stick_y);
-
+            motorA.setPower(-gamepad1.left_stick_y);
+            motorB.setPower(motorA.getPower());
         }
     }
 }
