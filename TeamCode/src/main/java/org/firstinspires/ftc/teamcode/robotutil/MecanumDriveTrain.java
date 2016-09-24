@@ -138,11 +138,41 @@ public class MecanumDriveTrain {
         setMotorPower(frontRight, (float)-power);
     }
     public void rotateClockwiseDegrees(double degrees) throws InterruptedException{
-        startClockWiseRotation(0.5);
-        while (gyro.getIntegratedZValue() > -degrees && opMode.opModeIsActive()) {
-            System.out.println("getHeading: " + gyro.getHeading());
-            //opMode.telemetry.addData("integratedZValue: ", gyro.getIntegratedZValue());
-            //opMode.updateTelemetry(opMode.telemetry);
+        startClockWiseRotation(0.35);
+//        while (gyro.getIntegratedZValue() > -degrees && opMode.opModeIsActive()) {
+//            System.out.println("getIntegratedZValue: " + gyro.getIntegratedZValue());
+//            startClockWiseRotation(Math.max((degrees + gyro.getIntegratedZValue())/degrees, 0.1));
+//        }
+        while (Math.abs(gyro.getIntegratedZValue() + degrees) != 0 && opMode.opModeIsActive()){
+            System.out.println("getIntegratedZValue: " + gyro.getIntegratedZValue());
+            double gyroValue = gyro.getIntegratedZValue();
+            double velocity;
+            if (gyroValue > -degrees)
+                velocity = Math.max((degrees + gyroValue)/degrees, 0.2);
+            else{
+                velocity = Math.min((degrees + gyroValue)/degrees, -0.2);
+            }
+            startClockWiseRotation(velocity);
+        }
+        stopAll();
+    }
+    public void rotateCounterClockwiseDegrees(double degrees) throws InterruptedException{
+        startClockWiseRotation(0.35);
+//        while (gyro.getIntegratedZValue() > -degrees && opMode.opModeIsActive()) {
+//            System.out.println("getIntegratedZValue: " + gyro.getIntegratedZValue());
+//            startClockWiseRotation(Math.max((degrees + gyro.getIntegratedZValue())/degrees, 0.1));
+//        }
+        while (Math.abs(gyro.getIntegratedZValue() + degrees) != 0 && opMode.opModeIsActive()){
+            System.out.println("getIntegratedZValue: " + gyro.getIntegratedZValue());
+            double gyroValue = gyro.getIntegratedZValue();
+            double velocity;
+            if (gyroValue > degrees)
+                velocity = Math.max((degrees + gyroValue)/degrees, 0.2);
+
+            else{
+                velocity = Math.min((degrees + gyroValue)/degrees, -0.2);
+            }
+            startClockWiseRotation(velocity);
         }
         stopAll();
     }
