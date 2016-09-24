@@ -166,13 +166,12 @@ public class MecanumDriveTrain {
             System.out.println("getIntegratedZValue: " + gyro.getIntegratedZValue());
             double gyroValue = gyro.getIntegratedZValue();
             double velocity;
-            if (gyroValue > degrees)
+            if (degrees > gyroValue)
                 velocity = Math.max((degrees + gyroValue)/degrees, 0.2);
-
             else{
                 velocity = Math.min((degrees + gyroValue)/degrees, -0.2);
             }
-            startClockWiseRotation(velocity);
+            startCounterClockWiseRotation(velocity);
         }
         stopAll();
     }
