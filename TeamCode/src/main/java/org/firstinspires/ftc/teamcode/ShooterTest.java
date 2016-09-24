@@ -25,7 +25,7 @@ public class ShooterTest extends LinearOpMode {
         motorA.setDirection(DcMotorSimple.Direction.REVERSE);
         waitForStart();
         while(opModeIsActive()) {
-            motorA.setPower(-gamepad1.left_stick_y);
+            motorA.setPower(-0.8*gamepad1.left_stick_y);
             motorB.setPower(motorA.getPower());
         }
     }
