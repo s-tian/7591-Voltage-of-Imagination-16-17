@@ -17,13 +17,12 @@ public class Autonomous extends LinearOpMode {
 
     MecanumDriveTrain driveTrain;
     DcMotor frontLeft, frontRight, backLeft, backRight;
-    public void runOpMode() throws InterruptedException{
+    public void runOpMode() throws InterruptedException {
         initialize();
         waitForStart();
-        driveTrain.rotateClockwiseDegrees(90);
+        driveTrain.moveLeftNInch(0.5, 25);
     }
     public void initialize(){
-
         frontLeft = hardwareMap.dcMotor.get("frontLeft");
         frontRight = hardwareMap.dcMotor.get("frontRight");
         backLeft = hardwareMap.dcMotor.get("backLeft");
@@ -40,6 +39,8 @@ public class Autonomous extends LinearOpMode {
         frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
         driveTrain = new MecanumDriveTrain(backLeft,backRight,frontLeft,frontRight,gyro,this);
+        driveTrain.setEncoderMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        driveTrain.setEncoderMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 }
 

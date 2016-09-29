@@ -6,13 +6,15 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
 
 /**
  * Created by Stephen on 9/17/2016.
  */
 public class MecanumDriveTrain {
-
+    public static double INCHES_PER_1000_TICKS_FORWARD = 19.03;
+    public static double INCHES_PER_1000_TICKS_STRAFE = 13.34;
     public DcMotor backLeft;
     public DcMotor backRight;
     public DcMotor frontLeft;
@@ -20,7 +22,7 @@ public class MecanumDriveTrain {
 
     ModernRoboticsI2cGyro gyro;
     LinearOpMode opMode;
-    public DcMotor[] motorArray = {backLeft, backRight, frontLeft, frontRight};
+    public DcMotor[] motorArray = new DcMotor[4];
 
     public MecanumDriveTrain(DcMotor backLeft, DcMotor backRight, DcMotor frontLeft, DcMotor frontRight) {
         this.backLeft = backLeft;
@@ -28,6 +30,10 @@ public class MecanumDriveTrain {
         this.frontLeft = frontLeft;
         this.frontRight = frontRight;
         reverseMotors();
+        motorArray[0] = backLeft;
+        motorArray[1] = backRight;
+        motorArray[2] = frontLeft;
+        motorArray[3] = frontRight;
     }
     public MecanumDriveTrain(DcMotor backLeft, DcMotor backRight, DcMotor frontLeft, DcMotor frontRight, ModernRoboticsI2cGyro gyro, LinearOpMode opMode) {
         this.backLeft = backLeft;
@@ -105,9 +111,10 @@ public class MecanumDriveTrain {
         }
     }
     public void powerAllMotors(float power){
-        for (DcMotor motor : motorArray){
-            setMotorPower(motor, power);
-        }
+        setMotorPower(backLeft, power);
+        setMotorPower(backRight, power);
+        setMotorPower(frontLeft, power);
+        setMotorPower(frontRight, power);
     }
     public void powerRight(float power){
         setMotorPower(backRight, power);
@@ -125,11 +132,11 @@ public class MecanumDriveTrain {
         powerLeft((float) -power);
         powerRight((float) power);
     }
-    public void strafeLeft(double power){
-        setMotorPower(backRight, (float)-power);
-        setMotorPower(backLeft, (float)power);
-        setMotorPower(frontLeft, (float)-power);
-        setMotorPower(frontRight, (float)power);
+    public void strafeLeft(double power) {
+        setMotorPower(backRight, (float) -power);
+        setMotorPower(backLeft, (float) power);
+        setMotorPower(frontLeft, (float) -power);
+        setMotorPower(frontRight, (float) power);
     }
     public void strafeRight(double power){
         setMotorPower(backRight, (float)power);
@@ -137,20 +144,16 @@ public class MecanumDriveTrain {
         setMotorPower(frontLeft, (float)power);
         setMotorPower(frontRight, (float)-power);
     }
+
     public void rotateClockwiseDegrees(double degrees) throws InterruptedException{
-        startClockWiseRotation(0.35);
-//        while (gyro.getIntegratedZValue() > -degrees && opMode.opModeIsActive()) {
-//            System.out.println("getIntegratedZValue: " + gyro.getIntegratedZValue());
-//            startClockWiseRotation(Math.max((degrees + gyro.getIntegratedZValue())/degrees, 0.1));
-//        }
+        startClockWiseRotation(0.1);
         while (Math.abs(gyro.getIntegratedZValue() + degrees) != 0 && opMode.opModeIsActive()){
-            System.out.println("getIntegratedZValue: " + gyro.getIntegratedZValue());
             double gyroValue = gyro.getIntegratedZValue();
             double velocity;
             if (gyroValue > -degrees)
-                velocity = Math.max((degrees + gyroValue)/degrees, 0.2);
+                velocity = Math.max((degrees + gyroValue)/degrees, 0.1);
             else{
-                velocity = Math.min((degrees + gyroValue)/degrees, -0.2);
+                velocity = Math.min((degrees + gyroValue)/degrees, -0.1);
             }
             startClockWiseRotation(velocity);
         }
@@ -158,10 +161,6 @@ public class MecanumDriveTrain {
     }
     public void rotateCounterClockwiseDegrees(double degrees) throws InterruptedException{
         startClockWiseRotation(0.35);
-//        while (gyro.getIntegratedZValue() > -degrees && opMode.opModeIsActive()) {
-//            System.out.println("getIntegratedZValue: " + gyro.getIntegratedZValue());
-//            startClockWiseRotation(Math.max((degrees + gyro.getIntegratedZValue())/degrees, 0.1));
-//        }
         while (Math.abs(gyro.getIntegratedZValue() + degrees) != 0 && opMode.opModeIsActive()){
             System.out.println("getIntegratedZValue: " + gyro.getIntegratedZValue());
             double gyroValue = gyro.getIntegratedZValue();
@@ -175,8 +174,134 @@ public class MecanumDriveTrain {
         }
         stopAll();
     }
+    public void rotateWithoutAdjustment(double power, double degrees) throws InterruptedException{
+        int initialGyro = gyro.getIntegratedZValue();
+        if (degrees > 0){
+            startCounterClockWiseRotation(power);
+            while(gyro.getIntegratedZValue() > initialGyro - degrees && opMode.opModeIsActive()){
+                System.out.println(gyro.getIntegratedZValue() - initialGyro);
+            }
+        }
+        else{
+            startClockWiseRotation(power);
+            while(gyro.getIntegratedZValue() < initialGyro + degrees && opMode.opModeIsActive()) {
+                System.out.println(gyro.getIntegratedZValue() - initialGyro);
+            }
+        }
+    }
+    public void moveForwardNInch(float power, float inches)
+            throws InterruptedException {
+        moveForwardTicksWithEncoders(power, (int) (inches*(1000/INCHES_PER_1000_TICKS_FORWARD)));
+        stopAll();
+    }
+    public void moveBackwardNInch(float power, float inches)
+            throws InterruptedException {
+        moveBackwardTicksWithEncoders(power, (int) (inches*(1000/INCHES_PER_1000_TICKS_FORWARD)));
+        stopAll();
+    }
+    public void moveLeftNInch(double power, double inches) throws InterruptedException{
+        int initialDegrees = gyro.getIntegratedZValue();
+        moveLeftTicksWithEncoders(power, (int) (inches*1000/INCHES_PER_1000_TICKS_STRAFE));
+        int finalDegrees = gyro.getIntegratedZValue();
+        rotateWithoutAdjustment(0.1,finalDegrees-initialDegrees);
+        System.out.println(finalDegrees - initialDegrees);
+    }
+    public void moveRightNInch(double power, double inches) throws InterruptedException{
+        int initialDegrees = gyro.getIntegratedZValue();
+        moveRightTicksWithEncoders(power, (int) (inches*1000/INCHES_PER_1000_TICKS_STRAFE));
+        int finalDegrees = gyro.getIntegratedZValue();
+        rotateWithoutAdjustment(0.1, finalDegrees - initialDegrees);
+    }
+    public void moveLeftTicksWithEncoders(double power, int ticks) throws InterruptedException{
+        int initialBackRight = backRight.getCurrentPosition();
+        strafeLeft(power);
+        while(opMode.opModeIsActive()) {
+            if (backRight.getCurrentPosition() <= initialBackRight - ticks) {
+                stopAll();
+                return;
+            }
+        }
+    }
+    public void moveRightTicksWithEncoders(double power, int ticks) throws InterruptedException{
+        int initialBackRight = backRight.getCurrentPosition();
+        strafeLeft(power);
+        while(opMode.opModeIsActive()) {
+            if (backRight.getCurrentPosition() >= initialBackRight + ticks) {
+                stopAll();
+                return;
+            }
+        }
+    }
+    public void moveForwardTicksWithEncoders(float power, int ticks) throws InterruptedException{
+        moveTicks(power, ticks,true);
+    }
+    public void moveBackwardTicksWithEncoders(float power, int ticks) throws InterruptedException{
+        moveTicks(power, ticks, false);
+    }
+    public void getTicks(){
+        System.out.println(backRight.getCurrentPosition());
+    }
+    public void moveTicks(float power, int ticks, boolean forward) throws InterruptedException{
+        int initialBackRight = backRight.getCurrentPosition();
+//        int initialBackLeft = backLeft.getCurrentPosition();
+//        int initialFrontLeft = frontLeft.getCurrentPosition();
+//        int initialFrontRight = frontRight.getCurrentPosition();
+        powerAllMotors(forward?power:-power);
 
+//        boolean runBackRight = true;
+//        boolean runBackLeft = true;
+//        boolean runFrontRight = true;
+//        boolean runFrontLeft = true;
 
+            while (opMode.opModeIsActive()) {
+                if (forward) {
+                    if (backRight.getCurrentPosition() >= ticks + initialBackRight) {
+                        //runBackRight = false;
+                        stopAll();
+                        return;
+                        //backRight.setPower(0);
+                    }
+//                    if (backLeft.getCurrentPosition() >= ticks + initialBackLeft) {
+//                        runBackLeft = false;
+//                        backLeft.setPower(0);
+//                    }
+//                    if (frontLeft.getCurrentPosition() >= ticks + initialFrontLeft) {
+//                        runFrontLeft = false;
+//                        frontLeft.setPower(0);
+//                    }
+//                    if (frontRight.getCurrentPosition() >= ticks + initialFrontRight) {
+//                        runFrontRight = false;
+//                        frontRight.setPower(0);
+//                    }
+                }else{
+                    if (backRight.getCurrentPosition() <= -ticks + initialBackRight) {
+                        //runBackRight = false;
+                        //backRight.setPower(0);
+                        stopAll();
+                        return;
+                    }
+//                    if (backLeft.getCurrentPosition() <= -ticks + initialBackLeft) {
+//                        runBackLeft = false;
+//                        backLeft.setPower(0);
+//                    }
+//                    if (frontLeft.getCurrentPosition() <= -ticks + initialFrontLeft) {
+//                        runFrontLeft = false;
+//                        frontLeft.setPower(0);
+//                    }
+//                    if (frontRight.getCurrentPosition() <= -ticks + initialFrontRight) {
+//                        runFrontRight = false;
+//                        frontRight.setPower(0);
+//                    }
+                }
+            }
 
+    }
+    public void powerAllForTime(float power, float seconds)
+            throws InterruptedException
+    {
+        powerAllMotors(power);
+        Thread.sleep((long) (1000*seconds));
+        stopAll();
+    }
 
 }
