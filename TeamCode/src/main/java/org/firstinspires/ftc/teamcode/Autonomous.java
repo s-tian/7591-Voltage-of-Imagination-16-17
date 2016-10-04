@@ -20,7 +20,12 @@ public class Autonomous extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         initialize();
         waitForStart();
-        driveTrain.moveLeftNInch(0.5, 25);
+        //driveTrain.moveLeftNInch(0.5, 24);
+        driveTrain.getTicks();
+        driveTrain.moveRightNInch(0.5, 20);
+        sleep(1000);
+        driveTrain.stopAll();
+        driveTrain.getTicks();
     }
     public void initialize(){
         frontLeft = hardwareMap.dcMotor.get("frontLeft");

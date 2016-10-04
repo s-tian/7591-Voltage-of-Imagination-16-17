@@ -200,35 +200,45 @@ public class MecanumDriveTrain {
         stopAll();
     }
     public void moveLeftNInch(double power, double inches) throws InterruptedException{
-        int initialDegrees = gyro.getIntegratedZValue();
         moveLeftTicksWithEncoders(power, (int) (inches*1000/INCHES_PER_1000_TICKS_STRAFE));
-        int finalDegrees = gyro.getIntegratedZValue();
-        rotateWithoutAdjustment(0.1,finalDegrees-initialDegrees);
-        System.out.println(finalDegrees - initialDegrees);
-    }
+}
     public void moveRightNInch(double power, double inches) throws InterruptedException{
-        int initialDegrees = gyro.getIntegratedZValue();
         moveRightTicksWithEncoders(power, (int) (inches*1000/INCHES_PER_1000_TICKS_STRAFE));
-        int finalDegrees = gyro.getIntegratedZValue();
-        rotateWithoutAdjustment(0.1, finalDegrees - initialDegrees);
     }
     public void moveLeftTicksWithEncoders(double power, int ticks) throws InterruptedException{
+        int initialDegrees = gyro.getIntegratedZValue();
+
         int initialBackRight = backRight.getCurrentPosition();
         strafeLeft(power);
         while(opMode.opModeIsActive()) {
             if (backRight.getCurrentPosition() <= initialBackRight - ticks) {
-                stopAll();
-                return;
+                backRight.setPower(0);
+                backLeft.setPower(0);
+                opMode.sleep(90);
+                frontRight.setPower(0);
+                frontLeft.setPower(0);
+                break;
             }
         }
+        int finalDegrees = gyro.getIntegratedZValue();
+        rotateWithoutAdjustment(0.1,finalDegrees-initialDegrees);
+        System.out.println(finalDegrees - initialDegrees);
     }
     public void moveRightTicksWithEncoders(double power, int ticks) throws InterruptedException{
         int initialBackRight = backRight.getCurrentPosition();
-        strafeLeft(power);
+        frontRight.setPower(-power);
+        frontLeft.setPower(power);
+        opMode.sleep(200);
+        backRight.setPower(power);
+        backLeft.setPower(-power);
         while(opMode.opModeIsActive()) {
             if (backRight.getCurrentPosition() >= initialBackRight + ticks) {
-                stopAll();
-                return;
+                backRight.setPower(0);
+                backLeft.setPower(0);
+                //opMode.sleep(50);
+                frontRight.setPower(0);
+                frontLeft.setPower(0);
+                break;
             }
         }
     }
