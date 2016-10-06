@@ -6,8 +6,9 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 /**
- * Created by Andy on 10/5/16.
+ * Created by bunnycide on 10/5/16.
  */
+
 @TeleOp(name = "Tank Drive", group = "Drive")
 
 public class TankDrive extends LinearOpMode {
@@ -42,8 +43,8 @@ public class TankDrive extends LinearOpMode {
 
         waitForStart();
         while (opModeIsActive()) {
-            double joy1Y = gamepad1.left_stick_y/2;
-            double joy2Y = gamepad1.right_stick_y/2;
+            double joy1Y = gamepad1.left_stick_y;
+            double joy2Y = gamepad1.right_stick_y;
             backLeft.setPower(joy1Y);
             backRight.setPower(joy2Y);
             midbackLeft.setPower(joy1Y);

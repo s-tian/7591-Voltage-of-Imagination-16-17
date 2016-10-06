@@ -16,8 +16,6 @@ public class ShooterTest extends LinearOpMode {
 
     DcMotor motorA, motorB;
 
-
-
     @Override
     public void runOpMode() throws InterruptedException {
         boolean increased = false ,decreased = false;

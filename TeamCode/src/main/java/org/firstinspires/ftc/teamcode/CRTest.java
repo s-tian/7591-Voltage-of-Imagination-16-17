@@ -11,7 +11,8 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 /**
  * Created by bunnycide on 10/5/16.
  */
-@TeleOp(name = "CR Test", group = "Drive")
+
+@TeleOp(name = "CR Test", group = "Test")
 
 public class CRTest extends LinearOpMode{
 
@@ -28,10 +29,12 @@ public class CRTest extends LinearOpMode{
             if (gamepad1.a) {
                 servo1.setPower(1);
                 servo2.setPower(1);
-            } else if (gamepad1.b) {
+            }
+            else if (gamepad1.b) {
                 servo1.setPower(-1);
                 servo2.setPower(-1);
-            } else {
+            }
+            else {
                 servo1.setPower(0);
                 servo2.setPower(0);
             }
