@@ -9,15 +9,9 @@ The FTC Driver Station app is available through Google Play.
 
 To use this SDK, download/clone the entire project to your local computer.
 Use Android Studio to import the folder  ("Import project (Eclipse ADT, Gradle, etc.)").
-<<<<<<< HEAD
 
 Documentation for the FTC SDK are included with this repository.  There is a subfolder called "doc" which contains several subfolders:
 
-=======
-
-Documentation for the FTC SDK are included with this repository.  There is a subfolder called "doc" which contains several subfolders:
-
->>>>>>> e5b437727b5d969f5cc89a42f8d09c2023464284
  * The folder "apk" contains the .apk files for the FTC Driver Station and FTC Robot Controller apps.
  * The folder "javadoc" contains the JavaDoc user documentation for the FTC SDK.
  * The folder "tutorial" contains PDF files that help teach the basics of using the FTC SDK.
@@ -28,39 +22,6 @@ For technical questions regarding the SDK, please visit the FTC Technology forum
 
 **************************************************************************************
 
-<<<<<<< HEAD
-=======
-Version 2.35 (released on 16.10.06)
-  * Blockly programming mode - Removed unnecesary idle() call from blocks for new project.
-
-**************************************************************************************
-
-Version 2.30 (released on 16.10.05)
-  * Blockly programming mode:
-     - Mechanism added to save Blockly op modes from Programming Mode Server onto local device
-     - To avoid clutter, blocks are displayed in categorized folders
-     - Added support for DigitalChannel
-     - Added support for ModernRoboticsI2cCompassSensor
-     - Added support for ModernRoboticsI2cRangeSensor
-     - Added support for VoltageSensor
-     - Added support for AnalogInput
-     - Added support for AnalogOutput
-     - Fix for CompassSensor setMode block
-  * Vuforia
-     - Fix deadlock / make camera data available while Vuforia is running.
-     - Update to Vuforia 6.0.117 (recommended by Vuforia and Google to close security loophole). 
-  * Fix for autonomous 30 second timer bug (where timer was in effect, even though it appeared to have timed out).
-  * opModeIsActive changes to allow cleanup after op mode is stopped (with enforced 2 second safety timeout).
-  * Fix to avoid reading i2c twice.
-  * Updated sample Op Modes.
-  * Improved logging and fixed intermittent freezing.
-  * Added digital I/O sample.
-  * Cleaned up device names in sample op modes to be consistent with Pushbot guide.
-  * Fix to allow use of IrSeekerSensorV3.
-
-**************************************************************************************
-
->>>>>>> e5b437727b5d969f5cc89a42f8d09c2023464284
 Version 2.20 (released on 16.09.08)
   * Support for Modern Robotics Compass Sensor.
   * Support for Modern Robotics Range Sensor.
@@ -274,7 +235,6 @@ Release 15.11.04.001
  * Updated javadoc documentation.
  * Updated release .apk files for Robot Controller and Driver Station apps.
 
-<<<<<<< HEAD
 T. Eng
 November 5, 2015
  
@@ -290,23 +250,6 @@ Release 15.10.06.002
 T. Eng
 October 6, 2015
 
-=======
-T. Eng
-November 5, 2015
- 
-**************************************************************************************
-
-Release 15.10.06.002
-
- * Added support for Legacy Matrix 9.6V motor/servo controller.
- * Cleaned up build.gradle file.
- * Minor UI and bug fixes for driver station and robot controller apps.
- * Throws error if Ultrasonic sensor (NXT) is not configured for legacy module port 4 or 5.
-
-T. Eng
-October 6, 2015
-
->>>>>>> e5b437727b5d969f5cc89a42f8d09c2023464284
 **************************************************************************************
 
 In this latest version of the FTC SDK (20150803_001) the following changes should be noted:

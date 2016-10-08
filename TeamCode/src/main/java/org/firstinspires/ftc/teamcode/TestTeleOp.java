@@ -1,4 +1,4 @@
-/* Copyright (c) 2015 Qualcomm Technologies Inc
+/* Copyright (c) 2014, 2015 Qualcomm Technologies Inc
 
 All rights reserved.
 
@@ -29,61 +29,32 @@ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
-package org.firstinspires.ftc.robotcontroller.external.samples;
+package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.GyroSensor;
-import com.qualcomm.robotcore.hardware.IrSeekerSensor;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
-/*
- * This is an example LinearOpMode that shows how to use
- * the Modern Robotics ITR Seeker
- *
- * The op mode assumes that the IR Seeker
- * is configured with a name of "ir seeker".
- *
- * Set the switch on the Modern Robotics IR beacon to 1200 at 180.  <br>
- * Turn on the IR beacon.
- * Make sure the side of the beacon with the LED on is facing the robot. <br>
- *
- * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+/**
+ * Demonstrates empty OpMode
  */
-@TeleOp(name = "Sensor: MR IR Seeker", group = "Sensor")
-@Disabled
-public class SensorMRIrSeeker extends LinearOpMode {
+@TeleOp(name = "Timer Op", group = "Tests")
+public class TestTeleOp extends LinearOpMode {
 
-  @Override
-  public void runOpMode() throws InterruptedException {
+    private ElapsedTime runtime = new ElapsedTime();
 
-    IrSeekerSensor irSeeker;    // Hardware Device Object
-
-    // get a reference to our GyroSensor object.
-    irSeeker = hardwareMap.irSeekerSensor.get("seeker");
-
-    // wait for the start button to be pressed.
-    waitForStart();
-
-    while (opModeIsActive())  {
-
-      // Ensure we have a IR signal
-      if (irSeeker.signalDetected())
-      {
-        // Display angle and strength
-        telemetry.addData("Angle",    irSeeker.getAngle());
-        telemetry.addData("Strength", irSeeker.getStrength());
-      }
-      else
-      {
-        // Display loss of signal
-        telemetry.addData("Seeker", "Signal Lost");
-      }
-
-      telemetry.update();
-      idle(); // Always call idle() at the bottom of your while(opModeIsActive()) loop
+    @Override
+    public void runOpMode() throws InterruptedException{
+        waitForStart();
+        while(opModeIsActive()){
+            telemetry.addData("Time elapsed", getRuntime());
+            telemetry.update();
+        }
     }
-  }
 }

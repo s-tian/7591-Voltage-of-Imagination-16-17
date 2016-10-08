@@ -8,7 +8,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 /**
  * Created by Howard on 10/1/16.
  */
-
 @TeleOp(name = "Simple Teleop", group = "Drive")
 
 public class SimpleTeleop extends LinearOpMode {
@@ -27,8 +26,8 @@ public class SimpleTeleop extends LinearOpMode {
 
         waitForStart();
         while (opModeIsActive()) {
-            double joy1Y = gamepad1.left_stick_y;
-            double joy2Y = gamepad1.right_stick_y;
+            double joy1Y = gamepad1.left_stick_y/2;
+            double joy2Y = gamepad1.right_stick_y/2;
             backLeft.setPower(joy1Y);
             backRight.setPower(joy2Y);
         }
