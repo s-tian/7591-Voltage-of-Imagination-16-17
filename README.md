@@ -4,6 +4,8 @@ FTC Android Studio project to create FTC Robot Controller app.
 This is the FTC SDK that can be used to create an FTC Robot Controller app, with custom op modes.
 The FTC Robot Controller app is designed to work in conjunction with the FTC Driver Station app.
 The FTC Driver Station app is available through Google Play.
+# Voltage of Imagination Code 16-17!
+All of our code will be updated in this repo.
 
 To use this SDK, download/clone the entire project to your local computer.
 Use Android Studio to import the folder  ("Import project (Eclipse ADT, Gradle, etc.)").
