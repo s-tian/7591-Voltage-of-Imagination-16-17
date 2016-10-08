@@ -42,7 +42,7 @@ public class AutoDrive extends LinearOpMode {
         backRight = hardwareMap.dcMotor.get("backRight");
         colorSensorBottom = hardwareMap.colorSensor.get("colorBottom");
         colorSensorTop = hardwareMap.colorSensor.get("colorTop");
-        colorSensorBottom.setI2cAddress(0x42);
+        //colorSensorBottom.setI2cAddress(0x42);
         voiColorSensorBottom = new VOIColorSensor(colorSensorBottom);
         gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
         gyro.calibrate();

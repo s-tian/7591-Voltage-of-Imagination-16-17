@@ -33,8 +33,6 @@ public class MecanumDrive extends LinearOpMode {
         backRight.setDirection(DcMotorSimple.Direction.REVERSE);
         frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
-
-
         waitForStart();
         while(opModeIsActive()) {
             double joy1Y = -gamepad1.left_stick_y;
