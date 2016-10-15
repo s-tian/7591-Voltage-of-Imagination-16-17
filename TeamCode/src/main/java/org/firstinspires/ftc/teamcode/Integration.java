@@ -14,7 +14,7 @@ import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
  * Created by bunnycide on 10/13/16.
  */
 
-@TeleOp(name = "TeleOp", group = "Drive")
+@TeleOp(name = "Integration", group = "Drive")
 
 public class Integration extends LinearOpMode {
 
@@ -24,40 +24,11 @@ public class Integration extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-
         boolean increased = false ,decreased = false;
         boolean cIncreased = false, cDecreased = false;
-
-        frontLeft = hardwareMap.dcMotor.get("frontLeft");
-        frontRight = hardwareMap.dcMotor.get("frontRight");
-        backLeft = hardwareMap.dcMotor.get("backLeft");
-        backRight = hardwareMap.dcMotor.get("backRight");
-        flywheelRight = hardwareMap.dcMotor.get("flywheelRight");
-        flywheelLeft = hardwareMap.dcMotor.get("flywheelLeft");
-        conveyor = hardwareMap.dcMotor.get("conveyor");
-        sweeper = hardwareMap.dcMotor.get("sweeper");
-        gate = hardwareMap.servo.get("gate");
-        button = hardwareMap.servo.get("button");
-        gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
-
-        frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        flywheelRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        flywheelLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        flywheelRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        flywheelLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-
-        backRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        flywheelRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        conveyor.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        gyro.calibrate();
-        gyro.resetZAxisIntegrator();
-        int base = gyro.getIntegratedZValue();
-
+        boolean buttonOut = false, xPushed = false;
+        boolean gateOut = false, dpadUpPushed = false;
+        initialize();
         waitForStart();
         while(opModeIsActive()) {
             telemetry.addData("Flywheel", flywheelRight.getPower());
@@ -74,7 +45,32 @@ public class Integration extends LinearOpMode {
             backLeft.setPower(Math.max(-1, Math.min(1, joy1Y + joy2X - joy1X)));
             frontRight.setPower(Math.max(-1, Math.min(1, joy1Y - joy2X - joy1X)));
             backRight.setPower(Math.max(-1, Math.min(1, joy1Y - joy2X + joy1X)));
-
+            if (gamepad1.x && !xPushed){
+                if (buttonOut){
+                    buttonOut = false;
+                    button.setPosition(0);
+                }else{
+                    buttonOut = true;
+                    button.setPosition(1);
+                }
+                xPushed = true;
+            }
+            if (!gamepad1.x){
+                xPushed = false;
+            }
+            if (gamepad1.dpad_up && !dpadUpPushed){
+                if (!gateOut){
+                    gateOut = true;
+                    gate.setPosition(0);
+                }else{
+                    gateOut = false;
+                    gate.setPosition(0.4);
+                }
+                dpadUpPushed = true;
+            }
+            if (!gamepad1.dpad_up){
+                dpadUpPushed = false;
+            }
             if (gamepad1.right_trigger > 0 && flywheelRight.getPower() <= .9 && !increased) {
                 flywheelRight.setPower(flywheelRight.getPower() + .1);
                 flywheelLeft.setPower(flywheelRight.getPower());
@@ -114,8 +110,41 @@ public class Integration extends LinearOpMode {
             if(gamepad1.b){
                 sweeper.setPower(0);
             }
-
             telemetry.update();
         }
+    }
+    public void initialize(){
+
+
+        frontLeft = hardwareMap.dcMotor.get("frontLeft");
+        frontRight = hardwareMap.dcMotor.get("frontRight");
+        backLeft = hardwareMap.dcMotor.get("backLeft");
+        backRight = hardwareMap.dcMotor.get("backRight");
+        flywheelRight = hardwareMap.dcMotor.get("flywheelRight");
+        flywheelLeft = hardwareMap.dcMotor.get("flywheelLeft");
+        conveyor = hardwareMap.dcMotor.get("conveyor");
+        sweeper = hardwareMap.dcMotor.get("sweeper");
+        gate = hardwareMap.servo.get("gate");
+        button = hardwareMap.servo.get("button");
+        gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
+
+        frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        flywheelRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        flywheelLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        flywheelRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        flywheelLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+        backRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        flywheelRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        conveyor.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        gyro.calibrate();
+        gyro.resetZAxisIntegrator();
+        int base = gyro.getIntegratedZValue();
+
     }
 }
