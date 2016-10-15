@@ -1,23 +1,26 @@
 package org.firstinspires.ftc.teamcode;
 
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 
 /**
  * Created by bunnycide on 10/13/16.
  */
 
-@com.qualcomm.robotcore.eventloop.opmode.TeleOp(name = "TeleOp", group = "Drive")
+@TeleOp(name = "TeleOp", group = "Drive")
 
-public class TeleOp extends LinearOpMode {
+public class Integration extends LinearOpMode {
 
     DcMotor frontLeft, frontRight, backLeft, backRight, flywheelRight, flywheelLeft, conveyor, sweeper;
     Servo gate, button;
+    ModernRoboticsI2cGyro gyro;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -35,7 +38,7 @@ public class TeleOp extends LinearOpMode {
         sweeper = hardwareMap.dcMotor.get("sweeper");
         gate = hardwareMap.servo.get("gate");
         button = hardwareMap.servo.get("button");
-
+        gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
 
         frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -51,11 +54,16 @@ public class TeleOp extends LinearOpMode {
         flywheelRight.setDirection(DcMotorSimple.Direction.REVERSE);
         conveyor.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        gyro.calibrate();
+        gyro.resetZAxisIntegrator();
+        int base = gyro.getIntegratedZValue();
+
         waitForStart();
         while(opModeIsActive()) {
             telemetry.addData("Flywheel", flywheelRight.getPower());
             telemetry.addData("Conveyor", conveyor.getPower());
 
+            //no PID
             double joy1Y = -gamepad1.left_stick_y;
             joy1Y = Math.abs(joy1Y) > 0.15 ? joy1Y*3/4: 0;
             double joy1X = gamepad1.left_stick_x;
@@ -67,34 +75,34 @@ public class TeleOp extends LinearOpMode {
             frontRight.setPower(Math.max(-1, Math.min(1, joy1Y - joy2X - joy1X)));
             backRight.setPower(Math.max(-1, Math.min(1, joy1Y - joy2X + joy1X)));
 
-            if (gamepad1.right_bumper && flywheelRight.getPower() <= .9 && !increased) {
+            if (gamepad1.right_trigger > 0 && flywheelRight.getPower() <= .9 && !increased) {
                 flywheelRight.setPower(flywheelRight.getPower() + .1);
                 flywheelLeft.setPower(flywheelRight.getPower());
                 increased = true;
             }
-            if (gamepad1.left_bumper && flywheelRight.getPower() >= .1 && !decreased) {
+            if (gamepad1.left_trigger > 0 && flywheelRight.getPower() >= .1 && !decreased) {
                 flywheelRight.setPower(flywheelRight.getPower() - .1);
                 flywheelLeft.setPower(flywheelRight.getPower());
                 decreased = true;
             }
-            if (gamepad1.dpad_up && conveyor.getPower() <= .9 && !cIncreased){
+            if (gamepad1.right_bumper && conveyor.getPower() <= .9 && !cIncreased){
                 conveyor.setPower(conveyor.getPower() + .1);
                 cIncreased = true;
             }
-            if (gamepad1.dpad_down && conveyor.getPower() >= .1 && !cDecreased){
+            if (gamepad1.left_bumper && conveyor.getPower() >= .1 && !cDecreased){
                 conveyor.setPower(conveyor.getPower()- .1);
                 cDecreased = true;
             }
-            if (!gamepad1.right_bumper){
+            if (gamepad1.right_trigger == 0){
                 increased = false;
             }
-            if (!gamepad1.left_bumper) {
+            if (gamepad1.left_trigger == 0) {
                 decreased = false;
             }
-            if (!gamepad1.dpad_up){
+            if (!gamepad1.right_bumper){
                 cIncreased = false;
             }
-            if (!gamepad1.dpad_down){
+            if (!gamepad1.left_bumper){
                 cDecreased = false;
             }
             if(gamepad1.y){
