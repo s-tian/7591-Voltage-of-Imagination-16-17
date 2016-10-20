@@ -145,6 +145,7 @@ public class Integration extends LinearOpMode {
         gyro.calibrate();
         gyro.resetZAxisIntegrator();
         int base = gyro.getIntegratedZValue();
+        gate.setPosition(0.4);
 
     }
 }

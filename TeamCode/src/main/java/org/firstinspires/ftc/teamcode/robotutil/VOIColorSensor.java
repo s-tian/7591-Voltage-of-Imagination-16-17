@@ -70,7 +70,8 @@ public class VOIColorSensor {
         int blue = getBlue();
         int green = getGreen();
         debugOutput("Red: " + getRed() + " Blue: " + getBlue() + " Green " + getGreen());
-        return (red >= 2 && blue >= 2 && green >= 2);
+
+        return (red >= 25 && blue >= 25 && green >= 25);
     }
 
     public boolean isBlue()
