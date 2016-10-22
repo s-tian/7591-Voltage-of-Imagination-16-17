@@ -3,8 +3,8 @@ package org.firstinspires.ftc.teamcode.robotutil;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorController;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.MecanumDrive;
@@ -13,29 +13,19 @@ import org.firstinspires.ftc.teamcode.MecanumDrive;
  * Created by Stephen on 9/17/2016.
  */
 public class MecanumDriveTrain {
-    public static final double frontBackRatio = 1;
-    public static double TICKS_PER_INCH_FORWARD= 57.89;
-    public static double TICKS_PER_INCH_RIGHT = 61.05;
-    final static double POWER_RATIO = 0.78;
-    public DcMotor backLeft;
-    public DcMotor backRight;
-    public DcMotor frontLeft;
-    public DcMotor frontRight;
-
+    public static final double TICKS_PER_INCH_FORWARD= 57.89;
+    public static final double TICKS_PER_INCH_STRAFE = 61.05;
+    public static ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    static final double POWER_RATIO = 0.78;
+    public DcMotor backLeft, backRight, frontLeft, frontRight;
     ModernRoboticsI2cGyro gyro;
     LinearOpMode opMode;
-    public DcMotor[] motorArray = new DcMotor[4];
-
     public MecanumDriveTrain(DcMotor backLeft, DcMotor backRight, DcMotor frontLeft, DcMotor frontRight) {
         this.backLeft = backLeft;
         this.backRight = backRight;
         this.frontLeft = frontLeft;
         this.frontRight = frontRight;
         reverseMotors();
-        motorArray[0] = backLeft;
-        motorArray[1] = backRight;
-        motorArray[2] = frontLeft;
-        motorArray[3] = frontRight;
     }
     public MecanumDriveTrain(DcMotor backLeft, DcMotor backRight, DcMotor frontLeft, DcMotor frontRight, ModernRoboticsI2cGyro gyro, LinearOpMode opMode) {
         this.backLeft = backLeft;
@@ -50,9 +40,6 @@ public class MecanumDriveTrain {
         this.gyro = gyro;
         this.opMode = opMode;
         reverseMotors();
-    }
-    public enum DriveTrainMotor {
-        BACK_LEFT, BACK_RIGHT, FRONT_LEFT ,FRONT_RIGHT;
     }
     private void reverseMotors() {
         backRight.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -70,32 +57,17 @@ public class MecanumDriveTrain {
         backLeft.setPower(power);
         backRight.setPower(power);
     }
-    public void stopAll() {
-        powerAll(0);
-    }
     public void setMotorPower(DcMotor motor,double power){
         motor.setPower(POWER_RATIO*power);
-    }
-    public void setMotorPower(MecanumDriveTrain.DriveTrainMotor motor, double power){
-        switch(motor){
-            case BACK_LEFT:
-                backLeft.setPower(power);
-                break;
-            case BACK_RIGHT:
-                backRight.setPower(power);
-                break;
-            case FRONT_LEFT:
-                frontLeft.setPower(power);
-                break;
-            case FRONT_RIGHT:
-                frontRight.setPower(power);
-        }
     }
     public void powerAllMotors(double power){
         setMotorPower(backLeft, power);
         setMotorPower(backRight, power);
         setMotorPower(frontLeft, power);
         setMotorPower(frontRight, power);
+    }
+    public void stopAll() {
+        powerAll(0);
     }
     public void powerRight(double power){
         setMotorPower(backRight, power);
@@ -105,14 +77,6 @@ public class MecanumDriveTrain {
         setMotorPower(backLeft, power);
         setMotorPower(frontLeft, power);
     }
-    public void startClockWiseRotation(double power){
-        powerLeft(power);
-        powerRight(-power);
-    }
-    public void startCounterClockWiseRotation(double power){
-        powerLeft(-power);
-        powerRight(power);
-    }
     public void startRotation(double power){
         powerLeft(power);
         powerRight(-power);
@@ -120,14 +84,14 @@ public class MecanumDriveTrain {
     public void strafeLeft(double power) {
         setMotorPower(backRight,  -power);
         setMotorPower(backLeft, power);
-        setMotorPower(frontLeft, -power*frontBackRatio);
-        setMotorPower(frontRight, power*frontBackRatio);
+        setMotorPower(frontLeft, -power);
+        setMotorPower(frontRight, power);
     }
     public void strafeRight(double power){
         setMotorPower(backRight, power);
         setMotorPower(backLeft, -power);
-        setMotorPower(frontLeft, power*frontBackRatio);
-        setMotorPower(frontRight, -power*frontBackRatio);
+        setMotorPower(frontLeft, power);
+        setMotorPower(frontRight, -power);
     }
     public void rotateDegrees(int degrees) throws InterruptedException{
         // Clockwise: degrees > 0
@@ -137,11 +101,11 @@ public class MecanumDriveTrain {
         double velocity;
         while (Math.abs(gyro.getIntegratedZValue() - targetGyro) > 2 && opMode.opModeIsActive()){
             double gyroValue = gyro.getIntegratedZValue();
-            if (gyroValue < targetGyro) {
+            if (gyroValue < targetGyro)
                 velocity = Math.max((targetGyro - gyroValue)*0.55/degrees, 0.2);
-            } else {
+            else
                 velocity = Math.min((targetGyro-gyroValue)*0.55/degrees, -0.2);
-            }
+
             startRotation(velocity);
         }
         stopAll();
@@ -149,55 +113,47 @@ public class MecanumDriveTrain {
     }
     public void moveForwardNInch(double power, double inches) throws InterruptedException {
         moveForwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD));
-        stopAll();
     }
     public void moveBackwardNInch(double power, double inches) throws InterruptedException {
         moveBackwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD));
-        stopAll();
     }
     public void moveLeftNInch(double power, double inches, int timeout) throws InterruptedException{
-        moveLeftTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_RIGHT), timeout);
+        moveLeftTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_STRAFE), timeout);
 }
     public void moveRightNInch(double power, double inches, int timeout) throws InterruptedException{
-        moveRightTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_RIGHT), timeout);
+        moveRightTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_STRAFE), timeout);
     }
     public void moveLeftTicksWithEncoders(double power, int ticks, int timeout) throws InterruptedException{
-        long initialTime = System.nanoTime();
-        int initialBackRight = backRight.getCurrentPosition();
+        int timeOutMS = timeout*1000;
+        int targetPosition = backRight.getCurrentPosition() - ticks;
         strafeLeft(power);
-        while(backRight.getCurrentPosition() > initialBackRight - ticks && opMode.opModeIsActive() && System.nanoTime() < initialTime + timeout*1000000000L) {
-        }
+        timer.reset();
+        while(backRight.getCurrentPosition() > targetPosition && opMode.opModeIsActive() && timer.time() < timeOutMS) {}
+        timer.reset();
         stopAll();
     }
     public void moveRightTicksWithEncoders(double power, int ticks, int timeout) throws InterruptedException{
-        long initialTime = System.nanoTime();
-        int initialBackRight = backRight.getCurrentPosition();
+        int timeOutMS = timeout*1000;
+        int targetPosition = backRight.getCurrentPosition() + ticks;
         strafeRight(power);
-        while(backRight.getCurrentPosition() < initialBackRight + ticks && opMode.opModeIsActive() && System.nanoTime() < initialTime + timeout*1000000000L) {
-        }
+        timer.reset();
+        while(backRight.getCurrentPosition() < targetPosition && opMode.opModeIsActive() && timer.time() < timeOutMS) {}
+        timer.reset();
         stopAll();
     }
     public void moveForwardTicksWithEncoders(double power, int ticks) throws InterruptedException{
-        int target = frontLeft.getCurrentPosition() - ticks;
+        int target = backRight.getCurrentPosition() + ticks;
         powerAllMotors(power);
-        while (opMode.opModeIsActive()) {
-            if (frontLeft.getCurrentPosition() > target) {
-                stopAll();
-                return;
-            }
-        }
+        while (opMode.opModeIsActive() && backRight.getCurrentPosition() < target) {}
+        stopAll();
     }
     public void moveBackwardTicksWithEncoders(double power, int ticks) throws InterruptedException{
-        int target = frontLeft.getCurrentPosition() - ticks;
-        powerAllMotors(power);
-        while (opMode.opModeIsActive()) {
-            if (frontLeft.getCurrentPosition() > target) {
-                stopAll();
-                return;
-            }
-        }
+        int target = backRight.getCurrentPosition() - ticks;
+        powerAllMotors(-power);
+        while (opMode.opModeIsActive() && backRight.getCurrentPosition() > target) {}
+        stopAll();
     }
     public void getTicks(){
-        System.out.println(frontLeft.getCurrentPosition());
+        System.out.println(backRight.getCurrentPosition());
     }
 }

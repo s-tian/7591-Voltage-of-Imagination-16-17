@@ -2,8 +2,8 @@ package org.firstinspires.ftc.teamcode.robotutil;
 
 /**
  * Created by Stephen on 10/4/2016.
- */import android.graphics.Color;
-
+ */
+import android.graphics.Color;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -73,18 +73,10 @@ public class VOIColorSensor {
     }
 
     public boolean isBlue() {
-        /* Averages multiple values for better reliability. */
-        if (sensor.blue() >3)
-            return true;
-        return false;
+        return sensor.blue() >3;
     }
 
     public boolean isRed() {
-        if (sensor.red() > 3)
-            return true;
-        return false;
+        return sensor.red()>3;
     }
-
-
-
 }

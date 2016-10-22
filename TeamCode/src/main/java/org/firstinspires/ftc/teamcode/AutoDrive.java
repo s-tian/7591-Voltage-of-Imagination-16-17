@@ -18,11 +18,12 @@ import static java.lang.Thread.sleep;
  */
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "AutoDrive", group = "Tests")
 public class AutoDrive extends LinearOpMode {
+    static boolean REDTEAM = false;
+    static final int topSensorID = 0x3c;
+    static final int bottomSensorID = 0x44;
     ModernRoboticsI2cGyro gyro;
-    ColorSensor colorSensorBottom;
-    ColorSensor colorSensorTop;
-    VOIColorSensor voiColorSensorBottom;
-    VOIColorSensor voiColorSensorTop;
+    ColorSensor colorSensorTop, colorSensorBottom;
+    VOIColorSensor voiColorSensorTop, voiColorSensorBottom;
     Servo gate, button;
     MecanumDriveTrain driveTrain;
     DcMotor frontLeft, frontRight, backLeft, backRight;
@@ -56,18 +57,13 @@ public class AutoDrive extends LinearOpMode {
         backRight = hardwareMap.dcMotor.get("backRight");
         colorSensorBottom = hardwareMap.colorSensor.get("colorBottom");
         colorSensorTop = hardwareMap.colorSensor.get("colorTop");
-        final int topSensorID = 0x3c;
-        final int bottomSensorID = 0x44;
         colorSensorBottom.setI2cAddress(I2cAddr.create8bit(topSensorID));//maybe create8bit
         colorSensorTop.setI2cAddress(I2cAddr.create8bit(bottomSensorID));
-        voiColorSensorBottom = new VOIColorSensor(colorSensorBottom);
-        voiColorSensorTop = new VOIColorSensor(colorSensorTop);
         gate = hardwareMap.servo.get("gate");
         button = hardwareMap.servo.get("button");
         gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
         gyro.calibrate();
         while(gyro.isCalibrating()) {
-
         }
         gyro.resetZAxisIntegrator(); //address is 0x20
         button.setPosition(0);
@@ -84,15 +80,25 @@ public class AutoDrive extends LinearOpMode {
             telemetry.addData("Color: ", red + " " + green + " " + blue);
             updateTelemetry(telemetry);
         }
+        // roughly align with wall
         driveTrain.rotateDegrees(-50);
+        // ram into wall to straighten out
         driveTrain.moveRightNInch(0.4, 20, 3);
+        // back off so that wheels don't get stuck
         driveTrain.moveLeftNInch(0.4, 0.5,2);
     }
     public void drivePushButton() throws InterruptedException {
+        // move backwards to get behind beacon
         driveTrain.moveBackwardNInch(0.5,0.3);
+        // move forward until beacon detected
         driveTrain.powerAll(0.5);
-        while(!voiColorSensorTop.isBlue()){
+        if (REDTEAM) {
+            while (!voiColorSensorTop.isRed() && opModeIsActive()) {}
         }
+        else{
+            while (!voiColorSensorTop.isBlue() && opModeIsActive()){}
+        }
+        // move forward to align button pusher with beacon button and push
         driveTrain.moveForwardNInch(0.5,3);
         driveTrain.stopAll();
         pushButton();
