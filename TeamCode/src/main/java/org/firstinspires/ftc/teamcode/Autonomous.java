@@ -20,13 +20,18 @@ public class Autonomous extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         initialize();
         waitForStart();
-        //driveTrain.moveLeftNInch(0.5, 24);
+
         driveTrain.getTicks();
-        driveTrain.moveRightNInch(0.5, 20);
+        driveTrain.moveRightNInch(0.5,20, 10);
         sleep(1000);
+        driveTrain.moveLeftNInch(0.5,20, 10);
         driveTrain.stopAll();
         driveTrain.getTicks();
+
     }
+
+
+
     public void initialize(){
         frontLeft = hardwareMap.dcMotor.get("frontLeft");
         frontRight = hardwareMap.dcMotor.get("frontRight");
@@ -35,17 +40,9 @@ public class Autonomous extends LinearOpMode {
         gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
         gyro.calibrate();
         gyro.resetZAxisIntegrator();
-        frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        backRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
-
         driveTrain = new MecanumDriveTrain(backLeft,backRight,frontLeft,frontRight,gyro,this);
         driveTrain.setEncoderMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        driveTrain.setEncoderMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        driveTrain.setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 }
 

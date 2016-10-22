@@ -56,48 +56,34 @@ public class VOIColorSensor {
     }
 
     public void debugOutput(String output) {
-        if(logMessageTimer.time() > 50)
-        {
+        if(logMessageTimer.time() > 50) {
             logMessageTimer.reset();
             System.out.println(output);
             previousLogMessage = output;
         }
     }
 
-    public boolean isWhite()
-    {
+    public boolean isWhite() {
         int red =  getRed();
         int blue = getBlue();
         int green = getGreen();
         debugOutput("Red: " + getRed() + " Blue: " + getBlue() + " Green " + getGreen());
 
-        return (red >= 25 && blue >= 25 && green >= 25);
+        return (red >= 5 && blue >= 5 && green >= 5);
     }
 
-    public boolean isBlue()
-    {
+    public boolean isBlue() {
         /* Averages multiple values for better reliability. */
-        int blue = 0;
-        int red = 0;
-        for (int i = 0; i <25; i++) {
-            int b;
-            int r;
-            b = sensor.blue();
-            r = sensor.red();
-
-//            //reject values for when sensor is not working correctly
-//            while(b == 0  && r == 0) {
-//                b = sensor.blue();
-//                r = sensor.red();
-            blue += sensor.blue();
-            red += sensor.red();
-        }
-        System.out.println("blue " + blue);
-        System.out.println("red " +red);
-        return blue > red;
+        if (sensor.blue() >3)
+            return true;
+        return false;
     }
 
-    public boolean isRed() { return !isBlue(); }
+    public boolean isRed() {
+        if (sensor.red() > 3)
+            return true;
+        return false;
+    }
 
 
 

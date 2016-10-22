@@ -31,6 +31,11 @@ public class Integration extends LinearOpMode {
         initialize();
         waitForStart();
         while(opModeIsActive()) {
+            System.out.println("FL:" + frontLeft.getCurrentPosition());
+            System.out.println("FR:" + frontRight.getCurrentPosition());
+            System.out.println("BL:" + backLeft.getCurrentPosition());
+            System.out.println("BR:" + backRight.getCurrentPosition());
+
             telemetry.addData("Flywheel", flywheelRight.getPower());
             telemetry.addData("Conveyor", conveyor.getPower());
 
