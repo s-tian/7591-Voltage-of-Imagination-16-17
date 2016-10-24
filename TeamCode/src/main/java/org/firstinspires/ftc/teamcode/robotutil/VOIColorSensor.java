@@ -4,6 +4,8 @@ package org.firstinspires.ftc.teamcode.robotutil;
  * Created by Stephen on 10/4/2016.
  */
 import android.graphics.Color;
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -20,11 +22,10 @@ public class VOIColorSensor {
 
     ColorSensor sensor;
     private ElapsedTime logMessageTimer;
-    private String previousLogMessage;
+    LinearOpMode opMode;
 
-
-    public VOIColorSensor(ColorSensor sensor)
-    {
+    public VOIColorSensor(ColorSensor sensor, LinearOpMode opMode) {
+        this.opMode = opMode;
         this.sensor = sensor;
         logMessageTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         logMessageTimer.reset();
@@ -59,7 +60,6 @@ public class VOIColorSensor {
         if(logMessageTimer.time() > 50) {
             logMessageTimer.reset();
             System.out.println(output);
-            previousLogMessage = output;
         }
     }
 
@@ -67,16 +67,48 @@ public class VOIColorSensor {
         int red =  getRed();
         int blue = getBlue();
         int green = getGreen();
-        debugOutput("Red: " + getRed() + " Blue: " + getBlue() + " Green " + getGreen());
-
-        return (red >= 5 && blue >= 5 && green >= 5);
+        int i = 0;
+        int score = 0;
+        logMessageTimer.reset();
+        while (i < 10 && opMode.opModeIsActive()){
+            if (logMessageTimer.time() > 3){
+                i++;
+                //System.out.println("R: " + sensor.red() + " G: " + sensor.green()+ " B: "  + sensor.blue() );
+                logMessageTimer.reset();
+                if (sensor.red() >= 5 && sensor.blue() >= 5 && sensor.green() >= 5)
+                    score ++;
+            }
+        }
+        return score > 5;
     }
 
     public boolean isBlue() {
-        return sensor.blue() >3;
+        int i = 0;
+        int score = 0;
+        logMessageTimer.reset();
+        while (i < 10 && opMode.opModeIsActive()){
+            if (logMessageTimer.time() > 3){
+                i++;
+                logMessageTimer.reset();
+                if (sensor.blue() - sensor.red() > 2)
+                    score ++;
+            }
+        }
+        return score > 5;
     }
 
     public boolean isRed() {
-        return sensor.red()>3;
+        int i = 0;
+        int score = 0;
+        logMessageTimer.reset();
+        while (i < 10 && opMode.opModeIsActive()){
+            if (logMessageTimer.time() > 3){
+                i++;
+                logMessageTimer.reset();
+                if (sensor.red() - sensor.blue() > 2)
+                    score ++;
+            }
+        }
+        return score > 5;
     }
 }
