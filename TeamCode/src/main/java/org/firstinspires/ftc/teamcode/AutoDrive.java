@@ -32,6 +32,7 @@ public class AutoDrive extends LinearOpMode {
     DcMotor frontLeft, frontRight, backLeft, backRight, flywheelRight, flywheelLeft, sweeper, conveyor;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     public void runOpMode() throws InterruptedException {
+        System.out.println("Hello world");
         initialize();
         waitForStart();
         lineUpToWall();
@@ -45,27 +46,19 @@ public class AutoDrive extends LinearOpMode {
         driveTrain.stopAll();
         sleep(delay);
     }
-    public void testColor(){
-        while(opModeIsActive()){
-            int red = colorSensorBottom.red();
-            int green = colorSensorBottom.green();
-            int blue = colorSensorBottom.blue();
-            telemetry.addData("Bottom: ", red + " " + green + " " + blue);
-            telemetry.addData("Top: ", colorSensorTop.red() + " " + colorSensorTop.green() + " " + colorSensorTop.blue());
-            telemetry.addData("White: ", voiColorSensorBottom.isWhite() || voiColorSensorBottom.isWhite());
-            System.out.println("Top: " + colorSensorTop.red() + " " + colorSensorTop.green() + " " + colorSensorTop.blue());
-            System.out.println("Bottom: " + red + " " + green + " " + blue);
-            System.out.println("White: " + (voiColorSensorTop.isWhite() || (voiColorSensorBottom.isWhite())));
-            updateTelemetry(telemetry);
-        }
-    }
     public void initialize(){
+        timer.reset();
         flywheelRight = hardwareMap.dcMotor.get("flywheelRight");
         flywheelLeft = hardwareMap.dcMotor.get("flywheelLeft");
         flywheelRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        flywheelLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        flywheelRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        flywheelLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        flywheelRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         conveyor = hardwareMap.dcMotor.get("conveyor");
         conveyor.setDirection(DcMotorSimple.Direction.REVERSE);
         sweeper = hardwareMap.dcMotor.get("sweeper");
+        sweeper.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         frontLeft = hardwareMap.dcMotor.get("frontLeft");
         frontRight = hardwareMap.dcMotor.get("frontRight");
         backLeft = hardwareMap.dcMotor.get("backLeft");
@@ -89,7 +82,7 @@ public class AutoDrive extends LinearOpMode {
     }
     public void lineUpToWall() throws InterruptedException{
         driveTrain.moveForwardNInch(0.7,50);
-        pause();
+        //pause();
         driveTrain.powerAllMotors(0.3);
         boolean detectColor = false;
         timer.reset();
@@ -103,29 +96,44 @@ public class AutoDrive extends LinearOpMode {
                 updateTelemetry(telemetry);
             }
         }
-        pause();
+        //pause();
         // align with wall
         driveTrain.rotateDegrees((int)(-angle*0.7));
-        pause();
+        //pause();
         // ram into wall to straighten out
-        driveTrain.moveRightNInch(1, 20, 3);
-        pause();
+        driveTrain.moveRightNInch(1, 20, 10);
+        //pause();
     }
     public void drivePushButton() throws InterruptedException {
         // move backwards to get behind beacon
-        driveTrain.moveBackwardNInch(0.4,10);
+        driveTrain.moveBackwardNInch(0.4,5);
         // move forward until beacon detected
-        pause();
-        driveTrain.moveRightNInch(0.2,1,3);
-        pause();
+
+        //pause();
         driveTrain.powerAllMotors(0.2);
         boolean detectColor = false;
+        boolean oppositeColor = false;
+        int counter = 0;
+        int initialTicks = backRight.getCurrentPosition();
         timer.reset();
         if (REDTEAM) {
             while (!detectColor && opModeIsActive()) {
                 if (timer.time() > 30) {
                     detectColor = voiColorSensorTop.isRed();
                     timer.reset();
+                    if (voiColorSensorTop.isBlue()) oppositeColor = true;
+                    if (oppositeColor && !voiColorSensorTop.isBlue() && !voiColorSensorTop.isRed()){
+                        counter++;
+                        System.out.println("BAD: " + counter);
+                    }
+                    if (counter > 80){
+                        //pause();
+                        return;
+                    }
+                    if (backRight.getCurrentPosition()-initialTicks > 1200){
+                        //pause();
+                        return;
+                    }
                 }
             }
         } else{
@@ -133,13 +141,27 @@ public class AutoDrive extends LinearOpMode {
                 if (timer.time() > 30) {
                     detectColor = voiColorSensorTop.isBlue();
                     timer.reset();
+                    if (voiColorSensorTop.isRed()) oppositeColor = true;
+                    if (oppositeColor && !voiColorSensorTop.isBlue() && !voiColorSensorTop.isRed()){
+                        counter++;
+                        System.out.println("BAD: " + counter);
+                    }
+                    if (counter > 50){
+                        return;
+                    }
+                    if (backRight.getCurrentPosition()-initialTicks > 1200){
+                        //pause();
+                        return;
+                    }
                 }
             }
         }
-        pause();
+        //pause();
         // move forward to align button pusher with beacon button and push
         driveTrain.moveForwardNInch(0.2,3);
-        pause();
+        //pause();
+        correctionStrafe();
+        //pause();
         pushButton();
     }
     public void drivePushButton2() throws InterruptedException{
@@ -148,6 +170,8 @@ public class AutoDrive extends LinearOpMode {
         boolean detectColor = false;
         driveTrain.powerAllMotors(0.2);
         timer.reset();
+        int counter = 0;
+
         if (REDTEAM) {
             while (!detectColor && opModeIsActive()) {
                 if (timer.time() > 30) {
@@ -164,36 +188,43 @@ public class AutoDrive extends LinearOpMode {
             }
         }
         pause();
-        driveTrain.moveRightNInch(0.2,1,3);
+        driveTrain.moveRightNInch(0.2,1,0.5);
         pause();
         driveTrain.moveForwardNInch(0.2,3);
         pause();
         pushButton();
     }
-    public void pushButton() {
+    public void pushButton(){
         button.setPosition(1);
         sleep(500);
         button.setPosition(0);
         sleep(500);
     }
     public void moveFromWall() throws InterruptedException{
-        setFlywheelPower(0.7);
-        driveTrain.moveLeftNInch(0.6, 10, 10);
-        pause();
+        setFlywheelPower(1);
+        sweeper.setPower(1);
+        System.out.println("Sweeper: " + sweeper.getPower());
+        driveTrain.moveLeftNInch(0.6, 8, 10);
+        //pause();
         driveTrain.rotateDegreesPrecision(90);
-        pause();
+        //pause();
+        System.out.println("Sweeper: " + sweeper.getPower());
+        sweeper.setPower(1);
+        System.out.println("Sweeper: " + sweeper.getPower());
+
         driveTrain.setMotorPower(conveyor, 0.3);
-        sleep(5000);
+
+        sleep(8000);
     }
     public void checkFirst()throws InterruptedException{
-        driveTrain.moveBackwardNInch(0.5,25);
-        pause();
-        driveTrain.moveRightNInch(0.2,1,2);
-        pause();
+        driveTrain.moveBackwardNInch(0.5,45);
+        //pause();
+        correctionStrafe();
+        //pause();
         driveTrain.powerAllMotors(-0.2);
         boolean detectColor = false;
         boolean wrongColor = false;
-        DETECTINGCOLOR:
+        DETECTING_COLOR:
         if (REDTEAM) {
             while (!detectColor && opModeIsActive()) {
                 if (timer.time() > 30) {
@@ -201,7 +232,7 @@ public class AutoDrive extends LinearOpMode {
                     if (voiColorSensorTop.isBlue()){
                         driveTrain.stopAll();
                         wrongColor = true;
-                        break DETECTINGCOLOR;
+                        break DETECTING_COLOR;
                     }
                     timer.reset();
                 }
@@ -213,17 +244,43 @@ public class AutoDrive extends LinearOpMode {
                     if (voiColorSensorTop.isRed()){
                         driveTrain.stopAll();
                         wrongColor = true;
-                        break DETECTINGCOLOR;
+                        break DETECTING_COLOR;
                     }
                     timer.reset();
                 }
             }
         }
         if (wrongColor){
-            pause();
+            System.out.println("WRONG COLOR");
+            //pause();
+            correctionStrafe();
+            //pause();
             pushButton();
         }
-        pause();
+        else {
+            boolean blue = voiColorSensorTop.isBlue();
+            boolean red = false;
+            System.out.println("BLUE2 " + blue);
+            while (opModeIsActive() && blue){
+                if (timer.time()>30){
+                    blue = voiColorSensorTop.isBlue();
+                    timer.reset();
+                }
+                System.out.println("blue");
+            }
+
+            while (opModeIsActive() && !blue && !red){
+                if (timer.time()>30){
+                    blue = voiColorSensorTop.isBlue();
+                    red = voiColorSensorTop.isRed();
+                    timer.reset();
+                }
+                System.out.println("blank");
+            }
+            if (voiColorSensorTop.isRed())
+                goBackAndPress();
+        }
+        //pause();
     }
     public void coolDown(){
         timer.reset();
@@ -234,10 +291,25 @@ public class AutoDrive extends LinearOpMode {
         while (opModeIsActive() && timer.time() < 1000){}
         setFlywheelPower(0);
         driveTrain.setMotorPower(conveyor, 0);
+        driveTrain.setMotorPower(sweeper, 0);
     }
     public void setFlywheelPower(double power){
         driveTrain.setMotorPower(flywheelLeft, power);
         driveTrain.setMotorPower(flywheelRight, power);
+    }
+    public void goBackAndPress() throws InterruptedException{
+        driveTrain.powerAllMotors(0.3);
+        while (opModeIsActive() && !voiColorSensorTop.isBlue()){}
+        //pause();
+        driveTrain.moveForwardNInch(0.3,3);
+        //pause();
+        correctionStrafe();
+        //pause();
+        pushButton();
+        //pause();
+    }
+    public void correctionStrafe() throws InterruptedException{
+        driveTrain.moveRightNInch(0.2,1,0.5);
     }
 
 }

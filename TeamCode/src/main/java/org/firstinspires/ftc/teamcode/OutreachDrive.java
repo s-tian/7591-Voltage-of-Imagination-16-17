@@ -8,9 +8,9 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 /**
  * Created by Howard on 10/1/16.
  */
-@TeleOp(name = "Simple Teleop", group = "Drive")
+@TeleOp(name = "Outreach Drive", group = "Drive")
 
-public class SimpleTeleop extends LinearOpMode {
+public class OutreachDrive extends LinearOpMode {
 
     DcMotor backLeft, backRight;
 

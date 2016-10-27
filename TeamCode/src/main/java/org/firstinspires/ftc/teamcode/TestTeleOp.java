@@ -44,7 +44,7 @@ import java.util.Date;
 /**
  * Demonstrates empty OpMode
  */
-@TeleOp(name = "Timer Op", group = "Tests")
+//@TeleOp(name = "Timer Op", group = "Tests")
 public class TestTeleOp extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();

@@ -18,6 +18,10 @@ public class MecanumDriveTrain {
     public static final double TICKS_PER_INCH_STRAFE = 61.05;
     public static final double TICKS_PER_MS_FORWARD = 2.489; // at power = 1
     public static final double TICKS_PER_MS_STRAFE = 1.961; // at power = 1
+    public static final double factorFL = 1;
+    public static final double factorFR = 1;//0.9072
+    public static final double factorBL = 0.9069;//0.9069
+    public static final double factorBR = 0.9323;
     //public ElapsedTime timer, timer2, timer3;\
     public ElapsedTime timer;
     static final double POWER_RATIO = 0.78;
@@ -59,7 +63,17 @@ public class MecanumDriveTrain {
         frontRight.setMode(runMode);
     }
     public void setMotorPower(DcMotor motor,double power){
-        motor.setPower(POWER_RATIO*power);
+        double factor = 1;
+        if (motor == frontLeft){
+            factor = factorFL;
+        }else if (motor == frontRight){
+            factor = factorFR;
+        }else if (motor == backLeft){
+            factor = factorBL;
+        }else if (motor == backRight){
+            factor = factorBR;
+        }
+        motor.setPower(POWER_RATIO*power*factor);
     }
     public void powerAllMotors(double power){
         setMotorPower(backLeft, power);
@@ -121,7 +135,6 @@ public class MecanumDriveTrain {
             while (targetGyro < gyroValue && opMode.opModeIsActive()) {
                 gyroValue = gyro.getIntegratedZValue();
                 if (timer.time() > 50) {
-                    System.out.println(gyroValue);
                     timer.reset();
                 }
                 velocity = Math.min((targetGyro - gyroValue) * 0.35 / degrees, -0.2);
@@ -132,7 +145,6 @@ public class MecanumDriveTrain {
             while (gyroValue < targetGyro && opMode.opModeIsActive()){
                 gyroValue = gyro.getIntegratedZValue();
                 if (timer.time() > 50) {
-                    System.out.println(gyroValue);
                     timer.reset();
                 }
                 velocity = Math.max((targetGyro - gyroValue)*0.35/degrees, 0.2);
@@ -153,21 +165,17 @@ public class MecanumDriveTrain {
         while (opMode.opModeIsActive() && backRight.getCurrentPosition() > target) {}
         stopAll();
     }
-    public void moveForwardDiagonal(double power, double ratio){
-        powerLeft(power);
-        powerRight(power*ratio);
-    }
     public void moveBackwardNInch(double power, double inches) throws InterruptedException {
         moveBackwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD));
     }
-    public void moveLeftNInch(double power, double inches, int timeout) throws InterruptedException{
+    public void moveLeftNInch(double power, double inches, double timeout) throws InterruptedException{
         moveLeftTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_STRAFE), timeout, power == 1);
 }
-    public void moveRightNInch(double power, double inches, int timeout) throws InterruptedException{
+    public void moveRightNInch(double power, double inches, double timeout) throws InterruptedException{
         moveRightTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_STRAFE), timeout, power == 1);
     }
-    public void moveLeftTicksWithEncoders(double power, int ticks, int timeout, boolean detectStall) throws InterruptedException{
-        int timeOutMS = timeout*1000;
+    public void moveLeftTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall) throws InterruptedException{
+        double timeOutMS = timeout*1000;
         int targetPosition = backRight.getCurrentPosition() - ticks;
         strafeLeft(power);
         timer.reset();
@@ -189,8 +197,8 @@ public class MecanumDriveTrain {
         timer.reset();
         stopAll();
     }
-    public void moveRightTicksWithEncoders(double power, int ticks, int timeout, boolean detectStall) throws InterruptedException{
-        int timeOutMS = timeout*1000;
+    public void moveRightTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall) throws InterruptedException{
+        double timeOutMS = timeout*1000;
         int targetPosition = backRight.getCurrentPosition() + ticks;
         strafeRight(power);
         timer.reset();
@@ -228,13 +236,11 @@ public class MecanumDriveTrain {
         System.out.println(backRight.getCurrentPosition());
     }
     public void powerForTime(double power, double time) throws InterruptedException{
-//        double timeMS = time*1000;
-//        long currentTime = System.currentTimeMillis();
-//        powerAllMotors(power);
-//        while (opMode.opModeIsActive() && (System.currentTimeMillis()-currentTime) < timeMS){
-//        }
+        double timeMS = time*1000;
+        long currentTime = System.currentTimeMillis();
         powerAllMotors(power);
-        opMode.sleep(1000);
+        while (opMode.opModeIsActive() && (System.currentTimeMillis()-currentTime) < timeMS){
+        }
         stopAll();
     }
     public boolean stalling(){

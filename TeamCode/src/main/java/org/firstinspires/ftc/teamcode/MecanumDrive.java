@@ -12,7 +12,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
  * Created by Stephen on 9/11/2016.
  */
 
-@TeleOp(name = "Mecanum Drive", group = "Drive")
+//@TeleOp(name = "Mecanum Drive", group = "Drive")
 
 public class MecanumDrive extends LinearOpMode {
 

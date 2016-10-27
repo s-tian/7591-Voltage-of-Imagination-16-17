@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
-@com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "Auto", group = "Tests")
+//@com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "Auto", group = "Tests")
 
 /**
  * Created by Howard on 9/21/16.

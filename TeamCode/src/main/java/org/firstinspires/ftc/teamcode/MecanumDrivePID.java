@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
  * Created by Stephen on 9/11/2016.
  */
 
-@TeleOp(name = "Mecanum Drive PID", group = "Tests")
+//@TeleOp(name = "Mecanum Drive PID", group = "Tests")
 
 public class MecanumDrivePID extends LinearOpMode {
 

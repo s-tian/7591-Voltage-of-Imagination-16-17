@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.robotutil.VOIColorSensor;
 /**
  * Created by Howard on 10/21/16.
  */
-@TeleOp(name = "Color Test", group = "Tests")
+@TeleOp(name = "Color Test", group = "Test")
 
 public class ColorTest extends LinearOpMode {
     static final int topSensorID = 0x44;

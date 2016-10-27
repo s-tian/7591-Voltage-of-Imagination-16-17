@@ -13,19 +13,17 @@ import org.firstinspires.ftc.teamcode.robotutil.VOIColorSensor;
 /**
  * Created by Howard on 10/23/16.
  */
-@TeleOp(name = "Drive Test", group = "Tests")
+@TeleOp(name = "Drive Test", group = "Test")
 
 public class DriveTest extends LinearOpMode {
     MecanumDriveTrain driveTrain;
-    DcMotor frontLeft, frontRight, backLeft, backRight;
+    DcMotor frontLeft, frontRight, backLeft, backRight, sweeper;
 
     @Override
     public void runOpMode() throws InterruptedException {
         initialize();
         waitForStart();
-        long startTime = System.currentTimeMillis();
-        long currentTime = startTime;
-        driveTrain.moveRightNInch(0.3, 30, 20);
+        driveTrain.moveBackwardTicksWithEncoders(0.5,2000);
 
     }
     public void initialize(){
@@ -33,13 +31,27 @@ public class DriveTest extends LinearOpMode {
         frontRight = hardwareMap.dcMotor.get("frontRight");
         backLeft = hardwareMap.dcMotor.get("backLeft");
         backRight = hardwareMap.dcMotor.get("backRight");
+        sweeper = hardwareMap.dcMotor.get("sweeper");
+        sweeper.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         driveTrain = new MecanumDriveTrain(backLeft, backRight, frontLeft, frontRight, this);
+        driveTrain.setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
     public void testTicks(){
         driveTrain.getTicks();
-        driveTrain.strafeRight(1);
-        sleep(1500);
+        int startFL = frontLeft.getCurrentPosition();
+        int startBL = backLeft.getCurrentPosition();
+        int startFR = frontRight.getCurrentPosition();
+        int startBR = backRight.getCurrentPosition();
+//        System.out.println("FrontLeft: " + frontLeft.getCurrentPosition());
+//        System.out.println("BackLeft: " + backLeft.getCurrentPosition());
+//        System.out.println("FrontRight: " + frontLeft.getCurrentPosition());
+//        System.out.println("FrontLeft: " + frontLeft.getCurrentPosition());
+        driveTrain.powerAllMotors(0.5);
+        sleep(1750);
         driveTrain.stopAll();
-        driveTrain.getTicks();
+        System.out.println("Front Left: " + (frontLeft.getCurrentPosition()-startFL));
+        System.out.println("Back Left: " + (backLeft.getCurrentPosition()-startBL));
+        System.out.println("Front Right: " + (frontRight.getCurrentPosition()-startFR));
+        System.out.println("Back Right : " + (backRight.getCurrentPosition()-startBR));
     }
 }

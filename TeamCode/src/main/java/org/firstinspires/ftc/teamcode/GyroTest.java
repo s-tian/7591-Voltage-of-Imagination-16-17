@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
  * Created by Stephen on 9/11/2016.
  */
 
-@TeleOp(name = "Gyro Test", group = "Tests")
+@TeleOp(name = "Gyro Test", group = "Test")
 
 public class GyroTest extends LinearOpMode {
 
