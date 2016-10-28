@@ -22,7 +22,7 @@ public class Autonomous extends LinearOpMode {
         waitForStart();
 
         driveTrain.getTicks();
-        driveTrain.moveRightNInch(0.5,20, 10);
+        driveTrain.moveRightNInch(0.5,20, 10, true);
         sleep(1000);
         driveTrain.moveLeftNInch(0.5,20, 10);
         driveTrain.stopAll();

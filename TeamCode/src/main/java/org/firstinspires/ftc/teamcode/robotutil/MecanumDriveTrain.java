@@ -110,7 +110,7 @@ public class MecanumDriveTrain {
         setMotorPower(frontLeft, power);
         setMotorPower(frontRight, -power);
     }
-    public void rotateDegreesPrecision(int degrees) throws InterruptedException{
+    public void rotateDegreesPrecision(int degrees){
         // Clockwise: degrees > 0
         // CounterClockwise: degrees < 0;
         double velocity, targetGyro = gyro.getIntegratedZValue() + degrees;
@@ -118,15 +118,15 @@ public class MecanumDriveTrain {
         while (Math.abs(gyro.getIntegratedZValue() - targetGyro) > 2 && opMode.opModeIsActive()){
             double gyroValue = gyro.getIntegratedZValue();
             if (gyroValue < targetGyro)
-                velocity = Math.max((targetGyro - gyroValue)*0.35/degrees, 0.2);
+                velocity = Math.max((targetGyro - gyroValue)*0.35/degrees, 0.1);
             else
-                velocity = Math.min((targetGyro-gyroValue)*0.35/degrees, -0.2);
+                velocity = Math.min((targetGyro-gyroValue)*0.35/degrees, -0.1);
             startRotation(velocity);
         }
         stopAll();
         System.out.println(gyro.getIntegratedZValue());
     }
-    public void rotateDegrees(int degrees) throws InterruptedException{
+    public void rotateDegrees(int degrees){
         double gyroValue = gyro.getIntegratedZValue();
         int targetGyro = gyro.getIntegratedZValue() + degrees;
         double velocity;
@@ -152,7 +152,7 @@ public class MecanumDriveTrain {
             }
         }
     }
-    public void moveForwardNInch(double power, double inches) throws InterruptedException {
+    public void moveForwardNInch(double power, double inches)  {
         moveForwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD));
     }
     public void moveForwardNInchDiagonal(double power, double inches, double ratio){
@@ -165,16 +165,16 @@ public class MecanumDriveTrain {
         while (opMode.opModeIsActive() && backRight.getCurrentPosition() > target) {}
         stopAll();
     }
-    public void moveBackwardNInch(double power, double inches) throws InterruptedException {
+    public void moveBackwardNInch(double power, double inches) {
         moveBackwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD));
     }
-    public void moveLeftNInch(double power, double inches, double timeout) throws InterruptedException{
+    public void moveLeftNInch(double power, double inches, double timeout) {
         moveLeftTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_STRAFE), timeout, power == 1);
 }
-    public void moveRightNInch(double power, double inches, double timeout) throws InterruptedException{
-        moveRightTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_STRAFE), timeout, power == 1);
+    public void moveRightNInch(double power, double inches, double timeout, boolean detectStall) {
+        moveRightTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_STRAFE), timeout, detectStall);
     }
-    public void moveLeftTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall) throws InterruptedException{
+    public void moveLeftTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall) {
         double timeOutMS = timeout*1000;
         int targetPosition = backRight.getCurrentPosition() - ticks;
         strafeLeft(power);
@@ -197,7 +197,7 @@ public class MecanumDriveTrain {
         timer.reset();
         stopAll();
     }
-    public void moveRightTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall) throws InterruptedException{
+    public void moveRightTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall) {
         double timeOutMS = timeout*1000;
         int targetPosition = backRight.getCurrentPosition() + ticks;
         strafeRight(power);
@@ -206,12 +206,13 @@ public class MecanumDriveTrain {
         boolean startDetectingStall = false;
         while(backRight.getCurrentPosition() < targetPosition && opMode.opModeIsActive() && timer.time() < timeOutMS) {
             if (detectStall) {
-                if (System.currentTimeMillis() - currentTime > 500) {
+                if (System.currentTimeMillis() - currentTime > 300) {
                     startDetectingStall = true;
                     currentTime = System.currentTimeMillis();
-                } else if (startDetectingStall && System.currentTimeMillis() - currentTime > 105) {
+                } else if (startDetectingStall && System.currentTimeMillis() - currentTime > 50) {
                     currentTime = System.currentTimeMillis();
                     if (stalling()) {
+                        stopAll();
                         return;
                     }
                 }
@@ -220,13 +221,13 @@ public class MecanumDriveTrain {
         timer.reset();
         stopAll();
     }
-    public void moveForwardTicksWithEncoders(double power, int ticks) throws InterruptedException{
+    public void moveForwardTicksWithEncoders(double power, int ticks) {
         int target = backRight.getCurrentPosition() + ticks;
         powerAllMotors(power);
         while (opMode.opModeIsActive() && backRight.getCurrentPosition() < target) {}
         stopAll();
     }
-    public void moveBackwardTicksWithEncoders(double power, int ticks) throws InterruptedException{
+    public void moveBackwardTicksWithEncoders(double power, int ticks) {
         int target = backRight.getCurrentPosition() - ticks;
         powerAllMotors(-power);
         while (opMode.opModeIsActive() && backRight.getCurrentPosition() > target) {}
@@ -235,7 +236,7 @@ public class MecanumDriveTrain {
     public void getTicks(){
         System.out.println(backRight.getCurrentPosition());
     }
-    public void powerForTime(double power, double time) throws InterruptedException{
+    public void powerForTime(double power, double time) {
         double timeMS = time*1000;
         long currentTime = System.currentTimeMillis();
         powerAllMotors(power);

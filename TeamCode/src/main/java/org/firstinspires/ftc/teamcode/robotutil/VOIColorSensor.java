@@ -73,7 +73,7 @@ public class VOIColorSensor {
         while (i < 10 && opMode.opModeIsActive()){
             if (logMessageTimer.time() > 3){
                 i++;
-                //System.out.println("R: " + sensor.red() + " G: " + sensor.green()+ " B: "  + sensor.blue() );
+                System.out.println("R: " + sensor.red() + " G: " + sensor.green()+ " B: "  + sensor.blue() );
                 logMessageTimer.reset();
                 if (sensor.red() >= 5 && sensor.blue() >= 5 && sensor.green() >= 5)
                     score ++;
@@ -86,12 +86,12 @@ public class VOIColorSensor {
         int i = 0;
         int score = 0;
         logMessageTimer.reset();
-        while (i < 10 && opMode.opModeIsActive()){
+        while (i < 10 && opMode.opModeIsActive()) {
             if (logMessageTimer.time() > 3){
                 i++;
                 logMessageTimer.reset();
                 if (sensor.blue() - sensor.red() > 2)
-                    score ++;
+                    score++;
             }
         }
         return score > 5;
@@ -101,12 +101,12 @@ public class VOIColorSensor {
         int i = 0;
         int score = 0;
         logMessageTimer.reset();
-        while (i < 10 && opMode.opModeIsActive()){
+        while (i < 10 && opMode.opModeIsActive()) {
             if (logMessageTimer.time() > 3){
                 i++;
                 logMessageTimer.reset();
                 if (sensor.red() - sensor.blue() > 2)
-                    score ++;
+                    score++;
             }
         }
         return score > 5;
