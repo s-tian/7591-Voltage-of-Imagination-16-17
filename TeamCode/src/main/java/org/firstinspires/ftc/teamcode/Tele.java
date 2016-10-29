@@ -41,6 +41,24 @@ public class Tele extends LinearOpMode {
             joy1X = Math.abs(joy1X) > 0.15 ? joy1X*3/4: 0;
             double joy2X = gamepad1.right_stick_x;
             joy2X = Math.abs(joy2X) > 0.15 ? joy2X*3/4: 0;
+            if(Math.abs(joy1Y)==0 && Math.abs(joy1X)==0 && Math.abs(joy2X)==0){
+                joy2X = 0.3*(gamepad2.right_trigger-gamepad2.left_trigger);
+                if(joy2X==0) {
+                    joy2X = 0.3 * (gamepad1.right_trigger - gamepad1.left_trigger);
+                }
+                joy1Y = -gamepad2.left_stick_y;
+                joy1Y = Math.abs(joy1Y) > 0.15 ? joy1Y*0.3: 0;
+                joy1X = gamepad2.left_stick_x;
+                joy1X = Math.abs(joy1X) > 0.15 ? joy1X*0.3: 0;
+                if(joy1X==0 && joy1Y==0){
+                    if(gamepad1.left_bumper){
+                        joy1X = -0.3;
+                    }
+                    if(gamepad1.right_bumper){
+                        joy1X = 0.3;
+                    }
+                }
+            }
             frontLeft.setPower(Math.max(-1, Math.min(1, joy1Y + joy2X + joy1X)));
             backLeft.setPower(Math.max(-1, Math.min(1, joy1Y + joy2X - joy1X)));
             frontRight.setPower(Math.max(-1, Math.min(1, joy1Y - joy2X - joy1X)));
@@ -58,6 +76,14 @@ public class Tele extends LinearOpMode {
             if (!gamepad1.x){
                 xPushed = false;
             }
+            if(gamepad2.right_bumper){
+                buttonOut = true;
+                button.setPosition(1);
+            }
+            if(gamepad2.left_bumper){
+                buttonOut = false;
+                button.setPosition(0);
+            }
             if (gamepad1.dpad_up && !dpadUpPushed){
                 if (!gateOut){
                     gateOut = true;
@@ -71,6 +97,7 @@ public class Tele extends LinearOpMode {
             if (!gamepad1.dpad_up){
                 dpadUpPushed = false;
             }
+            /*
             if (gamepad1.right_trigger > 0 && flywheelRight.getPower() <= .9 && !increased) {
                 flywheelRight.setPower(flywheelRight.getPower() + .1);
                 flywheelLeft.setPower(flywheelRight.getPower());
@@ -89,6 +116,7 @@ public class Tele extends LinearOpMode {
                 conveyor.setPower(conveyor.getPower()- .1);
                 cDecreased = true;
             }
+
             if (gamepad1.right_trigger == 0){
                 increased = false;
             }
@@ -100,6 +128,31 @@ public class Tele extends LinearOpMode {
             }
             if (!gamepad1.left_bumper){
                 cDecreased = false;
+            }*/
+            if (gamepad2.a){
+                flywheelRight.setPower(0);
+                flywheelLeft.setPower(flywheelRight.getPower());
+            }
+            else if (gamepad2.x){
+                flywheelRight.setPower(0.7);
+                flywheelLeft.setPower(flywheelRight.getPower());
+            }
+            else if (gamepad2.y){
+                flywheelRight.setPower(0.8);
+                flywheelLeft.setPower(flywheelRight.getPower());
+            }
+            else if (gamepad2.b){
+                flywheelRight.setPower(0.9);
+                flywheelLeft.setPower(flywheelRight.getPower());
+            }
+            if(gamepad2.dpad_left || gamepad2.dpad_right){
+                conveyor.setPower(0);
+            }
+            else if(gamepad2.dpad_up){
+                conveyor.setPower(0.3);
+            }
+            else if(gamepad2.dpad_down){
+                conveyor.setPower(-0.3);
             }
             if(gamepad1.y){
                 sweeper.setPower(1);
