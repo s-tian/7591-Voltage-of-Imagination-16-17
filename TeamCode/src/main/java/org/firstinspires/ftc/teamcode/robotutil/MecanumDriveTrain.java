@@ -114,7 +114,7 @@ public class MecanumDriveTrain {
         // Clockwise: degrees > 0
         // CounterClockwise: degrees < 0;
         double velocity, targetGyro = gyro.getIntegratedZValue() + degrees;
-        rotateDegrees(degrees);
+        rotateDegrees(degrees, true);
         while (Math.abs(gyro.getIntegratedZValue() - targetGyro) > 2 && opMode.opModeIsActive()){
             double gyroValue = gyro.getIntegratedZValue();
             if (gyroValue < targetGyro)
@@ -126,50 +126,40 @@ public class MecanumDriveTrain {
         stopAll();
         System.out.println(gyro.getIntegratedZValue());
     }
-    public void rotateDegrees(int degrees){
+    public void rotateDegrees(int degrees, boolean slowdown){
         double gyroValue = gyro.getIntegratedZValue();
         int targetGyro = gyro.getIntegratedZValue() + degrees;
         double velocity;
         timer.reset();
         if (degrees < 0){
+            startRotation(-1);
             while (targetGyro < gyroValue && opMode.opModeIsActive()) {
                 gyroValue = gyro.getIntegratedZValue();
-                if (timer.time() > 50) {
-                    timer.reset();
+                if (slowdown) {
+                    velocity = Math.min((targetGyro - gyroValue) * 0.35 / degrees, -0.2);
+                    startRotation(velocity);
                 }
-                velocity = Math.min((targetGyro - gyroValue) * 0.35 / degrees, -0.2);
-                startRotation(velocity);
             }
         }
         else{
+            startRotation(1);
             while (gyroValue < targetGyro && opMode.opModeIsActive()){
                 gyroValue = gyro.getIntegratedZValue();
-                if (timer.time() > 50) {
-                    timer.reset();
+                if (slowdown){
+                    velocity = Math.max((targetGyro - gyroValue)*0.35/degrees, 0.2);
+                    startRotation(velocity);
                 }
-                velocity = Math.max((targetGyro - gyroValue)*0.35/degrees, 0.2);
-                startRotation(velocity);
             }
         }
     }
-    public void moveForwardNInch(double power, double inches)  {
-        moveForwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD));
+    public void moveForwardNInch(double power, double inches, double timeout, boolean detectStall)  {
+        moveForwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall);
     }
-    public void moveForwardNInchDiagonal(double power, double inches, double ratio){
-        int target = backRight.getCurrentPosition() + (int)(inches*TICKS_PER_INCH_FORWARD);
-        setMotorPower(backLeft, ratio*power);
-        setMotorPower(frontRight, ratio*power);
-        setMotorPower(backRight, ratio);
-        setMotorPower(frontLeft, ratio);
-        powerRight(power*ratio);
-        while (opMode.opModeIsActive() && backRight.getCurrentPosition() > target) {}
-        stopAll();
+    public void moveBackwardNInch(double power, double inches, double timeout, boolean detectStall) {
+        moveBackwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall);
     }
-    public void moveBackwardNInch(double power, double inches) {
-        moveBackwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD));
-    }
-    public void moveLeftNInch(double power, double inches, double timeout) {
-        moveLeftTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_STRAFE), timeout, power == 1);
+    public void moveLeftNInch(double power, double inches, double timeout, boolean detectStall) {
+        moveLeftTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_STRAFE), timeout, detectStall);
 }
     public void moveRightNInch(double power, double inches, double timeout, boolean detectStall) {
         moveRightTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_STRAFE), timeout, detectStall);
@@ -188,7 +178,7 @@ public class MecanumDriveTrain {
                     currentTime = System.currentTimeMillis();
                 }
                 if (startDetectingStall && System.currentTimeMillis() - currentTime > 100) {
-                    if (stalling()) {
+                    if (stalling(false)) {
                         return;
                     }
                 }
@@ -211,26 +201,59 @@ public class MecanumDriveTrain {
                     currentTime = System.currentTimeMillis();
                 } else if (startDetectingStall && System.currentTimeMillis() - currentTime > 50) {
                     currentTime = System.currentTimeMillis();
-                    if (stalling()) {
+                    if (stalling(false)) {
                         stopAll();
                         return;
                     }
                 }
             }
         }
-        timer.reset();
         stopAll();
     }
-    public void moveForwardTicksWithEncoders(double power, int ticks) {
-        int target = backRight.getCurrentPosition() + ticks;
+    public void moveForwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall) {
+        double timeOutMS = timeout*1000;
+        int targetPosition = backRight.getCurrentPosition() + ticks;
         powerAllMotors(power);
-        while (opMode.opModeIsActive() && backRight.getCurrentPosition() < target) {}
+        timer.reset();
+        long currentTime = System.currentTimeMillis();
+        boolean startDetectingStall = false;
+        while(backRight.getCurrentPosition() < targetPosition && opMode.opModeIsActive() && timer.time() < timeOutMS) {
+            if (detectStall) {
+                if (System.currentTimeMillis() - currentTime > 300) {
+                    startDetectingStall = true;
+                    currentTime = System.currentTimeMillis();
+                } else if (startDetectingStall && System.currentTimeMillis() - currentTime > 50) {
+                    currentTime = System.currentTimeMillis();
+                    if (stalling(true)) {
+                        stopAll();
+                        return;
+                    }
+                }
+            }
+        }
         stopAll();
     }
-    public void moveBackwardTicksWithEncoders(double power, int ticks) {
-        int target = backRight.getCurrentPosition() - ticks;
+    public void moveBackwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall) {
+        double timeOutMS = timeout*1000;
+        int targetPosition = backRight.getCurrentPosition() - ticks;
         powerAllMotors(-power);
-        while (opMode.opModeIsActive() && backRight.getCurrentPosition() > target) {}
+        timer.reset();
+        long currentTime = System.currentTimeMillis();
+        boolean startDetectingStall = false;
+        while(backRight.getCurrentPosition() > targetPosition && opMode.opModeIsActive() && timer.time() < timeOutMS) {
+            if (detectStall) {
+                if (System.currentTimeMillis() - currentTime > 300) {
+                    startDetectingStall = true;
+                    currentTime = System.currentTimeMillis();
+                } else if (startDetectingStall && System.currentTimeMillis() - currentTime > 50) {
+                    currentTime = System.currentTimeMillis();
+                    if (stalling(true)) {
+                        stopAll();
+                        return;
+                    }
+                }
+            }
+        }
         stopAll();
     }
     public void getTicks(){
@@ -244,14 +267,28 @@ public class MecanumDriveTrain {
         }
         stopAll();
     }
-    public boolean stalling(){
+    public boolean stalling(boolean forward){
         int initialBackRight = backRight.getCurrentPosition();
-        int initialFrontRight = frontLeft.getCurrentPosition();
+        int initialFrontRight = frontRight.getCurrentPosition();
+        int initialBackLeft = backLeft.getCurrentPosition();
+        int initialFrontLeft = frontLeft.getCurrentPosition();
         long currentTime = System.currentTimeMillis();
         while ((System.currentTimeMillis() - currentTime) < 100 && opMode.opModeIsActive()){}
         int ticksBackRight = Math.abs(backRight.getCurrentPosition()-initialBackRight);
-        int ticksFrontRight = Math.abs(backRight.getCurrentPosition() - initialFrontRight);
-        int expected = (int) (TICKS_PER_INCH_STRAFE*100/2);
-        return ticksBackRight < expected && ticksFrontRight < expected ;
+        int ticksFrontRight = Math.abs(frontRight.getCurrentPosition() - initialFrontRight);
+        int ticksBackLeft = Math.abs(backLeft.getCurrentPosition() - initialBackLeft);
+        int ticksFrontLeft = Math.abs(frontLeft.getCurrentPosition() - initialFrontLeft);
+        int expected = (int) (TICKS_PER_MS_FORWARD*100/2);
+
+        if(!forward)
+            expected = (int) (TICKS_PER_MS_STRAFE*100/2);
+
+        int stallingMotors = 0;
+        if (ticksBackLeft < expected) stallingMotors ++;
+        if (ticksBackRight < expected) stallingMotors ++;
+        if (ticksFrontRight < expected) stallingMotors ++;
+        if (ticksFrontLeft < expected) stallingMotors ++;
+
+        return stallingMotors >= 2;
     }
 }

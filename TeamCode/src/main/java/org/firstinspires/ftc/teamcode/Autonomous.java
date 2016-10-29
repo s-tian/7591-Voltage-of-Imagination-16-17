@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
-//@com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "Auto", group = "Tests")
+//@com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "Autonomous", group = "Tests")
 
 /**
  * Created by Howard on 9/21/16.
@@ -24,13 +24,10 @@ public class Autonomous extends LinearOpMode {
         driveTrain.getTicks();
         driveTrain.moveRightNInch(0.5,20, 10, true);
         sleep(1000);
-        driveTrain.moveLeftNInch(0.5,20, 10);
+        driveTrain.moveLeftNInch(0.5,20, 10, true);
         driveTrain.stopAll();
         driveTrain.getTicks();
-
     }
-
-
 
     public void initialize(){
         frontLeft = hardwareMap.dcMotor.get("frontLeft");

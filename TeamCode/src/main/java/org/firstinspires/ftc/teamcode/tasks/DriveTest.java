@@ -23,7 +23,7 @@ public class DriveTest extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         initialize();
         waitForStart();
-        driveTrain.moveBackwardTicksWithEncoders(0.5,2000);
+        driveTrain.moveBackwardTicksWithEncoders(0.5,2000, 10, false);
 
     }
     public void initialize(){

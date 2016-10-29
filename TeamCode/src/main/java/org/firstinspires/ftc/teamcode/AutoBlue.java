@@ -17,9 +17,12 @@ import static java.lang.Thread.sleep;
 /**
  * Created by Stephen on 10/4/2016.
  */
-@com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "AutoDrive", group = "Tests")
-public class AutoDrive extends LinearOpMode {
+@com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "AutoBlue", group = "Tests")
+
+public class AutoBlue extends LinearOpMode {
     static int delay = 200;
+    static int shootRotation = 102;
+    static int capBallRotation = -180;
     static boolean REDTEAM = false;
     static final int topSensorID = 0x3c;
     static final int bottomSensorID = 0x44;
@@ -41,6 +44,7 @@ public class AutoDrive extends LinearOpMode {
         checkFirst();
         moveFromWall();
         coolDown();
+        hitCapBall();
     }
     public void pause(){
         driveTrain.stopAll();
@@ -81,16 +85,16 @@ public class AutoDrive extends LinearOpMode {
         driveTrain.setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
     public void lineUpToWall() {
-        driveTrain.moveForwardNInch(0.7,50);
+        driveTrain.moveForwardNInch(0.7, 50, 10, false);
         //pause();
         driveTrain.powerAllMotors(0.3);
         boolean detectColor = false;
         timer.reset();
-        while(!detectColor && opModeIsActive()){
+        while (!detectColor && opModeIsActive()) {
             int red = colorSensorBottom.red();
             int green = colorSensorBottom.green();
             int blue = colorSensorBottom.blue();
-            if (timer.time() > 30){
+            if (timer.time() > 30) {
                 detectColor = voiColorSensorBottom.isWhite();
                 telemetry.addData("Color: ", red + " " + green + " " + blue);
                 updateTelemetry(telemetry);
@@ -99,15 +103,17 @@ public class AutoDrive extends LinearOpMode {
         }
         //pause();
         // align with wall
-        driveTrain.rotateDegrees((int)(-angle*0.7));
+        driveTrain.rotateDegrees((int) (-angle * 0.7), true);
+
         //pause();
         // ram into wall to straighten out
-        driveTrain.moveRightNInch(1, 20, 10, true);
+        driveTrain.moveRightNInch(1, 40, 10, true);
         //pause();
+
     }
     public void drivePushButton() {
         // move backwards to get behind beacon
-        driveTrain.moveBackwardNInch(0.4,3);
+        driveTrain.moveBackwardNInch(0.4,3, 10, false);
         // move forward until beacon detected
 
         //pause();
@@ -157,14 +163,14 @@ public class AutoDrive extends LinearOpMode {
         }
         //pause();
         // move forward to align button pusher with beacon button and push
-        driveTrain.moveForwardNInch(0.2,3);
+        driveTrain.moveForwardNInch(0.2,3, 10, false);
         //pause();
         correctionStrafe();
         //pause();
         pushButton();
     }
     public void drivePushButton2() {
-        driveTrain.moveForwardNInch(0.7,32);
+        driveTrain.moveForwardNInch(0.7,32, 10, false);
         //pause();
         correctionStrafe();
         boolean detectColor = false;
@@ -190,7 +196,7 @@ public class AutoDrive extends LinearOpMode {
         pause();
         correctionStrafe();
         pause();
-        driveTrain.moveForwardNInch(0.2,3);
+        driveTrain.moveForwardNInch(0.2,3, 10, false);
         pause();
         pushButton();
     }
@@ -202,25 +208,23 @@ public class AutoDrive extends LinearOpMode {
     }
     public void moveFromWall(){
         setFlywheelPower(1);
-        //sweeper.setPower(1);
+        sweeper.setPower(1);
         //System.out.println("Sweeper: " + sweeper.getPower());
-        driveTrain.moveLeftNInch(0.6, 8, 10);
+        driveTrain.moveLeftNInch(0.6, 8, 10, false);
         //pause();
-        driveTrain.rotateDegreesPrecision(95);
-        driveTrain.moveForwardNInch(0.6, 2);
+        driveTrain.rotateDegreesPrecision(shootRotation);
+        driveTrain.moveForwardNInch(0.6, 2, 10, false);
         //pause();
         //System.out.println("Sweeper: " + sweeper.getPower());
         sweeper.setPower(1);
         //System.out.println("Sweeper: " + sweeper.getPower());
-        sleep(1000);
         conveyor.setPower(0.3);
-        sleep(3000);
         sweeper.setPower(1);
-        sleep(4000);
+        sleep(2500);
 
     }
     public void checkFirst() {
-        driveTrain.moveBackwardNInch(0.5,40);
+        driveTrain.moveBackwardNInch(0.8,40, 10, false);
         //pause();
         correctionStrafe();
         //pause();
@@ -234,6 +238,7 @@ public class AutoDrive extends LinearOpMode {
                     if (voiColorSensorTop.isBlue()){
                         driveTrain.stopAll();
                         wrongColor = true;
+                        break;
                     }
                     timer.reset();
                 }
@@ -245,12 +250,13 @@ public class AutoDrive extends LinearOpMode {
                     if (voiColorSensorTop.isRed()){
                         driveTrain.stopAll();
                         wrongColor = true;
+                        break;
                     }
                     timer.reset();
                 }
             }
         }
-        if (wrongColor){
+        if (wrongColor && !detectColor){
             System.out.println("WRONG COLOR");
             //pause();
             correctionStrafe();
@@ -276,8 +282,10 @@ public class AutoDrive extends LinearOpMode {
                 }
                 System.out.println("blank");
             }
-            if (voiColorSensorTop.isRed())
+            if (voiColorSensorTop.isRed()) {
                 goBackAndPress();
+                shootRotation = 95;
+            }
         }
         //pause();
     }
@@ -301,7 +309,7 @@ public class AutoDrive extends LinearOpMode {
         driveTrain.powerAllMotors(0.3);
         while (opModeIsActive() && !voiColorSensorTop.isBlue()){}
         //pause();
-        driveTrain.moveForwardNInch(0.3,3);
+        driveTrain.moveForwardNInch(0.3,3,10, false);
         //pause();
         correctionStrafe();
         //pause();
@@ -311,5 +319,11 @@ public class AutoDrive extends LinearOpMode {
     public void correctionStrafe() {
         driveTrain.moveRightNInch(0.2,5,0.5, true);
     }
+    public void hitCapBall(){
+        driveTrain.moveBackwardNInch(1, 50, 10 , true);
+        driveTrain.rotateDegrees((int)(capBallRotation*0.3), false);
+        driveTrain.moveForwardNInch(0.5, 20, 10, false);
+    }
+
 
 }
