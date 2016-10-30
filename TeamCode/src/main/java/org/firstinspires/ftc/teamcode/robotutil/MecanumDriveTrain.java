@@ -22,7 +22,7 @@ public class MecanumDriveTrain {
     public static final double factorFR = 1;//0.9072
     public static final double factorBL = 0.9069;//0.9069
     public static final double factorBR = 0.9323;
-    //public ElapsedTime timer, timer2, timer3;\
+    //public ElapsedTime timer, timer2, timer3;
     public ElapsedTime timer;
     static final double POWER_RATIO = 0.78;
     public DcMotor backLeft, backRight, frontLeft, frontRight;
@@ -281,7 +281,7 @@ public class MecanumDriveTrain {
         int expected = (int) (TICKS_PER_MS_FORWARD*100/2);
 
         if(!forward)
-            expected = (int) (TICKS_PER_MS_STRAFE*100/2);
+            expected = (int) (TICKS_PER_MS_STRAFE*100*0.7);
 
         int stallingMotors = 0;
         if (ticksBackLeft < expected) stallingMotors ++;

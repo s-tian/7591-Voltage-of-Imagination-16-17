@@ -126,7 +126,7 @@ public class AutoBlue extends LinearOpMode {
         if (REDTEAM) {
             while (!detectColor && opModeIsActive()) {
                 if (timer.time() > 30) {
-                    detectColor = voiColorSensorTop.isRed();
+                    detectColor = voiColorSensorTop.isRed() && !voiColorSensorTop.isBlue();
                     timer.reset();
                     if (voiColorSensorTop.isBlue()) oppositeColor = true;
                     if (oppositeColor && !voiColorSensorTop.isBlue() && !voiColorSensorTop.isRed()) {
@@ -146,7 +146,7 @@ public class AutoBlue extends LinearOpMode {
                 if (timer.time() > 30) {
                     detectColor = voiColorSensorTop.isBlue();
                     timer.reset();
-                    if (voiColorSensorTop.isRed()) oppositeColor = true;
+                    if (voiColorSensorTop.isRed() && voiColorSensorTop.isBlue()) oppositeColor = true;
                     if (oppositeColor && !voiColorSensorTop.isBlue() && !voiColorSensorTop.isRed()) {
                         counter++;
                         System.out.println("BAD: " + counter);
@@ -181,7 +181,7 @@ public class AutoBlue extends LinearOpMode {
         if (REDTEAM) {
             while (!detectColor && opModeIsActive()) {
                 if (timer.time() > 30) {
-                    detectColor = voiColorSensorTop.isRed();
+                    detectColor = voiColorSensorTop.isRed() && !voiColorSensorTop.isBlue();
                     timer.reset();
                 }
             }
@@ -232,25 +232,22 @@ public class AutoBlue extends LinearOpMode {
         boolean detectColor = false;
         boolean wrongColor = false;
         if (REDTEAM) {
-            while (!detectColor && opModeIsActive()) {
+            while (!detectColor && !wrongColor && opModeIsActive()) {
                 if (timer.time() > 30) {
-                    detectColor = voiColorSensorTop.isRed();
+                    detectColor = voiColorSensorTop.isRed() && !voiColorSensorTop.isBlue();
                     if (voiColorSensorTop.isBlue()){
                         driveTrain.stopAll();
-                        wrongColor = true;
-                        break;
                     }
                     timer.reset();
                 }
             }
         } else {
-            while (!detectColor && opModeIsActive()) {
+            while (!detectColor && !wrongColor && opModeIsActive()) {
                 if (timer.time() > 30) {
                     detectColor = voiColorSensorTop.isBlue();
-                    if (voiColorSensorTop.isRed()){
+                    if (voiColorSensorTop.isRed() && !voiColorSensorTop.isBlue()){
                         driveTrain.stopAll();
                         wrongColor = true;
-                        break;
                     }
                     timer.reset();
                 }
@@ -265,27 +262,34 @@ public class AutoBlue extends LinearOpMode {
         } else {
             boolean blue = voiColorSensorTop.isBlue();
             boolean red = false;
+            boolean white = false;
             System.out.println("BLUE2 " + blue);
-            while (opModeIsActive() && blue){
+            while (opModeIsActive() && blue && !white){
                 if (timer.time()>30){
                     blue = voiColorSensorTop.isBlue();
                     timer.reset();
+                    white = voiColorSensorBottom.isWhite();
+
                 }
                 System.out.println("blue");
             }
 
-            while (opModeIsActive() && !blue && !red){
+            while (opModeIsActive() && !blue && !red && !white){
                 if (timer.time()>30) {
                     blue = voiColorSensorTop.isBlue();
-                    red = voiColorSensorTop.isRed();
+                    red = voiColorSensorTop.isRed() && !voiColorSensorTop.isBlue();
+                    white = voiColorSensorBottom.isWhite();
                     timer.reset();
                 }
                 System.out.println("blank");
             }
-            if (voiColorSensorTop.isRed()) {
+            if (red) {
                 goBackAndPress();
                 shootRotation = 95;
+            }else if (white){
+                driveTrain.moveForwardNInch(0.5, 2, 3, false);
             }
+
         }
         //pause();
     }
@@ -317,12 +321,15 @@ public class AutoBlue extends LinearOpMode {
         //pause();
     }
     public void correctionStrafe() {
-        driveTrain.moveRightNInch(0.2,5,0.5, true);
+        driveTrain.moveRightNInch(0.2,5,0.5, false);
     }
     public void hitCapBall(){
-        driveTrain.moveBackwardNInch(1, 50, 10 , true);
-        driveTrain.rotateDegrees((int)(capBallRotation*0.3), false);
-        driveTrain.moveForwardNInch(0.5, 20, 10, false);
+        int initialDirection = gyro.getIntegratedZValue();
+        driveTrain.moveBackwardNInch(1, 50, 10, true);
+
+        driveTrain.rotateDegrees((int) (capBallRotation * 0.3), false);
+        driveTrain.rotateDegrees((int)((initialDirection-gyro.getIntegratedZValue())*0.3), false);
+        driveTrain.moveBackwardNInch(1, 15, 10, true);
     }
 
 

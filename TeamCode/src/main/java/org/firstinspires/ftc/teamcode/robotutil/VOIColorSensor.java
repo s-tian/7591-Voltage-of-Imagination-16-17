@@ -79,7 +79,7 @@ public class VOIColorSensor {
                     score ++;
             }
         }
-        return score > 5;
+        return score >= 3;
     }
 
     public boolean isBlue() {
@@ -94,7 +94,7 @@ public class VOIColorSensor {
                     score++;
             }
         }
-        return score > 5;
+        return score >= 5;
     }
 
     public boolean isRed() {
@@ -105,10 +105,10 @@ public class VOIColorSensor {
             if (logMessageTimer.time() > 3){
                 i++;
                 logMessageTimer.reset();
-                if (sensor.red() - sensor.blue() > 2)
+                if (sensor.red() >= 3)
                     score++;
             }
         }
-        return score > 5;
+        return score >= 5;
     }
 }

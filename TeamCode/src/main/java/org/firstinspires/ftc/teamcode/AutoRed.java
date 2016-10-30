@@ -21,13 +21,13 @@ import org.firstinspires.ftc.teamcode.robotutil.VOIColorSensor;
  */
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "AutoRed", group = "Tests")
 public class AutoRed extends LinearOpMode {
-    static int delay = 200;
-    static int shootRotation = -102;
-    static int capBallRotation = 180;
+    static final int delay = 200;
+    static final int shootRotation = 85;
+    static final int capBallRotation = 180;
     static boolean REDTEAM = true;
     static final int topSensorID = 0x3c;
     static final int bottomSensorID = 0x44;
-    static int ramRotation = 30;
+    static final int ramRotation = 20;
     ModernRoboticsI2cGyro gyro;
     ColorSensor colorSensorTop, colorSensorBottom;
     VOIColorSensor voiColorSensorTop, voiColorSensorBottom;
@@ -43,9 +43,9 @@ public class AutoRed extends LinearOpMode {
         lineUpToWall();
         drivePushButton();
         drivePushButton2();
-        //moveFromWall();
-        //coolDown();
-        //hitCapBall();
+        moveFromWall();
+        coolDown();
+        hitCapBall();
     }
 
     public void pause() {
@@ -89,7 +89,7 @@ public class AutoRed extends LinearOpMode {
     }
 
     public void lineUpToWall() {
-        //driveTrain.moveForwardNInch(0.7, 70, 10, false);
+        driveTrain.moveBackwardNInch(0.7, 90, 10, false);
         //pause();
         driveTrain.powerAllMotors(-0.3);
         boolean detectColor = false;
@@ -118,7 +118,7 @@ public class AutoRed extends LinearOpMode {
 
     public void drivePushButton() {
         // move backwards to get behind beacon
-        driveTrain.moveBackwardNInch(0.4, 2, 10, false);
+        driveTrain.moveBackwardNInch(0.4, 0.3, 10, false);
         // move forward until beacon detected
 
         //pause();
@@ -126,24 +126,28 @@ public class AutoRed extends LinearOpMode {
         driveTrain.powerAllMotors(0.12);
         boolean detectColor = false;
         boolean oppositeColor = false;
-        int counter = 0;
         int initialTicks = backRight.getCurrentPosition();
         timer.reset();
         while (!detectColor && opModeIsActive()) {
             if (timer.time() > 30) {
-                detectColor = voiColorSensorTop.isRed();
+                int red = colorSensorBottom.red();
+                int green = colorSensorBottom.green();
+                int blue = colorSensorBottom.blue();
+                telemetry.addData("ColorWall: ", red + " " + green + " " + blue);
+                telemetry.addData("Red: ", voiColorSensorBottom.isRed());
+                telemetry.addData("Blue: ", voiColorSensorBottom.isBlue());
+                updateTelemetry(telemetry);
+
+                detectColor = voiColorSensorTop.isRed() && !voiColorSensorTop.isBlue();
                 timer.reset();
                 if (voiColorSensorTop.isBlue()) oppositeColor = true;
-                if (oppositeColor && !voiColorSensorTop.isBlue() && !voiColorSensorTop.isRed()) {
-                    counter++;
-                    System.out.println("BAD: " + counter);
-                }
+
 
             }
         }
-        pause();
+        //pause();
         // move forward to align button pusher with beacon button and push
-        driveTrain.moveForwardNInch(0.2, 1.5, 10, false);
+        driveTrain.moveForwardNInch(0.2, 2, 10, false);
         //pause();
         correctionStrafe();
         //pause();
@@ -162,7 +166,14 @@ public class AutoRed extends LinearOpMode {
         if (REDTEAM) {
             while (!detectColor && opModeIsActive()) {
                 if (timer.time() > 30) {
-                    detectColor = voiColorSensorTop.isRed();
+                    int red = colorSensorBottom.red();
+                    int green = colorSensorBottom.green();
+                    int blue = colorSensorBottom.blue();
+                    telemetry.addData("ColorWall: ", red + " " + green + " " + blue);
+                    telemetry.addData("Red: ", voiColorSensorBottom.isRed());
+                    telemetry.addData("Blue: ", voiColorSensorBottom.isBlue());
+                    updateTelemetry(telemetry);
+                    detectColor = voiColorSensorTop.isRed() && !voiColorSensorTop.isBlue();
                     timer.reset();
                 }
             }
@@ -174,11 +185,11 @@ public class AutoRed extends LinearOpMode {
                 }
             }
         }
-        pause();
+        //pause();
         correctionStrafe();
-        pause();
+        //pause();
         driveTrain.moveForwardNInch(0.2, 1.5, 10, false);
-        pause();
+        //pause();
         pushButton();
     }
 
@@ -186,7 +197,6 @@ public class AutoRed extends LinearOpMode {
         button.setPosition(1);
         sleep(500);
         button.setPosition(0);
-        sleep(500);
     }
 
     public void moveFromWall() {
@@ -196,7 +206,7 @@ public class AutoRed extends LinearOpMode {
         driveTrain.moveLeftNInch(0.6, 8, 10, false);
         //pause();
         driveTrain.rotateDegreesPrecision(shootRotation);
-        //driveTrain.moveForwardNInch(0.6, 2, 10, false);
+        driveTrain.moveForwardNInch(1, 2, 2, true);
         //pause();
         //System.out.println("Sweeper: " + sweeper.getPower());
         sweeper.setPower(1);
@@ -207,72 +217,7 @@ public class AutoRed extends LinearOpMode {
 
     }
 
-    public void checkFirst() {
-        driveTrain.moveBackwardNInch(0.8, 40, 10, false);
-        //pause();
-        correctionStrafe();
-        //pause();
-        driveTrain.powerAllMotors(-0.2);
-        boolean detectColor = false;
-        boolean wrongColor = false;
-        if (REDTEAM) {
-            while (!detectColor && opModeIsActive()) {
-                if (timer.time() > 30) {
-                    detectColor = voiColorSensorTop.isRed();
-                    if (voiColorSensorTop.isBlue()) {
-                        driveTrain.stopAll();
-                        wrongColor = true;
-                        break;
-                    }
-                    timer.reset();
-                }
-            }
-        } else {
-            while (!detectColor && opModeIsActive()) {
-                if (timer.time() > 30) {
-                    detectColor = voiColorSensorTop.isBlue();
-                    if (voiColorSensorTop.isRed()) {
-                        driveTrain.stopAll();
-                        wrongColor = true;
-                        break;
-                    }
-                    timer.reset();
-                }
-            }
-        }
-        if (wrongColor && !detectColor) {
-            System.out.println("WRONG COLOR");
-            //pause();
-            correctionStrafe();
-            pause();
-            pushButton();
-        } else {
-            boolean blue = voiColorSensorTop.isBlue();
-            boolean red = false;
-            System.out.println("BLUE2 " + blue);
-            while (opModeIsActive() && blue) {
-                if (timer.time() > 30) {
-                    blue = voiColorSensorTop.isBlue();
-                    timer.reset();
-                }
-                System.out.println("blue");
-            }
 
-            while (opModeIsActive() && !blue && !red) {
-                if (timer.time() > 30) {
-                    blue = voiColorSensorTop.isBlue();
-                    red = voiColorSensorTop.isRed();
-                    timer.reset();
-                }
-                System.out.println("blank");
-            }
-            if (voiColorSensorTop.isRed()) {
-                goBackAndPress();
-                shootRotation = 95;
-            }
-        }
-        //pause();
-    }
 
     public void coolDown() {
         timer.reset();
@@ -308,13 +253,16 @@ public class AutoRed extends LinearOpMode {
     }
 
     public void correctionStrafe() {
-        driveTrain.moveRightNInch(0.2, 5, 0.5, true);
+        driveTrain.moveRightNInch(0.2, 5, 0.5, false);
     }
 
     public void hitCapBall() {
+        int initialDirection = gyro.getIntegratedZValue();
         driveTrain.moveBackwardNInch(1, 50, 10, true);
+
         driveTrain.rotateDegrees((int) (capBallRotation * 0.3), false);
-        driveTrain.moveForwardNInch(0.5, 20, 10, false);
+        driveTrain.rotateDegrees((int)((initialDirection-gyro.getIntegratedZValue())*0.5), false);
+        driveTrain.moveBackwardNInch(1, 7, 10, true);
     }
 
 
