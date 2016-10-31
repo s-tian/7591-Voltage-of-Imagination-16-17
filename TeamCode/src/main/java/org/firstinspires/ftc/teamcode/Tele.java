@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**
  * Created by bunnycide on 10/13/16.
@@ -23,14 +24,19 @@ public class Tele extends LinearOpMode {
     ModernRoboticsI2cGyro gyro;
 
     @Override
-    public void runOpMode() throws InterruptedException {
+    public void runOpMode() {
         boolean increased = false ,decreased = false;
         boolean cIncreased = false, cDecreased = false;
         boolean buttonOut = false, xPushed = false;
         boolean gateOut = false, dpadUpPushed = false;
+        ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         initialize();
         waitForStart();
         while(opModeIsActive()) {
+            if (timer.time()>500 && !gamepad2.y){
+                button.setPosition(0);
+                buttonOut = false;
+            }
             telemetry.addData("Flywheel", flywheelRight.getPower());
             telemetry.addData("Conveyor", conveyor.getPower());
 
@@ -63,14 +69,10 @@ public class Tele extends LinearOpMode {
             backLeft.setPower(Math.max(-1, Math.min(1, joy1Y + joy2X - joy1X)));
             frontRight.setPower(Math.max(-1, Math.min(1, joy1Y - joy2X - joy1X)));
             backRight.setPower(Math.max(-1, Math.min(1, joy1Y - joy2X + joy1X)));
-            if (gamepad1.x && !xPushed){
-                if (buttonOut){
-                    buttonOut = false;
-                    button.setPosition(0);
-                }else{
-                    buttonOut = true;
-                    button.setPosition(1);
-                }
+            if (gamepad1.x && !xPushed && !buttonOut){
+                buttonOut = true;
+                button.setPosition(1);
+                timer.reset();
                 xPushed = true;
             }
             if (!gamepad1.x){
@@ -130,19 +132,20 @@ public class Tele extends LinearOpMode {
                 cDecreased = false;
             }*/
             if (gamepad2.a){
-                flywheelRight.setPower(0);
-                flywheelLeft.setPower(flywheelRight.getPower());
-            }
-            else if (gamepad2.x){
                 flywheelRight.setPower(0.7);
                 flywheelLeft.setPower(flywheelRight.getPower());
             }
-            else if (gamepad2.y){
-                flywheelRight.setPower(0.8);
+            else if (gamepad2.x){
+                setPow(flywheelRight, 0);
                 flywheelLeft.setPower(flywheelRight.getPower());
             }
+            else if (gamepad2.y){
+                buttonOut = true;
+                button.setPosition(1);
+                timer.reset();
+            }
             else if (gamepad2.b){
-                flywheelRight.setPower(0.9);
+                setPow(flywheelRight, 1.0);
                 flywheelLeft.setPower(flywheelRight.getPower());
             }
             if(gamepad2.dpad_left || gamepad2.dpad_right){
@@ -154,6 +157,10 @@ public class Tele extends LinearOpMode {
             else if(gamepad2.dpad_down){
                 conveyor.setPower(-0.3);
             }
+            if (!gamepad2.y){
+                button.setPosition(0);
+                buttonOut = false;
+            }
             if(gamepad1.y){
                 sweeper.setPower(1);
             }
@@ -163,12 +170,11 @@ public class Tele extends LinearOpMode {
             if(gamepad1.b){
                 sweeper.setPower(0);
             }
+
             telemetry.update();
         }
     }
     public void initialize(){
-
-
         frontLeft = hardwareMap.dcMotor.get("frontLeft");
         frontRight = hardwareMap.dcMotor.get("frontRight");
         backLeft = hardwareMap.dcMotor.get("backLeft");
@@ -201,4 +207,8 @@ public class Tele extends LinearOpMode {
         gate.setPosition(0.4);
 
     }
+    public void setPow(DcMotor motor, double power){
+        motor.setPower(power*0.7);
+    }
+
 }

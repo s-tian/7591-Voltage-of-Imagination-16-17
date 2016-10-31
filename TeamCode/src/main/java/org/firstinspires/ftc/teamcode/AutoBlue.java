@@ -21,8 +21,11 @@ import static java.lang.Thread.sleep;
 
 public class AutoBlue extends LinearOpMode {
     static int delay = 200;
+    boolean missed = true, pickUp = false;
     static int shootRotation = 102;
-    static int capBallRotation = -180;
+    static int shootRotation2 = 50;
+    static final int capBallRotation = -180;
+    static final int pickUpRotation = 45;
     static boolean REDTEAM = false;
     static final int topSensorID = 0x3c;
     static final int bottomSensorID = 0x44;
@@ -37,14 +40,20 @@ public class AutoBlue extends LinearOpMode {
     public void runOpMode() {
         System.out.println("Hello world");
         initialize();
+        options();
         waitForStart();
-        lineUpToWall();
+        if (pickUp){
+            pickUpBall();
+            lineUpToWall(40);
+        } else {
+            lineUpToWall(50);
+        }
         drivePushButton();
         drivePushButton2();
         checkFirst();
-        moveFromWall();
+        moveFromWall2();
         coolDown();
-        hitCapBall();
+        hitCapBall2();
     }
     public void pause(){
         driveTrain.stopAll();
@@ -84,8 +93,8 @@ public class AutoBlue extends LinearOpMode {
         driveTrain.setEncoderMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         driveTrain.setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
-    public void lineUpToWall() {
-        driveTrain.moveForwardNInch(0.7, 50, 10, false);
+    public void lineUpToWall(int distance) {
+        driveTrain.moveForwardNInch(0.7, distance, 10, false);
         //pause();
         driveTrain.powerAllMotors(0.3);
         boolean detectColor = false;
@@ -113,7 +122,7 @@ public class AutoBlue extends LinearOpMode {
     }
     public void drivePushButton() {
         // move backwards to get behind beacon
-        driveTrain.moveBackwardNInch(0.4,3, 10, false);
+        driveTrain.moveBackwardNInch(0.4,4, 10, false);
         // move forward until beacon detected
 
         //pause();
@@ -154,10 +163,11 @@ public class AutoBlue extends LinearOpMode {
 //                    if (counter > 50) {
 //                        return;
 //                    }
-//                    if (backRight.getCurrentPosition()-initialTicks > 1200) {
-//                        //pause();
-//                        return;
-//                    }
+                    if (backRight.getCurrentPosition()-initialTicks > 10*driveTrain.TICKS_PER_INCH_FORWARD) {
+                        //pause();
+                        missed = true;
+                        return;
+                    }
                 }
             }
         }
@@ -170,7 +180,11 @@ public class AutoBlue extends LinearOpMode {
         pushButton();
     }
     public void drivePushButton2() {
-        driveTrain.moveForwardNInch(0.7,32, 10, false);
+        if (!missed) {
+            driveTrain.moveForwardNInch(0.7,32, 10, false);
+        } else {
+            driveTrain.moveForwardNInch(0.7, 25, 10, false);
+        }
         //pause();
         correctionStrafe();
         boolean detectColor = false;
@@ -193,11 +207,11 @@ public class AutoBlue extends LinearOpMode {
                 }
             }
         }
-        pause();
+        //pause();
         correctionStrafe();
-        pause();
+        //pause();
         driveTrain.moveForwardNInch(0.2,3, 10, false);
-        pause();
+        //pause();
         pushButton();
     }
     public void pushButton(){
@@ -224,11 +238,11 @@ public class AutoBlue extends LinearOpMode {
 
     }
     public void checkFirst() {
-        driveTrain.moveBackwardNInch(0.8,40, 10, false);
+        driveTrain.moveBackwardNInch(0.8,42, 10, false);
         //pause();
         correctionStrafe();
         //pause();
-        driveTrain.powerAllMotors(-0.2);
+        driveTrain.powerAllMotors(-0.3);
         boolean detectColor = false;
         boolean wrongColor = false;
         if (REDTEAM) {
@@ -328,9 +342,55 @@ public class AutoBlue extends LinearOpMode {
         driveTrain.moveBackwardNInch(1, 50, 10, true);
 
         driveTrain.rotateDegrees((int) (capBallRotation * 0.3), false);
-        driveTrain.rotateDegrees((int)((initialDirection-gyro.getIntegratedZValue())*0.3), false);
-        driveTrain.moveBackwardNInch(1, 15, 10, true);
+        driveTrain.rotateDegrees((int)((initialDirection-gyro.getIntegratedZValue())*0.25), false);
+        driveTrain.moveBackwardNInch(1, 18, 10, true);
     }
-
-
+    public void pickUpBall(){
+        sweeper.setPower(1);
+        sleep(1500);
+        sweeper.setPower(0);
+        driveTrain.moveLeftNInch(0.5, 10, 5, false);
+        driveTrain.rotateDegreesPrecision(pickUpRotation);
+    }
+    public void options(){
+        telemetry.addData("Pick up ball?", pickUp);
+        telemetry.update();
+        boolean confirmed = false;
+        while(!confirmed){
+            if (gamepad1.a){
+                pickUp = true;
+                telemetry.addData("Pick up ball?: ", pickUp);
+                telemetry.update();
+            }
+            if (gamepad1.b){
+                pickUp = false;
+                telemetry.addData("Pick up ball?: ", pickUp );
+                telemetry.update();
+            }
+            if (gamepad1.left_stick_button && gamepad1.right_stick_button){
+                telemetry.addData("Pick up ball?", pickUp);
+                telemetry.addData("Confirmed!", "");
+                telemetry.update();
+                confirmed = true;
+            }
+        }
+    }
+    public void moveFromWall2 (){
+        setFlywheelPower(1);
+        sweeper.setPower(1);
+        //System.out.println("Sweeper: " + sweeper.getPower());
+        driveTrain.moveLeftNInch(0.6, 8, 10, false);
+        //pause();
+        driveTrain.rotateDegreesPrecision(shootRotation2);
+        //pause();
+        //System.out.println("Sweeper: " + sweeper.getPower());
+        sweeper.setPower(1);
+        //System.out.println("Sweeper: " + sweeper.getPower());
+        conveyor.setPower(0.3);
+        sweeper.setPower(1);
+        sleep(2500);
+    }
+    public void hitCapBall2(){
+        driveTrain.moveBackwardNInch(1, 40, 10, false);
+    }
 }

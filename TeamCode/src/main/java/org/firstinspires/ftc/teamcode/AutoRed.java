@@ -22,12 +22,14 @@ import org.firstinspires.ftc.teamcode.robotutil.VOIColorSensor;
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "AutoRed", group = "Tests")
 public class AutoRed extends LinearOpMode {
     static final int delay = 200;
-    static final int shootRotation = 85;
+    static final int shootRotation = 90;
     static final int capBallRotation = 180;
+    static final int pickUpRotation = -115;
     static boolean REDTEAM = true;
     static final int topSensorID = 0x3c;
     static final int bottomSensorID = 0x44;
-    static final int ramRotation = 20;
+    static final int ramRotation = -135;
+    boolean pickUp = false;
     ModernRoboticsI2cGyro gyro;
     ColorSensor colorSensorTop, colorSensorBottom;
     VOIColorSensor voiColorSensorTop, voiColorSensorBottom;
@@ -39,8 +41,14 @@ public class AutoRed extends LinearOpMode {
     public void runOpMode() {
         System.out.println("Hello world");
         initialize();
+        options();
         waitForStart();
-        lineUpToWall();
+        if (pickUp){
+            pickUpBall();
+            lineUpToWall(75);
+        } else {
+            lineUpToWall(90);
+        }
         drivePushButton();
         drivePushButton2();
         moveFromWall();
@@ -88,10 +96,10 @@ public class AutoRed extends LinearOpMode {
         driveTrain.setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
-    public void lineUpToWall() {
-        driveTrain.moveBackwardNInch(0.7, 90, 10, false);
+    public void lineUpToWall(int distance) {
+        driveTrain.moveForwardNInch(0.7, distance, 10, false);
         //pause();
-        driveTrain.powerAllMotors(-0.3);
+        driveTrain.powerAllMotors(0.3);
         boolean detectColor = false;
         timer.reset();
         while (!detectColor && opModeIsActive()) {
@@ -107,7 +115,7 @@ public class AutoRed extends LinearOpMode {
         }
         //pause();
         // align with wall
-        driveTrain.rotateDegrees((int) (ramRotation * 0.7), true);
+        driveTrain.rotateDegrees((int) (ramRotation * 0.49), false);
 
         //pause();
         // ram into wall to straighten out
@@ -118,8 +126,8 @@ public class AutoRed extends LinearOpMode {
 
     public void drivePushButton() {
         // move backwards to get behind beacon
-        driveTrain.moveBackwardNInch(0.4, 0.3, 10, false);
-        // move forward until beacon detected
+        driveTrain.moveBackwardNInch(0.4, 3, 10, false);
+        // move forward until beacon det|=ected
 
         //pause();
 
@@ -203,22 +211,22 @@ public class AutoRed extends LinearOpMode {
         setFlywheelPower(1);
         sweeper.setPower(1);
         //System.out.println("Sweeper: " + sweeper.getPower());
-        driveTrain.moveLeftNInch(0.6, 8, 10, false);
+        driveTrain.moveLeftNInch(0.6, 6, 10, false);
         //pause();
         driveTrain.rotateDegreesPrecision(shootRotation);
-        driveTrain.moveForwardNInch(1, 2, 2, true);
+        //driveTrain.moveForwardNInch(1, 2, 2, true);
         //pause();
         //System.out.println("Sweeper: " + sweeper.getPower());
         sweeper.setPower(1);
         //System.out.println("Sweeper: " + sweeper.getPower());
-        conveyor.setPower(0.3);
+        conveyor.setPower(0.7);
         sweeper.setPower(1);
-        sleep(2500);
-
+        if (!pickUp) {
+            sleep(2000);
+        } else {
+            sleep(2500);
+        }
     }
-
-
-
     public void coolDown() {
         timer.reset();
         sleep(1000);
@@ -260,9 +268,40 @@ public class AutoRed extends LinearOpMode {
         int initialDirection = gyro.getIntegratedZValue();
         driveTrain.moveBackwardNInch(1, 50, 10, true);
 
-        driveTrain.rotateDegrees((int) (capBallRotation * 0.3), false);
-        driveTrain.rotateDegrees((int)((initialDirection-gyro.getIntegratedZValue())*0.5), false);
-        driveTrain.moveBackwardNInch(1, 7, 10, true);
+//        driveTrain.rotateDegrees((int) (capBallRotation * 0.3), false);
+//        driveTrain.rotateDegrees((int)((initialDirection-gyro.getIntegratedZValue())*0.3), false);
+        driveTrain.rotateDegrees((int)(180*0.3), false);
+        driveTrain.moveForwardNInch(1, 9, 10, true);
+    }
+    public void options(){
+        telemetry.addData("Pick up ball?", pickUp);
+        telemetry.update();
+        boolean confirmed = false;
+        while(!confirmed){
+            if (gamepad1.a){
+                pickUp = true;
+                telemetry.addData("Pick up ball?: ", pickUp);
+                telemetry.update();
+            }
+            if (gamepad1.b){
+                pickUp = false;
+                telemetry.addData("Pick up ball?: ", pickUp );
+                telemetry.update();
+            }
+            if (gamepad1.left_stick_button && gamepad1.right_stick_button){
+                telemetry.addData("Pick up ball?: ", pickUp);
+                telemetry.addData("Confirmed!", "");
+                telemetry.update();
+                confirmed = true;
+            }
+        }
+    }
+    public void pickUpBall(){
+        sweeper.setPower(1);
+        sleep(1500);
+        sweeper.setPower(0);
+        driveTrain.moveLeftNInch(0.5, 10, 5, false);
+        driveTrain.rotateDegreesPrecision(pickUpRotation);
     }
 
 

@@ -118,9 +118,9 @@ public class MecanumDriveTrain {
         while (Math.abs(gyro.getIntegratedZValue() - targetGyro) > 2 && opMode.opModeIsActive()){
             double gyroValue = gyro.getIntegratedZValue();
             if (gyroValue < targetGyro)
-                velocity = Math.max((targetGyro - gyroValue)*0.35/degrees, 0.1);
+                velocity = Math.max((targetGyro - gyroValue)*0.7/degrees, 0.1);
             else
-                velocity = Math.min((targetGyro-gyroValue)*0.35/degrees, -0.1);
+                velocity = Math.min((targetGyro-gyroValue)*0.7/degrees, -0.1);
             startRotation(velocity);
         }
         stopAll();
