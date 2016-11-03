@@ -105,7 +105,7 @@ public class VOIColorSensor {
             if (logMessageTimer.time() > 3){
                 i++;
                 logMessageTimer.reset();
-                if (sensor.red() >= 3)
+                if (sensor.red() >= 2)
                     score++;
             }
         }

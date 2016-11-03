@@ -21,14 +21,16 @@ import static java.lang.Thread.sleep;
 
 public class AutoBlue extends LinearOpMode {
     static int delay = 200;
-    boolean missed = true, pickUp = false;
-    static int shootRotation = 102;
-    static int shootRotation2 = 50;
+    boolean missed = false, pickUp = false, detectRed1 = false;
+    static int shootRotation = 95;
+    static int shootRotation2 = 43;
+    static int sralt = 38;
     static final int capBallRotation = -180;
-    static final int pickUpRotation = 45;
-    static boolean REDTEAM = false;
+    static final int pickUpRotation = 152;
+    static final boolean REDTEAM = false;
     static final int topSensorID = 0x3c;
     static final int bottomSensorID = 0x44;
+    static int betweenBeacon = 28;
     static int angle = 45;
     ModernRoboticsI2cGyro gyro;
     ColorSensor colorSensorTop, colorSensorBottom;
@@ -37,6 +39,7 @@ public class AutoBlue extends LinearOpMode {
     MecanumDriveTrain driveTrain;
     DcMotor frontLeft, frontRight, backLeft, backRight, flywheelRight, flywheelLeft, sweeper, conveyor;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    ElapsedTime timer2 = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     public void runOpMode() {
         System.out.println("Hello world");
         initialize();
@@ -49,11 +52,19 @@ public class AutoBlue extends LinearOpMode {
             lineUpToWall(50);
         }
         drivePushButton();
+        //firstBeaconOptimization();
         drivePushButton2();
-        checkFirst();
-        moveFromWall2();
-        coolDown();
-        hitCapBall2();
+        //checkFirst();
+        if (missed){
+            checkFirst();
+            moveFromWall();
+            coolDown();
+            hitCapBall();
+        }else {
+            moveFromWall2();
+            coolDown();
+            hitCapBall2();
+        }
     }
     public void pause(){
         driveTrain.stopAll();
@@ -121,56 +132,42 @@ public class AutoBlue extends LinearOpMode {
 
     }
     public void drivePushButton() {
-        // move backwards to get behind beacon
-        driveTrain.moveBackwardNInch(0.4,4, 10, false);
-        // move forward until beacon detected
 
+        // move backwards to get behind beacon
+        driveTrain.moveBackwardNInch(0.4, 4, 10, false);
+
+        // move forward until beacon detected
         //pause();
         driveTrain.powerAllMotors(0.2);
         boolean detectColor = false;
-        boolean oppositeColor = false;
         int counter = 0;
         int initialTicks = backRight.getCurrentPosition();
         timer.reset();
-        if (REDTEAM) {
-            while (!detectColor && opModeIsActive()) {
-                if (timer.time() > 30) {
-                    detectColor = voiColorSensorTop.isRed() && !voiColorSensorTop.isBlue();
-                    timer.reset();
-                    if (voiColorSensorTop.isBlue()) oppositeColor = true;
-                    if (oppositeColor && !voiColorSensorTop.isBlue() && !voiColorSensorTop.isRed()) {
-                        counter++;
-                        System.out.println("BAD: " + counter);
-                    }
-
-                    //if (backRight.getCurrentPosition()-initialTicks > 1200) {
-                        //pause();
-                     //   return;
-                    //}
+        timer2.reset();
+        missed = false;
+        while (!detectColor && opModeIsActive()) {
+            System.out.println("In loop");
+            if (timer.time() > 30) {
+                detectColor = voiColorSensorTop.isBlue();
+                timer.reset();
+                if (voiColorSensorTop.isRed() && voiColorSensorTop.isBlue()) detectRed1 = true;
+                if (detectRed1 && !voiColorSensorTop.isBlue() && !voiColorSensorTop.isRed()) {
+                    counter++;
+                    System.out.println("BAD: " + counter);
                 }
-            }
-        } else {
-            while (!detectColor && opModeIsActive()) {
-                System.out.println("In loop");
-                if (timer.time() > 30) {
-                    detectColor = voiColorSensorTop.isBlue();
-                    timer.reset();
-                    if (voiColorSensorTop.isRed() && voiColorSensorTop.isBlue()) oppositeColor = true;
-                    if (oppositeColor && !voiColorSensorTop.isBlue() && !voiColorSensorTop.isRed()) {
-                        counter++;
-                        System.out.println("BAD: " + counter);
-                    }
 //                    if (counter > 50) {
 //                        return;
 //                    }
-                    if (backRight.getCurrentPosition()-initialTicks > 10*driveTrain.TICKS_PER_INCH_FORWARD) {
-                        //pause();
-                        missed = true;
-                        return;
-                    }
+                if (backRight.getCurrentPosition()-initialTicks > 10*driveTrain.TICKS_PER_INCH_FORWARD || timer2.time()>5000) {
+                    //pause();
+                    missed = true;
+                    return;
                 }
             }
         }
+        if (detectRed1)
+            betweenBeacon -= 4;
+
         //pause();
         // move forward to align button pusher with beacon button and push
         driveTrain.moveForwardNInch(0.2,3, 10, false);
@@ -181,9 +178,9 @@ public class AutoBlue extends LinearOpMode {
     }
     public void drivePushButton2() {
         if (!missed) {
-            driveTrain.moveForwardNInch(0.7,32, 10, false);
+            driveTrain.moveForwardNInch(0.7,betweenBeacon, 10, false);
         } else {
-            driveTrain.moveForwardNInch(0.7, 25, 10, false);
+            driveTrain.moveForwardNInch(0.7, betweenBeacon -5, 10, false);
         }
         //pause();
         correctionStrafe();
@@ -202,6 +199,10 @@ public class AutoBlue extends LinearOpMode {
         } else {
             while (!detectColor && opModeIsActive()) {
                 if (timer.time() > 30) {
+                    // determine which side of beacon
+                    if (voiColorSensorTop.isRed()){
+                        shootRotation2 = sralt;
+                    }
                     detectColor = voiColorSensorTop.isBlue();
                     timer.reset();
                 }
@@ -210,9 +211,27 @@ public class AutoBlue extends LinearOpMode {
         //pause();
         correctionStrafe();
         //pause();
-        driveTrain.moveForwardNInch(0.2,3, 10, false);
+        driveTrain.moveForwardNInch(0.2,2, 10, false);
         //pause();
         pushButton();
+    }
+    public void firstBeaconOptimization(){
+        if(voiColorSensorTop.isRed()){
+            driveTrain.stopAll();
+            pushButton();
+            return;
+        }
+        if (voiColorSensorTop.isBlue()){
+            driveTrain.moveForwardNInch(0.3,2,2,false);
+            driveTrain.stopAll();
+            pushButton();
+            return;
+        }
+        driveTrain.powerAllMotors(-0.2);
+        while (opModeIsActive()&&!voiColorSensorTop.isRed()&&!voiColorSensorTop.isBlue()){
+        }
+        firstBeaconOptimization();
+
     }
     public void pushButton(){
         button.setPosition(1);
@@ -299,7 +318,7 @@ public class AutoBlue extends LinearOpMode {
             }
             if (red) {
                 goBackAndPress();
-                shootRotation = 95;
+                shootRotation = 90;
             }else if (white){
                 driveTrain.moveForwardNInch(0.5, 2, 3, false);
             }
@@ -349,7 +368,7 @@ public class AutoBlue extends LinearOpMode {
         sweeper.setPower(1);
         sleep(1500);
         sweeper.setPower(0);
-        driveTrain.moveLeftNInch(0.5, 10, 5, false);
+        driveTrain.moveRightNInch(0.5, 10, 5, false);
         driveTrain.rotateDegreesPrecision(pickUpRotation);
     }
     public void options(){
@@ -377,20 +396,17 @@ public class AutoBlue extends LinearOpMode {
     }
     public void moveFromWall2 (){
         setFlywheelPower(1);
-        sweeper.setPower(1);
-        //System.out.println("Sweeper: " + sweeper.getPower());
-        driveTrain.moveLeftNInch(0.6, 8, 10, false);
+        driveTrain.moveLeftNInch(1, 8, 10, false);
         //pause();
         driveTrain.rotateDegreesPrecision(shootRotation2);
         //pause();
-        //System.out.println("Sweeper: " + sweeper.getPower());
+        driveTrain.moveBackwardNInch(1,18,3,false);
         sweeper.setPower(1);
-        //System.out.println("Sweeper: " + sweeper.getPower());
         conveyor.setPower(0.3);
         sweeper.setPower(1);
         sleep(2500);
     }
     public void hitCapBall2(){
-        driveTrain.moveBackwardNInch(1, 40, 10, false);
+        driveTrain.moveBackwardNInch(1, 36, 10, false);
     }
 }
