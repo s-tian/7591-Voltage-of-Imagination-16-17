@@ -22,7 +22,6 @@ public class Tele extends LinearOpMode {
     DcMotor frontLeft, frontRight, backLeft, backRight, flywheelRight, flywheelLeft, conveyor, sweeper;
     Servo gate, button;
     ModernRoboticsI2cGyro gyro;
-
     @Override
     public void runOpMode() {
         boolean increased = false ,decreased = false;

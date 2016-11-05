@@ -1,0 +1,61 @@
+package org.firstinspires.ftc.teamcode.tasks;
+
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
+
+/**
+ * Created by Howard on 10/15/16.
+ */
+public class ButtonPusherTask extends Thread {
+
+    private Servo servo;
+    private LinearOpMode opMode;
+    private boolean pressing = false;
+    private boolean buttonOut = false;
+    private boolean xPushed = false;
+    private boolean yPushed = false;
+    public volatile boolean running = true;
+
+
+    public ButtonPusherTask(LinearOpMode opMode, Servo servo) {
+        this.servo = servo;
+        this.opMode = opMode;
+    }
+
+    @Override
+    public void run() {
+        ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+        while(opMode.opModeIsActive() && running) {
+            if (timer.time()>500 && pressing){
+                servo.setPosition(0);
+                buttonOut = false;
+                pressing = false;
+            }
+            if (opMode.gamepad1.x) {
+                if (!xPushed && !buttonOut) {
+                    buttonOut = true;
+                    servo.setPosition(1);
+                    timer.reset();
+                    pressing = true;
+                    xPushed = true;
+                }
+            } else {
+                xPushed = false;
+            }
+            if(opMode.gamepad2.y) {
+                servo.setPosition(1);
+                buttonOut = true;
+                pressing = false;
+                yPushed = true;
+            } else if (yPushed) {
+                servo.setPosition(0);
+                buttonOut = false;
+                yPushed = false;
+            }
+
+        }
+    }
+}
