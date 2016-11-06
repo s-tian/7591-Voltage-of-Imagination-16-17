@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.opmodes;
 
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Created by bunnycide on 10/13/16.
  */
 
-@TeleOp(name = "Tele", group = "Drive")
+//@TeleOp(name = "Tele", group = "Drive")
 
 public class Tele extends LinearOpMode {
 
@@ -131,7 +131,7 @@ public class Tele extends LinearOpMode {
                 cDecreased = false;
             }*/
             if (gamepad2.a){
-                flywheelRight.setPower(0.7);
+                setPow(flywheelRight, 0.7);
                 flywheelLeft.setPower(flywheelRight.getPower());
             }
             else if (gamepad2.x){
@@ -144,7 +144,7 @@ public class Tele extends LinearOpMode {
                 timer.reset();
             }
             else if (gamepad2.b){
-                setPow(flywheelRight, 1.0);
+                setPow(flywheelRight, 0.9);
                 flywheelLeft.setPower(flywheelRight.getPower());
             }
             if(gamepad2.dpad_left || gamepad2.dpad_right){
@@ -207,7 +207,7 @@ public class Tele extends LinearOpMode {
 
     }
     public void setPow(DcMotor motor, double power){
-        motor.setPower(power*0.7);
+        motor.setPower(power*0.78);
     }
 
 }

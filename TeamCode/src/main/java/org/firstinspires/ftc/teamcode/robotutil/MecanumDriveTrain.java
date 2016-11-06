@@ -6,9 +6,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.MecanumDrive;
-
 /**
  * Created by Stephen on 9/17/2016.
  */
@@ -35,6 +32,10 @@ public class MecanumDriveTrain {
         this.frontLeft = frontLeft;
         this.frontRight = frontRight;
         this.opMode = opMode;
+        this.backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         reverseMotors();
     }
     public MecanumDriveTrain(DcMotor backLeft, DcMotor backRight, DcMotor frontLeft, DcMotor frontRight, ModernRoboticsI2cGyro gyro, LinearOpMode opMode) {
@@ -156,6 +157,7 @@ public class MecanumDriveTrain {
         moveForwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall);
     }
     public void moveBackwardNInch(double power, double inches, double timeout, boolean detectStall) {
+        System.out.println(inches);
         moveBackwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall);
     }
     public void moveLeftNInch(double power, double inches, double timeout, boolean detectStall) {
@@ -234,6 +236,8 @@ public class MecanumDriveTrain {
         stopAll();
     }
     public void moveBackwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall) {
+        System.out.println("Start " + timeout );
+        System.out.println(backRight.getCurrentPosition());
         double timeOutMS = timeout*1000;
         int targetPosition = backRight.getCurrentPosition() - ticks;
         powerAllMotors(-power);
@@ -242,19 +246,24 @@ public class MecanumDriveTrain {
         boolean startDetectingStall = false;
         while(backRight.getCurrentPosition() > targetPosition && opMode.opModeIsActive() && timer.time() < timeOutMS) {
             if (detectStall) {
-                if (System.currentTimeMillis() - currentTime > 300) {
+                if (System.currentTimeMillis() - currentTime > 500) {
                     startDetectingStall = true;
                     currentTime = System.currentTimeMillis();
                 } else if (startDetectingStall && System.currentTimeMillis() - currentTime > 50) {
                     currentTime = System.currentTimeMillis();
                     if (stalling(true)) {
+                        System.out.println("Stalling " + timeout);
                         stopAll();
                         return;
                     }
                 }
             }
         }
+
+        System.out.println("Normal stop " + timeout);
         stopAll();
+        System.out.println(backRight.getCurrentPosition());
+        System.out.println("End");
     }
     public void getTicks(){
         System.out.println(backRight.getCurrentPosition());
@@ -278,17 +287,24 @@ public class MecanumDriveTrain {
         int ticksFrontRight = Math.abs(frontRight.getCurrentPosition() - initialFrontRight);
         int ticksBackLeft = Math.abs(backLeft.getCurrentPosition() - initialBackLeft);
         int ticksFrontLeft = Math.abs(frontLeft.getCurrentPosition() - initialFrontLeft);
+        boolean BRStall = false;
+        boolean BLStall = false;
+        boolean FRStall = false;
+        boolean FLStall = false;
         int expected = (int) (TICKS_PER_MS_FORWARD*100/2);
 
-        if(!forward)
-            expected = (int) (TICKS_PER_MS_STRAFE*100*0.7);
-
+        if(!forward) {
+            expected = (int) (TICKS_PER_MS_STRAFE * 100 * 0.5);
+        }
         int stallingMotors = 0;
-        if (ticksBackLeft < expected) stallingMotors ++;
-        if (ticksBackRight < expected) stallingMotors ++;
-        if (ticksFrontRight < expected) stallingMotors ++;
-        if (ticksFrontLeft < expected) stallingMotors ++;
+        if (ticksBackLeft < expected) BLStall = true;
+        if (ticksBackRight < expected) BRStall = true;
+        if (ticksFrontRight < expected) FRStall = true;
+        if (ticksFrontLeft < expected) FLStall = true;
+        if (forward){
+            return (BLStall || FLStall) && (BRStall || FRStall);
+        }
+        return (BLStall || BRStall) && (FLStall || FRStall);
 
-        return stallingMotors >= 2;
     }
 }

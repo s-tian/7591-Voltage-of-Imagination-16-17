@@ -30,7 +30,7 @@ public class FlywheelTask extends Thread {
         while(opMode.opModeIsActive() && running) {
 
             if (opMode.gamepad2.a){
-                flywheelRight.setPower(0.7);
+                setPow(flywheelRight, 0.7);
                 flywheelLeft.setPower(flywheelRight.getPower());
             }
             else if (opMode.gamepad2.x){
@@ -52,6 +52,6 @@ public class FlywheelTask extends Thread {
         flywheelLeft.setPower(0);
     }
     private void setPow(DcMotor motor, double power){
-        motor.setPower(power*0.7);
+        motor.setPower(power*0.78);
     }
 }

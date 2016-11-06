@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.opmodes;
 
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -22,7 +22,8 @@ import org.firstinspires.ftc.teamcode.robotutil.VOIColorSensor;
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "AutoRed", group = "Tests")
 public class AutoRed extends LinearOpMode {
     static final int delay = 200;
-    static final int shootRotation = 90;
+    static int shootRotation = 82;
+    static int sralt = 76;
     static final int capBallRotation = 180;
     static final int pickUpRotation = -115;
     static boolean REDTEAM = true;
@@ -41,7 +42,7 @@ public class AutoRed extends LinearOpMode {
     public void runOpMode() {
         System.out.println("Hello world");
         initialize();
-        options();
+        //options();
         waitForStart();
         if (pickUp){
             pickUpBall();
@@ -126,7 +127,7 @@ public class AutoRed extends LinearOpMode {
 
     public void drivePushButton() {
         // move backwards to get behind beacon
-        driveTrain.moveBackwardNInch(0.4, 3, 10, false);
+        driveTrain.moveBackwardNInch(1, 6, 10, false);
         // move forward until beacon det|=ected
 
         //pause();
@@ -157,7 +158,7 @@ public class AutoRed extends LinearOpMode {
         // move forward to align button pusher with beacon button and push
         driveTrain.moveForwardNInch(0.2, 2, 10, false);
         //pause();
-        correctionStrafe();
+        correctionStrafe(0.5);
         //pause();
         pushButton();
     }
@@ -165,39 +166,34 @@ public class AutoRed extends LinearOpMode {
     public void drivePushButton2() {
         driveTrain.moveForwardNInch(0.7, 32, 10, false);
         //pause();
-        correctionStrafe();
+        correctionStrafe(0.5);
         boolean detectColor = false;
         driveTrain.powerAllMotors(0.2);
         timer.reset();
         int counter = 0;
 
-        if (REDTEAM) {
-            while (!detectColor && opModeIsActive()) {
-                if (timer.time() > 30) {
-                    int red = colorSensorBottom.red();
-                    int green = colorSensorBottom.green();
-                    int blue = colorSensorBottom.blue();
-                    telemetry.addData("ColorWall: ", red + " " + green + " " + blue);
-                    telemetry.addData("Red: ", voiColorSensorBottom.isRed());
-                    telemetry.addData("Blue: ", voiColorSensorBottom.isBlue());
-                    updateTelemetry(telemetry);
-                    detectColor = voiColorSensorTop.isRed() && !voiColorSensorTop.isBlue();
-                    timer.reset();
-                }
-            }
-        } else {
-            while (!detectColor && opModeIsActive()) {
-                if (timer.time() > 30) {
-                    detectColor = voiColorSensorTop.isBlue();
-                    timer.reset();
+        while (!detectColor && opModeIsActive()) {
+            if (timer.time() > 30) {
+                int red = colorSensorBottom.red();
+                int green = colorSensorBottom.green();
+                int blue = colorSensorBottom.blue();
+                telemetry.addData("ColorWall: ", red + " " + green + " " + blue);
+                telemetry.addData("Red: ", voiColorSensorBottom.isRed());
+                telemetry.addData("Blue: ", voiColorSensorBottom.isBlue());
+                updateTelemetry(telemetry);
+                detectColor = voiColorSensorTop.isRed() && !voiColorSensorTop.isBlue();
+                timer.reset();
+                if (voiColorSensorBottom.isBlue()){
+                    shootRotation = sralt;
                 }
             }
         }
+
         //pause();
-        correctionStrafe();
         //pause();
-        driveTrain.moveForwardNInch(0.2, 1.5, 10, false);
+        driveTrain.moveForwardNInch(0.2, 2, 10, false);
         //pause();
+        correctionStrafe(0.5);
         pushButton();
     }
 
@@ -254,24 +250,24 @@ public class AutoRed extends LinearOpMode {
         //pause();
         driveTrain.moveForwardNInch(0.3, 3, 10, false);
         //pause();
-        correctionStrafe();
+        correctionStrafe(0.5);
         //pause();
         pushButton();
         //pause();
     }
 
-    public void correctionStrafe() {
-        driveTrain.moveRightNInch(0.2, 5, 0.5, false);
+    public void correctionStrafe(double seconds) {
+        driveTrain.moveRightNInch(0.2, 5, seconds, false);
     }
 
     public void hitCapBall() {
-        int initialDirection = gyro.getIntegratedZValue();
-        driveTrain.moveBackwardNInch(1, 50, 10, true);
-
+        driveTrain.moveBackwardNInch(1, 50, 10.2, true);
 //        driveTrain.rotateDegrees((int) (capBallRotation * 0.3), false);
 //        driveTrain.rotateDegrees((int)((initialDirection-gyro.getIntegratedZValue())*0.3), false);
-        driveTrain.rotateDegrees((int)(180*0.3), false);
-        driveTrain.moveForwardNInch(1, 9, 10, true);
+        driveTrain.rotateDegrees(300, false);
+        driveTrain.stopAll();
+        sleep(100);
+        driveTrain.moveBackwardNInch(1, 20, 11.3, true);
     }
     public void options(){
         telemetry.addData("Pick up ball?", pickUp);
