@@ -30,6 +30,7 @@ public class AutoRed extends LinearOpMode {
     static final int topSensorID = 0x3c;
     static final int bottomSensorID = 0x44;
     static final int ramRotation = -135;
+    static double shootPower = 0.8;
     boolean pickUp = false;
     ModernRoboticsI2cGyro gyro;
     ColorSensor colorSensorTop, colorSensorBottom;
@@ -42,7 +43,7 @@ public class AutoRed extends LinearOpMode {
     public void runOpMode() {
         System.out.println("Hello world");
         initialize();
-        //options();
+        options();
         waitForStart();
         if (pickUp){
             pickUpBall();
@@ -127,7 +128,7 @@ public class AutoRed extends LinearOpMode {
 
     public void drivePushButton() {
         // move backwards to get behind beacon
-        driveTrain.moveBackwardNInch(1, 6, 10, false);
+        driveTrain.moveBackwardNInch(0.5, 6, 10, false);
         // move forward until beacon det|=ected
 
         //pause();
@@ -204,7 +205,7 @@ public class AutoRed extends LinearOpMode {
     }
 
     public void moveFromWall() {
-        setFlywheelPower(1);
+        setFlywheelPower(shootPower);
         sweeper.setPower(1);
         //System.out.println("Sweeper: " + sweeper.getPower());
         driveTrain.moveLeftNInch(0.6, 6, 10, false);
@@ -273,19 +274,37 @@ public class AutoRed extends LinearOpMode {
         telemetry.addData("Pick up ball?", pickUp);
         telemetry.update();
         boolean confirmed = false;
+        boolean dPadUpPressed = false;
+        boolean dPadDownPressed = false;
         while(!confirmed){
             if (gamepad1.a){
                 pickUp = true;
-                telemetry.addData("Pick up ball?: ", pickUp);
-                telemetry.update();
             }
             if (gamepad1.b){
                 pickUp = false;
-                telemetry.addData("Pick up ball?: ", pickUp );
-                telemetry.update();
+
             }
+            if (gamepad1.dpad_down&& !dPadDownPressed && shootPower > 0){
+                dPadDownPressed = true;
+                shootPower -= 0.01;
+            }
+            if (gamepad1.dpad_up && !dPadUpPressed && shootPower < 1){
+                dPadUpPressed = true;
+                shootPower += 0.01;
+            }
+            if (!gamepad1.dpad_down){
+                dPadDownPressed = false;
+            }
+            if (!gamepad1.dpad_up){
+                dPadUpPressed = false;
+            }
+            telemetry.addData("Pick up ball?: ", pickUp );
+            telemetry.addData("Shoot power", shootPower);
+            telemetry.update();
+
             if (gamepad1.left_stick_button && gamepad1.right_stick_button){
-                telemetry.addData("Pick up ball?: ", pickUp);
+                telemetry.addData("Shoot power", shootPower);
+                telemetry.addData("Pick up ball?", pickUp);
                 telemetry.addData("Confirmed!", "");
                 telemetry.update();
                 confirmed = true;

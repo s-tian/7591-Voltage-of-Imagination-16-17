@@ -23,15 +23,16 @@ public class AutoBlue extends LinearOpMode {
     static int delay = 200;
     boolean missed = false, pickUp = false, detectRed1 = false;
     static int shootRotation = 95;
-    static int shootRotation2 = 43;
-    static int sralt = 38;
+    static int shootRotation2 = 40                    ;
+    static int sralt = 35;
     static final int capBallRotation = -180;
     static final int pickUpRotation = 152;
     static final boolean REDTEAM = false;
     static final int topSensorID = 0x3c;
     static final int bottomSensorID = 0x44;
     static int betweenBeacon = 28;
-    static int angle = 45;
+    static int angle = 40;
+    static double shootPower = 0.8;
     ModernRoboticsI2cGyro gyro;
     ColorSensor colorSensorTop, colorSensorBottom;
     VOIColorSensor voiColorSensorTop, voiColorSensorBottom;
@@ -158,7 +159,7 @@ public class AutoBlue extends LinearOpMode {
 //                    if (counter > 50) {
 //                        return;
 //                    }
-                if (backRight.getCurrentPosition()-initialTicks > 10*driveTrain.TICKS_PER_INCH_FORWARD || timer2.time()>5000) {
+                if (backRight.getCurrentPosition()-initialTicks > 20*driveTrain.TICKS_PER_INCH_FORWARD || timer2.time()>5000) {
                     //pause();
                     missed = true;
                     return;
@@ -180,7 +181,7 @@ public class AutoBlue extends LinearOpMode {
         if (!missed) {
             driveTrain.moveForwardNInch(0.7,betweenBeacon, 10, false);
         } else {
-            driveTrain.moveForwardNInch(0.7, betweenBeacon -5, 10, false);
+            driveTrain.moveForwardNInch(0.7, betweenBeacon -15, 10, false);
         }
         //pause();
         correctionStrafe();
@@ -240,7 +241,7 @@ public class AutoBlue extends LinearOpMode {
         sleep(500);
     }
     public void moveFromWall(){
-        setFlywheelPower(1);
+        setFlywheelPower(shootPower);
         sweeper.setPower(1);
         //System.out.println("Sweeper: " + sweeper.getPower());
         driveTrain.moveLeftNInch(0.6, 8, 10, false);
@@ -359,7 +360,6 @@ public class AutoBlue extends LinearOpMode {
     public void hitCapBall(){
         int initialDirection = gyro.getIntegratedZValue();
         driveTrain.moveBackwardNInch(1, 50, 10, true);
-
         driveTrain.rotateDegrees((int) (capBallRotation * 0.3), false);
         driveTrain.rotateDegrees((int)((initialDirection-gyro.getIntegratedZValue())*0.25), false);
         driveTrain.moveBackwardNInch(1, 18, 10, true);
@@ -375,27 +375,45 @@ public class AutoBlue extends LinearOpMode {
         telemetry.addData("Pick up ball?", pickUp);
         telemetry.update();
         boolean confirmed = false;
+        boolean dPadUpPressed = false;
+        boolean dPadDownPressed = false;
         while(!confirmed){
             if (gamepad1.a){
                 pickUp = true;
-                telemetry.addData("Pick up ball?: ", pickUp);
-                telemetry.update();
             }
             if (gamepad1.b){
                 pickUp = false;
-                telemetry.addData("Pick up ball?: ", pickUp );
-                telemetry.update();
             }
+            if (gamepad1.dpad_down&& !dPadDownPressed && shootPower > 0){
+                dPadDownPressed = true;
+                shootPower -= 0.01;
+            }
+            if (gamepad1.dpad_up && !dPadUpPressed && shootPower < 1){
+                dPadUpPressed = true;
+                shootPower += 0.01;
+            }
+            if (!gamepad1.dpad_down){
+                dPadDownPressed = false;
+            }
+            if (!gamepad1.dpad_up){
+                dPadUpPressed = false;
+            }
+            telemetry.addData("Shoot power", shootPower);
+            telemetry.addData("Pick up ball?", pickUp);
+            telemetry.update();
+
             if (gamepad1.left_stick_button && gamepad1.right_stick_button){
+                telemetry.addData("Shoot power", shootPower);
                 telemetry.addData("Pick up ball?", pickUp);
                 telemetry.addData("Confirmed!", "");
                 telemetry.update();
                 confirmed = true;
             }
+
         }
     }
     public void moveFromWall2 (){
-        setFlywheelPower(1);
+        setFlywheelPower(shootPower);
         driveTrain.moveLeftNInch(1, 8, 10, false);
         //pause();
         driveTrain.rotateDegreesPrecision(shootRotation2);
