@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
+import com.qualcomm.hardware.adafruit.AdafruitBNO055IMU;
+import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -11,6 +13,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
 import org.firstinspires.ftc.teamcode.robotutil.VOIColorSensor;
+import org.firstinspires.ftc.teamcode.robotutil.VOIImu;
 
 import static java.lang.Thread.sleep;
 
@@ -33,10 +36,12 @@ public class AutoBlue extends LinearOpMode {
     static int betweenBeacon = 28;
     static int angle = 40;
     static double shootPower = 0.8;
-    ModernRoboticsI2cGyro gyro;
+    //ModernRoboticsI2cGyro gyro;
     ColorSensor colorSensorTop, colorSensorBottom;
     VOIColorSensor voiColorSensorTop, voiColorSensorBottom;
     Servo gate, button;
+    VOIImu imu;
+    BNO055IMU adaImu;
     MecanumDriveTrain driveTrain;
     DcMotor frontLeft, frontRight, backLeft, backRight, flywheelRight, flywheelLeft, sweeper, conveyor;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -96,35 +101,44 @@ public class AutoBlue extends LinearOpMode {
         voiColorSensorBottom = new VOIColorSensor(colorSensorBottom, this);
         gate = hardwareMap.servo.get("gate");
         button = hardwareMap.servo.get("button");
-        gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
-        gyro.calibrate();
-        gyro.resetZAxisIntegrator(); //address is 0x20
+//        gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
+//        gyro.calibrate();
+//        gyro.resetZAxisIntegrator(); //address is 0x20
+        adaImu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu = new VOIImu(adaImu);
         button.setPosition(0);
         gate.setPosition(0.4);
-        driveTrain = new MecanumDriveTrain(backLeft,backRight,frontLeft,frontRight,gyro,this);
+        driveTrain = new MecanumDriveTrain(backLeft,backRight,frontLeft,frontRight,imu,this);
         driveTrain.setEncoderMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         driveTrain.setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
     }
     public void lineUpToWall(int distance) {
-        driveTrain.moveForwardNInch(0.7, distance, 10, false);
+        driveTrain.moveForwardNInch(0.3, 5, 10, false);
+        driveTrain.moveForwardNInch(0.7, distance-5, 10, false);
         //pause();
         driveTrain.powerAllMotors(0.3);
         boolean detectColor = false;
         timer.reset();
+        int initialTicks = frontRight.getCurrentPosition();
         while (!detectColor && opModeIsActive()) {
-            int red = colorSensorBottom.red();
-            int green = colorSensorBottom.green();
-            int blue = colorSensorBottom.blue();
             if (timer.time() > 30) {
                 detectColor = voiColorSensorBottom.isWhite();
-                telemetry.addData("Color: ", red + " " + green + " " + blue);
-                updateTelemetry(telemetry);
+
                 timer.reset();
+                if (frontRight.getCurrentPosition() - initialTicks > 20 * driveTrain.TICKS_PER_INCH_FORWARD ){
+                    driveTrain.moveBackwardNInch(0.5, 10, 8, false);
+
+                    break;
+                }
             }
         }
         //pause();
         // align with wall
-        driveTrain.rotateDegrees((int) (-angle * 0.7), true);
+        if (detectColor)
+            driveTrain.rotateDegrees((int) (-angle * 0.7), true);
+        else
+            driveTrain.rotateDegrees(-90, true);
 
         //pause();
         // ram into wall to straighten out
@@ -171,7 +185,6 @@ public class AutoBlue extends LinearOpMode {
 
         //pause();
         // move forward to align button pusher with beacon button and push
-        driveTrain.moveForwardNInch(0.2,3, 10, false);
         //pause();
         correctionStrafe();
         //pause();
@@ -212,7 +225,6 @@ public class AutoBlue extends LinearOpMode {
         //pause();
         correctionStrafe();
         //pause();
-        driveTrain.moveForwardNInch(0.2,2, 10, false);
         //pause();
         pushButton();
     }
@@ -358,10 +370,10 @@ public class AutoBlue extends LinearOpMode {
         driveTrain.moveRightNInch(0.2,5,0.5, false);
     }
     public void hitCapBall(){
-        int initialDirection = gyro.getIntegratedZValue();
+        int initialDirection = imu.getAngle();
         driveTrain.moveBackwardNInch(1, 50, 10, true);
         driveTrain.rotateDegrees((int) (capBallRotation * 0.3), false);
-        driveTrain.rotateDegrees((int)((initialDirection-gyro.getIntegratedZValue())*0.25), false);
+        driveTrain.rotateDegrees((int)((initialDirection-imu.getAngle())*0.25), false);
         driveTrain.moveBackwardNInch(1, 18, 10, true);
     }
     public void pickUpBall(){

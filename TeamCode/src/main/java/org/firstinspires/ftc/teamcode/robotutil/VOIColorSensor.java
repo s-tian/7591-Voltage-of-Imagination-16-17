@@ -90,8 +90,9 @@ public class VOIColorSensor {
             if (logMessageTimer.time() > 3){
                 i++;
                 logMessageTimer.reset();
-                if (sensor.blue() - sensor.red() > 2)
+                if (sensor.blue() - sensor.red() > 2) {
                     score++;
+                }
             }
         }
         return score >= 5;

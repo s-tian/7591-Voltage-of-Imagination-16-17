@@ -18,9 +18,9 @@ import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
  * Created by bunnycide on 11/4/16.
  */
 
-@TeleOp(name="Threaded teleop", group = "Drive")
+//@TeleOp(name="Constant Direction", group = "Drive")
 
-public class ThreadedTeleOp extends LinearOpMode {
+public class ConstantDirection extends LinearOpMode {
 
     DcMotor frontLeft, frontRight, backLeft, backRight, flywheelRight, flywheelLeft, conveyor, sweeper;
     Servo gate, button;
@@ -43,7 +43,6 @@ public class ThreadedTeleOp extends LinearOpMode {
         buttonPusherTask.start();
         flywheelTask.start();
         intakeTask.start();
-        DriveTrainTask.zeroAngle = gyro.getIntegratedZValue()*Math.PI/180;
 
         while(opModeIsActive()) {
             //Timer for 2 minute teleop period
@@ -67,7 +66,7 @@ public class ThreadedTeleOp extends LinearOpMode {
                 //telemetry.addData("time elapsed", (int) (elapsed / 1000000000L));
             }
             if (gamepad1.left_stick_button && gamepad1.right_stick_button){
-                DriveTrainTask.zeroAngle = gyro.getIntegratedZValue()*Math.PI/180;
+                DriveTrainTask.zeroAngle = gyro.getIntegratedZValue();
             }
 
             //telemetry.update();
@@ -108,3 +107,4 @@ public class ThreadedTeleOp extends LinearOpMode {
 
     }
 }
+

@@ -23,7 +23,8 @@ public class MecanumDriveTrain {
     public ElapsedTime timer;
     static final double POWER_RATIO = 0.78;
     public DcMotor backLeft, backRight, frontLeft, frontRight;
-    ModernRoboticsI2cGyro gyro;
+    //ModernRoboticsI2cGyro gyro;
+    VOIImu imu;
     LinearOpMode opMode;
     public MecanumDriveTrain(DcMotor backLeft, DcMotor backRight, DcMotor frontLeft, DcMotor frontRight, LinearOpMode opMode) {
         timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -36,6 +37,7 @@ public class MecanumDriveTrain {
         this.backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         this.frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         this.frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         reverseMotors();
     }
     public MecanumDriveTrain(DcMotor backLeft, DcMotor backRight, DcMotor frontLeft, DcMotor frontRight, ModernRoboticsI2cGyro gyro, LinearOpMode opMode) {
@@ -49,7 +51,22 @@ public class MecanumDriveTrain {
         this.frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         this.frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        this.gyro = gyro;
+        //this.gyro = gyro;
+        this.opMode = opMode;
+        reverseMotors();
+    }
+    public MecanumDriveTrain(DcMotor backLeft, DcMotor backRight, DcMotor frontLeft, DcMotor frontRight, VOIImu imu, LinearOpMode opMode) {
+        timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+        this.backLeft = backLeft;
+        this.backRight = backRight;
+        this.frontLeft = frontLeft;
+        this.frontRight = frontRight;
+        this.backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        this.frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        this.imu = imu;
         this.opMode = opMode;
         reverseMotors();
     }
@@ -114,40 +131,40 @@ public class MecanumDriveTrain {
     public void rotateDegreesPrecision(int degrees){
         // Clockwise: degrees > 0
         // CounterClockwise: degrees < 0;
-        double velocity, targetGyro = gyro.getIntegratedZValue() + degrees;
+        double velocity, targetGyro = addAngles(imu.getAngle(), degrees);
         rotateDegrees(degrees, true);
-        while (Math.abs(gyro.getIntegratedZValue() - targetGyro) > 2 && opMode.opModeIsActive()){
-            double gyroValue = gyro.getIntegratedZValue();
-            if (gyroValue < targetGyro)
-                velocity = Math.max((targetGyro - gyroValue)*0.7/degrees, 0.1);
+        while (Math.abs(imu.getAngle() - targetGyro) > 2 && opMode.opModeIsActive()){
+            double gyroValue = imu.getAngle();
+            if (subtractAngles(targetGyro, gyroValue) > 0)
+                velocity = Math.max(subtractAngles(targetGyro, gyroValue)*0.7/degrees, 0.1);
             else
-                velocity = Math.min((targetGyro-gyroValue)*0.7/degrees, -0.1);
+                velocity = Math.min(subtractAngles(targetGyro, gyroValue)*0.7/degrees, -0.1);
             startRotation(velocity);
         }
         stopAll();
-        System.out.println(gyro.getIntegratedZValue());
+        System.out.println(imu.getAngle());
     }
     public void rotateDegrees(int degrees, boolean slowdown){
-        double gyroValue = gyro.getIntegratedZValue();
-        int targetGyro = gyro.getIntegratedZValue() + degrees;
+        double gyroValue = imu.getAngle();
+        int targetGyro = addAngles(imu.getAngle(), degrees);
         double velocity;
         timer.reset();
         if (degrees < 0){
             startRotation(-1);
-            while (targetGyro < gyroValue && opMode.opModeIsActive()) {
-                gyroValue = gyro.getIntegratedZValue();
+            while (Math.abs(subtractAngles(targetGyro, gyroValue)) > 2 && opMode.opModeIsActive()) {
+                gyroValue = imu.getAngle();
                 if (slowdown) {
-                    velocity = Math.min((targetGyro - gyroValue) * 0.35 / degrees, -0.2);
+                    velocity = Math.min(subtractAngles(targetGyro, gyroValue) * 0.35 / degrees, -0.2);
                     startRotation(velocity);
                 }
             }
         }
         else{
             startRotation(1);
-            while (gyroValue < targetGyro && opMode.opModeIsActive()){
-                gyroValue = gyro.getIntegratedZValue();
+            while (Math.abs(subtractAngles(targetGyro, imu.getAngle())) > 2 && opMode.opModeIsActive()){
+                gyroValue = imu.getAngle();
                 if (slowdown){
-                    velocity = Math.max((targetGyro - gyroValue)*0.35/degrees, 0.2);
+                    velocity = Math.max(subtractAngles(targetGyro, imu.getAngle())*0.35/degrees, 0.2);
                     startRotation(velocity);
                 }
             }
@@ -276,14 +293,15 @@ public class MecanumDriveTrain {
         }
         stopAll();
     }
-    public boolean stalling(boolean forward){
+    public boolean stalling(boolean forward) {
         int initialBackRight = backRight.getCurrentPosition();
         int initialFrontRight = frontRight.getCurrentPosition();
         int initialBackLeft = backLeft.getCurrentPosition();
         int initialFrontLeft = frontLeft.getCurrentPosition();
         long currentTime = System.currentTimeMillis();
-        while ((System.currentTimeMillis() - currentTime) < 100 && opMode.opModeIsActive()){}
-        int ticksBackRight = Math.abs(backRight.getCurrentPosition()-initialBackRight);
+        while ((System.currentTimeMillis() - currentTime) < 100 && opMode.opModeIsActive()) {
+        }
+        int ticksBackRight = Math.abs(backRight.getCurrentPosition() - initialBackRight);
         int ticksFrontRight = Math.abs(frontRight.getCurrentPosition() - initialFrontRight);
         int ticksBackLeft = Math.abs(backLeft.getCurrentPosition() - initialBackLeft);
         int ticksFrontLeft = Math.abs(frontLeft.getCurrentPosition() - initialFrontLeft);
@@ -291,9 +309,9 @@ public class MecanumDriveTrain {
         boolean BLStall = false;
         boolean FRStall = false;
         boolean FLStall = false;
-        int expected = (int) (TICKS_PER_MS_FORWARD*100/2);
+        int expected = (int) (TICKS_PER_MS_FORWARD * 100 / 2);
 
-        if(!forward) {
+        if (!forward) {
             expected = (int) (TICKS_PER_MS_STRAFE * 100 * 0.5);
         }
         int stallingMotors = 0;
@@ -301,10 +319,28 @@ public class MecanumDriveTrain {
         if (ticksBackRight < expected) BRStall = true;
         if (ticksFrontRight < expected) FRStall = true;
         if (ticksFrontLeft < expected) FLStall = true;
-        if (forward){
+        if (forward) {
             return (BLStall || FLStall) && (BRStall || FRStall);
         }
         return (BLStall || BRStall) && (FLStall || FRStall);
 
+    }
+    public int addAngles(int angle1, int angle2){
+        int sum = (angle1 + angle2)%360;
+        if (sum >= 180){
+            sum -= 360;
+        } else if (sum <= -180){
+            sum += 360;
+        }
+        return sum;
+    }
+    public int subtractAngles(double angle1, double angle2){
+        double difference = angle1 - angle2;
+        if (difference >= 180) {
+            difference = 360 - difference;
+        } else if (difference <= -180){
+            difference =  -difference - 360;
+        }
+        return (int)difference;
     }
 }

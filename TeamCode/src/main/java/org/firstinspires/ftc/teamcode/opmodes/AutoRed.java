@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
+import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -11,9 +12,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
 import org.firstinspires.ftc.teamcode.robotutil.VOIColorSensor;
-
-
-
+import org.firstinspires.ftc.teamcode.robotutil.VOIImu;
+import org.firstinspires.ftc.teamcode.tasks.DriveTrainTask;
 
 
 /**
@@ -32,7 +32,9 @@ public class AutoRed extends LinearOpMode {
     static final int ramRotation = -135;
     static double shootPower = 0.8;
     boolean pickUp = false;
-    ModernRoboticsI2cGyro gyro;
+    // ModernRoboticsI2cGyro gyro;
+    BNO055IMU adaImu;
+    VOIImu imu;
     ColorSensor colorSensorTop, colorSensorBottom;
     VOIColorSensor voiColorSensorTop, voiColorSensorBottom;
     Servo gate, button;
@@ -88,12 +90,14 @@ public class AutoRed extends LinearOpMode {
         voiColorSensorBottom = new VOIColorSensor(colorSensorBottom, this);
         gate = hardwareMap.servo.get("gate");
         button = hardwareMap.servo.get("button");
-        gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
-        gyro.calibrate();
-        gyro.resetZAxisIntegrator(); //address is 0x20
+        //gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
+        //gyro.calibrate();
+        //gyro.resetZAxisIntegrator(); //address is 0x20
+        adaImu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu = new VOIImu(adaImu);
         button.setPosition(0);
         gate.setPosition(0.4);
-        driveTrain = new MecanumDriveTrain(backLeft, backRight, frontLeft, frontRight, gyro, this);
+        driveTrain = new MecanumDriveTrain(backLeft, backRight, frontLeft, frontRight, imu, this);
         driveTrain.setEncoderMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         driveTrain.setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
@@ -157,7 +161,6 @@ public class AutoRed extends LinearOpMode {
         }
         //pause();
         // move forward to align button pusher with beacon button and push
-        driveTrain.moveForwardNInch(0.2, 2, 10, false);
         //pause();
         correctionStrafe(0.5);
         //pause();
@@ -192,7 +195,6 @@ public class AutoRed extends LinearOpMode {
 
         //pause();
         //pause();
-        driveTrain.moveForwardNInch(0.2, 2, 10, false);
         //pause();
         correctionStrafe(0.5);
         pushButton();

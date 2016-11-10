@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.Tests;
 
+import com.qualcomm.hardware.adafruit.AdafruitBNO055IMU;
+import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -9,6 +11,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
 import org.firstinspires.ftc.teamcode.robotutil.VOIColorSensor;
+import org.firstinspires.ftc.teamcode.robotutil.VOIImu;
 
 /**
  * Created by Howard on 10/23/16.
@@ -18,12 +21,13 @@ import org.firstinspires.ftc.teamcode.robotutil.VOIColorSensor;
 public class DriveTest extends LinearOpMode {
     MecanumDriveTrain driveTrain;
     DcMotor frontLeft, frontRight, backLeft, backRight, sweeper;
-
+    VOIImu imu;
+    BNO055IMU adaImu;
     @Override
     public void runOpMode() throws InterruptedException {
         initialize();
         waitForStart();
-        driveTrain.moveBackwardTicksWithEncoders(0.5,2000, 10, false);
+        driveTrain.rotateDegrees(90, true);
 
     }
     public void initialize(){
@@ -32,8 +36,11 @@ public class DriveTest extends LinearOpMode {
         backLeft = hardwareMap.dcMotor.get("backLeft");
         backRight = hardwareMap.dcMotor.get("backRight");
         sweeper = hardwareMap.dcMotor.get("sweeper");
+        adaImu = hardwareMap.get(BNO055IMU.class, "imu");
         sweeper.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        driveTrain = new MecanumDriveTrain(backLeft, backRight, frontLeft, frontRight, this);
+
+        imu = new VOIImu(adaImu);
+        driveTrain = new MecanumDriveTrain(backLeft, backRight, frontLeft, frontRight,imu, this);
         driveTrain.setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
     public void testTicks(){

@@ -29,11 +29,6 @@ public class ButtonPusherTask extends Thread {
     public void run() {
         ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         while(opMode.opModeIsActive() && running) {
-            if (timer.time()>500 && pressing){
-                servo.setPosition(0);
-                buttonOut = false;
-                pressing = false;
-            }
             if (opMode.gamepad1.x) {
                 if (!xPushed && !buttonOut) {
                     buttonOut = true;
@@ -44,6 +39,8 @@ public class ButtonPusherTask extends Thread {
                 }
             } else {
                 xPushed = false;
+                buttonOut = false;
+                servo.setPosition(0);
             }
             if(opMode.gamepad2.y) {
                 servo.setPosition(1);
