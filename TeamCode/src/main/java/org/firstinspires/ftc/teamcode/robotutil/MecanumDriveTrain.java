@@ -122,18 +122,18 @@ public class MecanumDriveTrain {
         setMotorPower(frontLeft, -power);
         setMotorPower(frontRight, power);
     }
-    public void strafeRight(double power){
+    public void strafeRight(double power) {
         setMotorPower(backRight, power);
         setMotorPower(backLeft, -power);
         setMotorPower(frontLeft, power);
         setMotorPower(frontRight, -power);
     }
-    public void rotateDegreesPrecision(int degrees){
+    public void rotateDegreesPrecision(int degrees) {
         // Clockwise: degrees > 0
         // CounterClockwise: degrees < 0;
         double velocity, targetGyro = addAngles(imu.getAngle(), degrees);
         rotateDegrees(degrees, true);
-        while (Math.abs(imu.getAngle() - targetGyro) > 2 && opMode.opModeIsActive()){
+        while (Math.abs(subtractAngles(imu.getAngle(), targetGyro))> 2 && opMode.opModeIsActive()){
             double gyroValue = imu.getAngle();
             if (subtractAngles(targetGyro, gyroValue) > 0)
                 velocity = Math.max(subtractAngles(targetGyro, gyroValue)*0.7/degrees, 0.1);
@@ -144,7 +144,7 @@ public class MecanumDriveTrain {
         stopAll();
         System.out.println(imu.getAngle());
     }
-    public void rotateDegrees(int degrees, boolean slowdown){
+    public void rotateDegrees(int degrees, boolean slowdown) {
         double gyroValue = imu.getAngle();
         int targetGyro = addAngles(imu.getAngle(), degrees);
         double velocity;
@@ -154,7 +154,7 @@ public class MecanumDriveTrain {
             while (Math.abs(subtractAngles(targetGyro, gyroValue)) > 2 && opMode.opModeIsActive()) {
                 gyroValue = imu.getAngle();
                 if (slowdown) {
-                    velocity = Math.min(subtractAngles(targetGyro, gyroValue) * 0.35 / degrees, -0.2);
+                    velocity = Math.min(subtractAngles(targetGyro, gyroValue, false) * 0.35 / degrees, -0.2);
                     startRotation(velocity);
                 }
             }
@@ -164,7 +164,7 @@ public class MecanumDriveTrain {
             while (Math.abs(subtractAngles(targetGyro, imu.getAngle())) > 2 && opMode.opModeIsActive()){
                 gyroValue = imu.getAngle();
                 if (slowdown){
-                    velocity = Math.max(subtractAngles(targetGyro, imu.getAngle())*0.35/degrees, 0.2);
+                    velocity = Math.max(subtractAngles(targetGyro, imu.getAngle(), true)*0.35/degrees, 0.2);
                     startRotation(velocity);
                 }
             }
@@ -335,12 +335,37 @@ public class MecanumDriveTrain {
         return sum;
     }
     public int subtractAngles(double angle1, double angle2){
-        double difference = angle1 - angle2;
-        if (difference >= 180) {
-            difference = 360 - difference;
-        } else if (difference <= -180){
-            difference =  -difference - 360;
+        if (angle1 < 0) {
+            angle1 += 360;
         }
-        return (int)difference;
+        if (angle2 < 0) {
+            angle2 += 360;
+        }
+        int diff1 = (int)(angle1 - angle2);
+        int diff2 = diff1 + 360;
+        int diff3 = diff1 - 360;
+        if (Math.abs(diff1) <= Math.abs(diff2) && Math.abs(diff1) <= Math.abs(diff3)){
+            return diff1;
+        } else if (Math.abs(diff2) < Math.abs(diff3)){
+            return diff2;
+        }
+        return diff3;
+    }
+
+    public int subtractAngles(double angle1, double angle2, boolean clockwise) {
+        // angle1 - angle2
+        if (angle1 < 0) {
+            angle1 += 360;
+        }
+        if (angle2 < 0) {
+            angle2 += 360;
+        }
+        if (clockwise && angle1 < angle2) {
+            angle1 += 360;
+        } else if (!clockwise && angle1 > angle2) {
+            angle1 -= 360;
+        }
+        return (int)(angle1 - angle2);
+
     }
 }
