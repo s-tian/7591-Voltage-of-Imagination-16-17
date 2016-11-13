@@ -31,7 +31,11 @@ public class VOIImu{
     }
     public int getAngle(){
         angles = adafruit.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
-        return -(int)AngleUnit.DEGREES.normalize(AngleUnit.DEGREES.fromUnit(angles.angleUnit, angles.firstAngle));
+        int angle = (int)AngleUnit.DEGREES.normalize(AngleUnit.DEGREES.fromUnit(angles.angleUnit, angles.firstAngle));
+        return angle;
+    }
+    public double getRadians(){
+        return getAngle()*Math.PI/180;
     }
 
 }

@@ -18,7 +18,8 @@ public class DriveTrainTask extends Thread {
     public volatile boolean running = true;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     static double joy1X, joy1Y, joy2X;
-    public static double zeroAngle, joyStickAngle, gyroAngle;
+    public int joyStickFactor = 1;
+    public double zeroAngle, joyStickAngle, gyroAngle;
     public DriveTrainTask(LinearOpMode opMode, DcMotor frontLeft, DcMotor frontRight, DcMotor backLeft, DcMotor backRight) {
         this.frontLeft = frontLeft;
         this.frontRight = frontRight;
@@ -31,7 +32,7 @@ public class DriveTrainTask extends Thread {
     public void run() {
         timer.reset();
         while(opMode.opModeIsActive() && running) {
-            if (timer.time() > 100) {
+            if (timer.time() > 10) {
 
                 joy1Y = -opMode.gamepad1.left_stick_y;
                 joy1Y = Math.abs(joy1Y) > 0.15 ? joy1Y * 3 / 4 : 0;
@@ -40,13 +41,10 @@ public class DriveTrainTask extends Thread {
                 joy2X = opMode.gamepad1.right_stick_x;
                 joy2X = Math.abs(joy2X) > 0.15 ? joy2X * 3 / 4 : 0;
 
+                joy1X *= joyStickFactor;
+                joy1Y *= joyStickFactor;
                 if(joy1X != 0 || joy1Y != 0 || joy2X != 0) {
-                    System.out.println("joy1X: " + joy1X);
-                    System.out.println("joy1Y: " + joy1Y);
                     convertJoyStick();
-                    System.out.println("joy1X: " + joy1X);
-                    System.out.println("joy1Y: " + joy1Y);
-                    System.out.println();
                 }
 
                 timer.reset();
@@ -86,15 +84,19 @@ public class DriveTrainTask extends Thread {
     }
     public void convertJoyStick(){
         joyStickAngle = Math.atan2(joy1Y, joy1X);
-
-        double totalAngle = zeroAngle - gyroAngle*Math.PI/180 + joyStickAngle;
+        //System.out.println("Before: " + joy1X + " " + joy1Y);
+        double totalAngle = zeroAngle - gyroAngle + joyStickAngle;
         double magnitude = Math.min(1, Math.sqrt(joy1X*joy1X + joy1Y*joy1Y));
         joy1X = Math.cos(totalAngle)*magnitude;
         opMode.telemetry.addData("joy1X",joy1X);
         joy1Y = Math.sin(totalAngle)*magnitude;
         opMode.telemetry.addData("joy1Y", joy1Y);
         opMode.updateTelemetry(opMode.telemetry);
-        System.out.print("Gyro: " + gyroAngle + " Zero: " + zeroAngle + " Joystick: " + joyStickAngle);
-        System.out.println("Total: " + totalAngle);
+        //System.out.println("\nGyro: " + gyroAngle + " Zero: " + zeroAngle + " Joystick: " + joyStickAngle + "\nTotal: " + totalAngle*180/Math.PI + "\nAfter: " + joy1X + " " + joy1Y);
+        System.out.printf("Total: %.4f%n", totalAngle*180/Math.PI);
+        System.out.println("Gyro: " + gyroAngle*180/Math.PI);
+        System.out.println("Zero: " + zeroAngle *180/Math.PI);
+        //System.out.println( "After: " + joy1X + " " + joy1Y);
+
     }
 }

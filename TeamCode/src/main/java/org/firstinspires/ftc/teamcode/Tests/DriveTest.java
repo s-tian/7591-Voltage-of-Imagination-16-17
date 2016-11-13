@@ -27,7 +27,7 @@ public class DriveTest extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         initialize();
         waitForStart();
-        driveTrain.rotateDegrees(90, true);
+        driveTrain.rotateDegrees((int)(90*0.7), true);
 
     }
     public void initialize(){
