@@ -79,7 +79,6 @@ public class FlywheelTask extends Thread {
                 if(lastEncoderReadingLeft == 0) {
                     lastEncoderReadingLeft = encoderReadingLeft;
                     lastEncoderReadingRight = encoderReadingRight;
-                    timer.reset();
                 } else if (deltaTime > 50000000L) {
                     int approxRateLeft = (int) ((encoderReadingLeft - lastEncoderReadingLeft)*1.0/deltaTime*1000000000L);
                     int approxRateRight = (int) ((encoderReadingRight - lastEncoderReadingRight)*1.0/deltaTime*1000000000L);
@@ -135,6 +134,7 @@ public class FlywheelTask extends Thread {
         leftPower = rightPower = power*FULL_SPEED_RPM/THEORETICAL_MAX_RPM;
         //We intentionally set the power so that it is highly likely to be lower than the
         //"correct" value so that it continues to adjust upwards.
+        lastEncoderReadingRight = lastEncoderReadingLeft = 0;
     }
 
     private int getEncoderLeft() {
