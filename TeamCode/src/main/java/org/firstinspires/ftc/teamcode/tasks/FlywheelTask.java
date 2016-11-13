@@ -68,6 +68,8 @@ public class FlywheelTask extends Thread {
 
             currentTime = System.nanoTime();
             long deltaTime = currentTime - lastTime;
+            int encoderReadingLeft = getEncoderLeft();
+            int encoderReadingRight = getEncoderRight();
 
             if(state == FlywheelState.STATE_ACCELERATING) {
                 if(timer.time() > 500) {//Give the flywheel half a second to power up before adjusting speed
@@ -75,12 +77,12 @@ public class FlywheelTask extends Thread {
                 }
             } else if (state == FlywheelState.STATE_ADJUSTING || state == FlywheelState.STATE_RUNNING_NEAR_TARGET) {
                 if(lastEncoderReadingLeft == 0) {
-                    lastEncoderReadingLeft = getEncoderLeft();
-                    lastEncoderReadingRight = getEncoderRight();
+                    lastEncoderReadingLeft = encoderReadingLeft;
+                    lastEncoderReadingRight = encoderReadingRight;
                     timer.reset();
                 } else if (deltaTime > 50000000L) {
-                    int approxRateLeft = (int) ((getEncoderLeft() - lastEncoderReadingLeft)*1.0/deltaTime*1000000000L);
-                    int approxRateRight = (int) ((getEncoderLeft() - lastEncoderReadingRight)*1.0/deltaTime*1000000000L);
+                    int approxRateLeft = (int) ((encoderReadingLeft - lastEncoderReadingLeft)*1.0/deltaTime*1000000000L);
+                    int approxRateRight = (int) ((encoderReadingRight - lastEncoderReadingRight)*1.0/deltaTime*1000000000L);
                     if(Math.abs(approxRateLeft - targetEncoderRate) < targetEncoderRate*MAX_ALLOWED_ERROR && Math.abs(approxRateRight - targetEncoderRate) < targetEncoderRate*MAX_ALLOWED_ERROR) {
                         state = FlywheelState.STATE_RUNNING_NEAR_TARGET;
                     }
@@ -94,6 +96,8 @@ public class FlywheelTask extends Thread {
                     flywheelRight.setPower(rightPower);
 
                     lastTime = currentTime;
+                    lastEncoderReadingLeft = encoderReadingLeft;
+                    lastEncoderReadingRight = encoderReadingRight;
                 }
 
             }
