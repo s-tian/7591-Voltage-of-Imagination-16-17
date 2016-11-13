@@ -122,7 +122,7 @@ public class FlywheelTask extends Thread {
         }
     }
 
-    private void setFlywheelPow(double power) {
+    public void setFlywheelPow(double power) {
         if(power == 0) {
             state = state.STATE_STOPPED;
         } else {
