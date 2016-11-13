@@ -84,6 +84,8 @@ public class FlywheelTask extends Thread {
                     int approxRateRight = (int) ((encoderReadingRight - lastEncoderReadingRight)*1.0/deltaTime*1000000000L);
                     if(Math.abs(approxRateLeft - targetEncoderRate) < targetEncoderRate*MAX_ALLOWED_ERROR && Math.abs(approxRateRight - targetEncoderRate) < targetEncoderRate*MAX_ALLOWED_ERROR) {
                         state = FlywheelState.STATE_RUNNING_NEAR_TARGET;
+                    } else {
+                        state = FlywheelState.STATE_ADJUSTING;
                     }
 
                     leftPower += 1.0*(targetEncoderRate - approxRateLeft)*KP;
