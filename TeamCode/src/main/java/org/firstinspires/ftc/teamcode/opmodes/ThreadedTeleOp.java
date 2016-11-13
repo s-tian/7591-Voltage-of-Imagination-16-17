@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 import android.widget.Button;
 
+import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -9,6 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.teamcode.robotutil.VOIImu;
 import org.firstinspires.ftc.teamcode.tasks.ButtonPusherTask;
 import org.firstinspires.ftc.teamcode.tasks.DriveTrainTask;
 import org.firstinspires.ftc.teamcode.tasks.FlywheelTask;
@@ -24,7 +26,10 @@ public class ThreadedTeleOp extends LinearOpMode {
 
     DcMotor frontLeft, frontRight, backLeft, backRight, flywheelRight, flywheelLeft, conveyor, sweeper;
     Servo gate, button;
-    ModernRoboticsI2cGyro gyro;
+    //BNO055IMU adaImu;
+    //VOIImu imu;
+    boolean xPushed = false;
+    //ModernRoboticsI2cGyro gyro;
 
     @Override
     public void runOpMode() {
@@ -32,7 +37,7 @@ public class ThreadedTeleOp extends LinearOpMode {
         initialize();
 
         DriveTrainTask driveTrainTask = new DriveTrainTask(this, frontLeft, frontRight, backLeft, backRight);
-        ButtonPusherTask buttonPusherTask = new ButtonPusherTask(this, button);
+        //ButtonPusherTask buttonPusherTask = new ButtonPusherTask(this, button);
         FlywheelTask flywheelTask = new FlywheelTask(this, flywheelLeft, flywheelRight);
         IntakeTask intakeTask = new IntakeTask(this, sweeper, conveyor);
 
@@ -40,37 +45,37 @@ public class ThreadedTeleOp extends LinearOpMode {
         long startTime = System.nanoTime();
 
         driveTrainTask.start();
-        buttonPusherTask.start();
+        //buttonPusherTask.start();
         flywheelTask.start();
         intakeTask.start();
-        DriveTrainTask.zeroAngle = gyro.getIntegratedZValue()*Math.PI/180;
+        //driveTrainTask.zeroAngle = imu.getRadians();
 
         while(opModeIsActive()) {
             //Timer for 2 minute teleop period
             long elapsed = System.nanoTime() - startTime;
-            DriveTrainTask.gyroAngle = gyro.getIntegratedZValue();
-            telemetry.addData("gyro" , DriveTrainTask.gyroAngle);
-            telemetry.addData("Zero",DriveTrainTask.zeroAngle);
-            telemetry.addData("Joystick",  DriveTrainTask.joyStickAngle);
-            telemetry.addData("Total", DriveTrainTask.zeroAngle - DriveTrainTask.gyroAngle + DriveTrainTask.joyStickAngle);
+            //driveTrainTask.gyroAngle = imu.getRadians();
 
             if (elapsed > 120 * 1000000000L) {
                 //Stop all tasks, the tasks will stop motors etc.
                 driveTrainTask.running = false;
-                buttonPusherTask.running = false;
+                //buttonPusherTask.running = false;
                 flywheelTask.running = false;
                 intakeTask.running = false;
-                DriveTrainTask.gyroAngle = gyro.getIntegratedZValue();
                 //Get out of the loop
                 break;
             } else {
-                //telemetry.addData("time elapsed", (int) (elapsed / 1000000000L));
+                telemetry.addData("time elapsed", (int) (elapsed / 1000000000L));
             }
-            if (gamepad1.left_stick_button && gamepad1.right_stick_button){
-                DriveTrainTask.zeroAngle = gyro.getIntegratedZValue()*Math.PI/180;
+            if (gamepad1.x && !xPushed){
+                driveTrainTask.joyStickFactor *= -1;
+                //driveTrainTask.zeroAngle = imu.getRadians();
+                xPushed = true;
+            }
+            if (!gamepad1.x){
+                xPushed = false;
             }
 
-            //telemetry.update();
+            telemetry.update();
         }
 
     }
@@ -85,8 +90,9 @@ public class ThreadedTeleOp extends LinearOpMode {
         sweeper = hardwareMap.dcMotor.get("sweeper");
         gate = hardwareMap.servo.get("gate");
         button = hardwareMap.servo.get("button");
-        gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
-
+        //gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
+        //adaImu = hardwareMap.get(BNO055IMU.class, "imu");
+        //imu = new VOIImu(adaImu);
         frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -101,9 +107,9 @@ public class ThreadedTeleOp extends LinearOpMode {
         flywheelRight.setDirection(DcMotorSimple.Direction.REVERSE);
         conveyor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        gyro.calibrate();
-        gyro.resetZAxisIntegrator();
-        int base = gyro.getIntegratedZValue();
+        //gyro.calibrate();
+        //gyro.resetZAxisIntegrator();
+       // int base = gyro.getIntegratedZValue();
         gate.setPosition(0.4);
 
     }

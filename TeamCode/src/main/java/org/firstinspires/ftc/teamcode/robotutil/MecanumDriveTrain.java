@@ -150,25 +150,39 @@ public class MecanumDriveTrain {
         double velocity;
         timer.reset();
         if (degrees < 0){
-            startRotation(-1);
-            while (Math.abs(subtractAngles(targetGyro, gyroValue)) > 2 && opMode.opModeIsActive()) {
+
+            startRotation(-0.35);
+            while ((subtractAngles(targetGyro, gyroValue)) <  -2 && opMode.opModeIsActive()) {
+
                 gyroValue = imu.getAngle();
+                opMode.telemetry.addData("imu angle: " ,gyroValue);
+                opMode.telemetry.addData("target angle: " ,targetGyro);
                 if (slowdown) {
-                    velocity = Math.min(subtractAngles(targetGyro, gyroValue, false) * 0.35 / degrees, -0.2);
-                    startRotation(velocity);
+                    opMode.telemetry.addData("Angle left: ",subtractAngles(targetGyro, gyroValue, false));
+                    //velocity = Math.min(subtractAngles(targetGyro, gyroValue, false) * 0.35 / degrees, -0.2);
+                    //startRotation(velocity);
                 }
+                opMode.telemetry.update();
+
             }
         }
         else{
-            startRotation(1);
-            while (Math.abs(subtractAngles(targetGyro, imu.getAngle())) > 2 && opMode.opModeIsActive()){
+            startRotation(0.35);
+            while ((subtractAngles(targetGyro, imu.getAngle())) > 2 && opMode.opModeIsActive()){
                 gyroValue = imu.getAngle();
+                opMode.telemetry.addData("imu angle: " ,gyroValue);
+                opMode.telemetry.addData("target angle: " ,targetGyro);
                 if (slowdown){
-                    velocity = Math.max(subtractAngles(targetGyro, imu.getAngle(), true)*0.35/degrees, 0.2);
-                    startRotation(velocity);
+                    opMode.telemetry.addData("Angle left: ",subtractAngles(targetGyro, gyroValue, false));
+
+                    //velocity = Math.max(subtractAngles(targetGyro, imu.getAngle(), true)*0.35/degrees, 0.2);
+                    //startRotation(velocity);
                 }
+                opMode.telemetry.update();
+
             }
         }
+        stopAll();
     }
     public void moveForwardNInch(double power, double inches, double timeout, boolean detectStall)  {
         moveForwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall);

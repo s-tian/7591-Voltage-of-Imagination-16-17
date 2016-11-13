@@ -114,8 +114,8 @@ public class AutoBlue extends LinearOpMode {
 
     }
     public void lineUpToWall(int distance) {
-        driveTrain.moveForwardNInch(0.3, 5, 10, false);
-        driveTrain.moveForwardNInch(0.7, distance-5, 10, false);
+        driveTrain.moveForwardNInch(0.3, 3, 10, false);
+        driveTrain.moveForwardNInch(0.7, distance-3, 10, false);
         //pause();
         driveTrain.powerAllMotors(0.3);
         boolean detectColor = false;
@@ -126,7 +126,7 @@ public class AutoBlue extends LinearOpMode {
                 detectColor = voiColorSensorBottom.isWhite();
 
                 timer.reset();
-                if (frontRight.getCurrentPosition() - initialTicks > 20 * driveTrain.TICKS_PER_INCH_FORWARD ){
+                if (frontRight.getCurrentPosition() - initialTicks > 35 * driveTrain.TICKS_PER_INCH_FORWARD ){
                     driveTrain.moveBackwardNInch(0.5, 10, 8, false);
 
                     break;
@@ -136,9 +136,9 @@ public class AutoBlue extends LinearOpMode {
         //pause();
         // align with wall
         if (detectColor)
-            driveTrain.rotateDegrees((int) (-angle * 0.7), true);
+            driveTrain.rotateDegrees((int) (angle * 0.7), true);
         else
-            driveTrain.rotateDegrees(-90, true);
+            driveTrain.rotateDegrees(90, true);
 
         //pause();
         // ram into wall to straighten out
