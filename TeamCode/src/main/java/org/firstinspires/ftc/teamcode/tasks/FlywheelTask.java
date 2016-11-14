@@ -37,9 +37,6 @@ public class FlywheelTask extends Thread {
         STATE_STOPPED, STATE_ACCELERATING, STATE_ADJUSTING, STATE_RUNNING_NEAR_TARGET
     }
 
-    public String getFlywheelState() {
-        return state.toString();
-    }
 
     public FlywheelTask(LinearOpMode opMode, DcMotor flywheelLeft, DcMotor flywheelRight) {
         this.flywheelLeft = flywheelLeft;
@@ -74,19 +71,20 @@ public class FlywheelTask extends Thread {
             if(state == FlywheelState.STATE_ACCELERATING) {
                 if(timer.time() > 500) {//Give the flywheel half a second to power up before adjusting speed
                     state = FlywheelState.STATE_ADJUSTING;
-                    lastTime = currentTime;
                 }
             } else if (state == FlywheelState.STATE_ADJUSTING || state == FlywheelState.STATE_RUNNING_NEAR_TARGET) {
-                if(lastEncoderReadingLeft == 0) {
+                if(lastEncoderReadingLeft == 0 && lastEncoderReadingRight == 0) {
+                    //We just entered this state from the adjusting state, update encoder and time values.
                     lastEncoderReadingLeft = encoderReadingLeft;
                     lastEncoderReadingRight = encoderReadingRight;
-                    timer.reset();
-
+                    lastTime = currentTime;
                 } else if (deltaTime > 50000000L) {
                     int approxRateLeft = (int) ((encoderReadingLeft - lastEncoderReadingLeft)*1.0/deltaTime*1000000000L);
                     int approxRateRight = (int) ((encoderReadingRight - lastEncoderReadingRight)*1.0/deltaTime*1000000000L);
                     if(Math.abs(approxRateLeft - targetEncoderRate) < targetEncoderRate*MAX_ALLOWED_ERROR && Math.abs(approxRateRight - targetEncoderRate) < targetEncoderRate*MAX_ALLOWED_ERROR) {
                         state = FlywheelState.STATE_RUNNING_NEAR_TARGET;
+                    } else {
+                        state = FlywheelState.STATE_ADJUSTING;
                     }
 
                     leftPower += 1.0*(targetEncoderRate - approxRateLeft)*KP;
@@ -94,8 +92,7 @@ public class FlywheelTask extends Thread {
                     leftPower = range(leftPower);
                     rightPower = range(rightPower);
 
-                    flywheelLeft.setPower(leftPower);
-                    flywheelRight.setPower(rightPower);
+                    updatePowers();
 
                     lastTime = currentTime;
                     lastEncoderReadingLeft = encoderReadingLeft;
@@ -130,13 +127,19 @@ public class FlywheelTask extends Thread {
         } else {
             state = state.STATE_ACCELERATING;
         }
-        flywheelRight.setPower(power*FULL_SPEED_RPM/THEORETICAL_MAX_RPM);
-        flywheelLeft.setPower(power*FULL_SPEED_RPM/THEORETICAL_MAX_RPM);
+
         timer.reset();
         targetEncoderRate = (int) (MAX_ENCODER_TICKS_PER_SEC * power);
         leftPower = rightPower = power*FULL_SPEED_RPM/THEORETICAL_MAX_RPM;
+        updatePowers();
         //We intentionally set the power so that it is highly likely to be lower than the
         //"correct" value so that it continues to adjust upwards.
+        lastEncoderReadingRight = lastEncoderReadingLeft = 0;
+    }
+
+    private void updatePowers() {
+        flywheelRight.setPower(rightPower);
+        flywheelLeft.setPower(leftPower);
     }
 
     private int getEncoderLeft() {
@@ -145,6 +148,12 @@ public class FlywheelTask extends Thread {
 
     private int getEncoderRight() {
         return flywheelRight.getCurrentPosition();
+    }
+
+    public FlywheelState getFlywheelState() { return state; }
+
+    public String getFlywheelStateString() {
+        return state.toString();
     }
 
 }

@@ -21,7 +21,7 @@ import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
  * Created by bunnycide on 11/4/16.
  */
 
-@TeleOp(name="Threaded teleop", group = "Drive")
+@TeleOp(name="Threaded Teleop", group = "Drive")
 
 public class ThreadedTeleOp extends LinearOpMode {
 
@@ -65,7 +65,8 @@ public class ThreadedTeleOp extends LinearOpMode {
                 //Get out of the loop
                 break;
             } else {
-                telemetry.addData("time elapsed", (int) (elapsed / 1000000000L));
+                telemetry.addData("Time elapsed", (int) (elapsed / 1000000000L));
+                telemetry.addData("Flywheel status", flywheelTask.getFlywheelStateString());
             }
             if (gamepad1.x && !xPushed){
                 driveTrainTask.joyStickFactor *= -1;
