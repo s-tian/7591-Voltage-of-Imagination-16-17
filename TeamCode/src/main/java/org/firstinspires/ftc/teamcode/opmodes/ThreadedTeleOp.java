@@ -12,6 +12,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.robotutil.VOIImu;
 import org.firstinspires.ftc.teamcode.tasks.ButtonPusherTask;
+import org.firstinspires.ftc.teamcode.tasks.CapBallTask;
 import org.firstinspires.ftc.teamcode.tasks.DriveTrainTask;
 import org.firstinspires.ftc.teamcode.tasks.FlywheelTask;
 import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
@@ -24,7 +25,7 @@ import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
 
 public class ThreadedTeleOp extends LinearOpMode {
 
-    DcMotor frontLeft, frontRight, backLeft, backRight, flywheelRight, flywheelLeft, conveyor, sweeper;
+    DcMotor frontLeft, frontRight, backLeft, backRight, flywheelRight, flywheelLeft, conveyor, sweeper, lift;
     Servo gate, button;
     //BNO055IMU adaImu;
     //VOIImu imu;
@@ -40,7 +41,7 @@ public class ThreadedTeleOp extends LinearOpMode {
         //ButtonPusherTask buttonPusherTask = new ButtonPusherTask(this, button);
         FlywheelTask flywheelTask = new FlywheelTask(this, flywheelLeft, flywheelRight);
         IntakeTask intakeTask = new IntakeTask(this, sweeper, conveyor);
-
+        CapBallTask capBallTask = new CapBallTask(this, lift);
         waitForStart();
         long startTime = System.nanoTime();
 
@@ -90,6 +91,7 @@ public class ThreadedTeleOp extends LinearOpMode {
         sweeper = hardwareMap.dcMotor.get("sweeper");
         gate = hardwareMap.servo.get("gate");
         button = hardwareMap.servo.get("button");
+        lift = hardwareMap.dcMotor.get("lift");
         //gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
         //adaImu = hardwareMap.get(BNO055IMU.class, "imu");
         //imu = new VOIImu(adaImu);
@@ -106,7 +108,8 @@ public class ThreadedTeleOp extends LinearOpMode {
         frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
         flywheelRight.setDirection(DcMotorSimple.Direction.REVERSE);
         conveyor.setDirection(DcMotorSimple.Direction.REVERSE);
-
+        lift.setDirection(DcMotor.Direction.REVERSE);
+        
         //gyro.calibrate();
         //gyro.resetZAxisIntegrator();
        // int base = gyro.getIntegratedZValue();

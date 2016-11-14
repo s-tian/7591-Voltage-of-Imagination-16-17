@@ -74,12 +74,14 @@ public class FlywheelTask extends Thread {
             if(state == FlywheelState.STATE_ACCELERATING) {
                 if(timer.time() > 500) {//Give the flywheel half a second to power up before adjusting speed
                     state = FlywheelState.STATE_ADJUSTING;
+                    lastTime = currentTime;
                 }
             } else if (state == FlywheelState.STATE_ADJUSTING || state == FlywheelState.STATE_RUNNING_NEAR_TARGET) {
                 if(lastEncoderReadingLeft == 0) {
                     lastEncoderReadingLeft = encoderReadingLeft;
                     lastEncoderReadingRight = encoderReadingRight;
                     timer.reset();
+
                 } else if (deltaTime > 50000000L) {
                     int approxRateLeft = (int) ((encoderReadingLeft - lastEncoderReadingLeft)*1.0/deltaTime*1000000000L);
                     int approxRateRight = (int) ((encoderReadingRight - lastEncoderReadingRight)*1.0/deltaTime*1000000000L);
