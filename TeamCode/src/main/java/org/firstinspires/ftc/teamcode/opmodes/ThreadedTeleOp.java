@@ -68,6 +68,7 @@ public class ThreadedTeleOp extends LinearOpMode {
                 telemetry.addData("Time elapsed", (int) (elapsed / 1000000000L));
                 telemetry.addData("Flywheel status", flywheelTask.getFlywheelStateString());
             }
+
             if (gamepad1.x && !xPushed){
                 driveTrainTask.joyStickFactor *= -1;
                 //driveTrainTask.zeroAngle = imu.getRadians();

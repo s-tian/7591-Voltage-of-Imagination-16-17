@@ -92,6 +92,9 @@ public class FlywheelTask extends Thread {
                     leftPower = range(leftPower);
                     rightPower = range(rightPower);
 
+                    System.out.println("Target rate: " + targetEncoderRate + " Left rate: " + approxRateLeft + " Right rate: " + approxRateRight);
+                    System.out.println("LPower " + leftPower + " RPower " + rightPower);
+
                     updatePowers();
 
                     lastTime = currentTime;
