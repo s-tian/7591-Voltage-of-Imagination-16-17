@@ -36,7 +36,7 @@ public class IntakeTask extends Thread {
             else if(opMode.gamepad2.dpad_down){
                 conveyor.setPower(-0.3);
             }
-            opMode.telemetry.addData("Conveyor", conveyor.getPower());
+            //opMode.telemetry.addData("Conveyor", conveyor.getPower());
 
             if(opMode.gamepad1.y) {
                 sweeper.setPower(1);
