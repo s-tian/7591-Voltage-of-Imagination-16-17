@@ -27,7 +27,6 @@ public class ThreadedTeleOp extends LinearOpMode {
 
     DcMotor frontLeft, frontRight, backLeft, backRight, flywheelRight, flywheelLeft, conveyor, sweeper, lift;
     Servo gate, button;
-    //BNO055IMU adaImu;
     //VOIImu imu;
     boolean xPushed = false;
     //ModernRoboticsI2cGyro gyro;
@@ -37,15 +36,15 @@ public class ThreadedTeleOp extends LinearOpMode {
 
         initialize();
 
-        DriveTrainTask driveTrainTask = new DriveTrainTask(this, frontLeft, frontRight, backLeft, backRight);
+        //DriveTrainTask driveTrainTask = new DriveTrainTask(this, frontLeft, frontRight, backLeft, backRight);
         //ButtonPusherTask buttonPusherTask = new ButtonPusherTask(this, button);
         FlywheelTask flywheelTask = new FlywheelTask(this, flywheelLeft, flywheelRight);
         IntakeTask intakeTask = new IntakeTask(this, sweeper, conveyor);
-        CapBallTask capBallTask = new CapBallTask(this, lift);
+        //CapBallTask capBallTask = new CapBallTask(this, lift);
         waitForStart();
         long startTime = System.nanoTime();
 
-        driveTrainTask.start();
+        //driveTrainTask.start();
         //buttonPusherTask.start();
         flywheelTask.start();
         intakeTask.start();
@@ -58,19 +57,19 @@ public class ThreadedTeleOp extends LinearOpMode {
 
             if (elapsed > 120 * 1000000000L) {
                 //Stop all tasks, the tasks will stop motors etc.
-                driveTrainTask.running = false;
+                //driveTrainTask.running = false;
                 //buttonPusherTask.running = false;
                 flywheelTask.running = false;
                 intakeTask.running = false;
                 //Get out of the loop
                 break;
             } else {
-                telemetry.addData("Time elapsed", (int) (elapsed / 1000000000L));
-                telemetry.addData("Flywheel status", flywheelTask.getFlywheelStateString());
+                //telemetry.addData("Time elapsed", (int) (elapsed / 1000000000L));
+                //telemetry.addData("Flywheel status", flywheelTask.getFlywheelStateString());
             }
 
             if (gamepad1.x && !xPushed){
-                driveTrainTask.joyStickFactor *= -1;
+                //driveTrainTask.joyStickFactor *= -1;
                 //driveTrainTask.zeroAngle = imu.getRadians();
                 xPushed = true;
             }
@@ -93,7 +92,7 @@ public class ThreadedTeleOp extends LinearOpMode {
         sweeper = hardwareMap.dcMotor.get("sweeper");
         gate = hardwareMap.servo.get("gate");
         button = hardwareMap.servo.get("button");
-        lift = hardwareMap.dcMotor.get("lift");
+        //lift = hardwareMap.dcMotor.get("lift");
         //gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
         //adaImu = hardwareMap.get(BNO055IMU.class, "imu");
         //imu = new VOIImu(adaImu);
@@ -110,12 +109,12 @@ public class ThreadedTeleOp extends LinearOpMode {
         frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
         flywheelRight.setDirection(DcMotorSimple.Direction.REVERSE);
         conveyor.setDirection(DcMotorSimple.Direction.REVERSE);
-        lift.setDirection(DcMotor.Direction.REVERSE);
+        //lift.setDirection(DcMotor.Direction.REVERSE);
         
         //gyro.calibrate();
         //gyro.resetZAxisIntegrator();
        // int base = gyro.getIntegratedZValue();
-        gate.setPosition(0.4);
+        //gate.setPosition(0.4);
 
     }
 }
