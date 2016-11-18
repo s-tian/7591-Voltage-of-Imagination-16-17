@@ -35,7 +35,7 @@ public class FlywheelTask extends Thread {
     private double rightPower = 0;
 
     public enum FlywheelState {
-        STATE_STOPPED, STATE_ACCELERATING, STATE_ADJUSTING, STATE_CLOSE_TO_TARGET, STATE_RUNNING_NEAR_TARGET
+        STATE_STOPPED, STATE_ACCELERATING, STATE_ADJUSTING, STATE_RUNNING_NEAR_TARGET
     }
 
 
@@ -70,31 +70,29 @@ public class FlywheelTask extends Thread {
             int encoderReadingRight = getEncoderRight();
 
             if(state == FlywheelState.STATE_ACCELERATING) {
-                if(timer.time() > 250) {//Give the flywheel half a second to power up before adjusting speed
+                if(timer.time() > 500) {//Give the flywheel half a second to power up before adjusting speed
                     state = FlywheelState.STATE_ADJUSTING;
                 }
-            } else if (state == FlywheelState.STATE_ADJUSTING || state == FlywheelState.STATE_RUNNING_NEAR_TARGET || state == FlywheelState.STATE_CLOSE_TO_TARGET) {
+            } else if (state == FlywheelState.STATE_ADJUSTING || state == FlywheelState.STATE_RUNNING_NEAR_TARGET) {
                 if(lastEncoderReadingLeft == 0 && lastEncoderReadingRight == 0) {
                     //We just entered this state from the adjusting state, update encoder and time values.
                     lastEncoderReadingLeft = encoderReadingLeft;
                     lastEncoderReadingRight = encoderReadingRight;
                     lastTime = currentTime;
-                } else if (deltaTime > 200000000L) {
-                    int approxRateLeft = (int) ((encoderReadingLeft - lastEncoderReadingLeft) * 1.0 / deltaTime * 1000000000L);
-                    int approxRateRight = (int) ((encoderReadingRight - lastEncoderReadingRight) * 1.0 / deltaTime * 1000000000L);
-                    if (Math.abs(approxRateLeft - targetEncoderRate) < targetEncoderRate * CLOSE_ERROR && Math.abs(approxRateRight - targetEncoderRate) < targetEncoderRate * MAX_ALLOWED_ERROR) {
-                        state = FlywheelState.STATE_CLOSE_TO_TARGET;
-                    } else if (Math.abs(approxRateLeft - targetEncoderRate) < targetEncoderRate * MAX_ALLOWED_ERROR && Math.abs(approxRateRight - targetEncoderRate) < targetEncoderRate * MAX_ALLOWED_ERROR){
+                } else if (deltaTime > 50000000L) {
+                    int approxRateLeft = (int) ((encoderReadingLeft - lastEncoderReadingLeft)*1.0/deltaTime*1000000000L);
+                    int approxRateRight = (int) ((encoderReadingRight - lastEncoderReadingRight)*1.0/deltaTime*1000000000L);
+                    if(Math.abs(approxRateLeft - targetEncoderRate) < targetEncoderRate*MAX_ALLOWED_ERROR && Math.abs(approxRateRight - targetEncoderRate) < targetEncoderRate*MAX_ALLOWED_ERROR) {
                         state = FlywheelState.STATE_RUNNING_NEAR_TARGET;
                     } else {
                         state = FlywheelState.STATE_ADJUSTING;
                     }
-                    //if (FlywheelState.STATE_ADJUSTING == state){
-                        leftPower += 1.0 * (targetEncoderRate - approxRateLeft) * KP;
-                        rightPower += 1.0 * (targetEncoderRate - approxRateRight) * KP;
-                        leftPower = range(leftPower);
-                        rightPower = range(rightPower);
-                    //}
+
+                    leftPower += 1.0*(targetEncoderRate - approxRateLeft)*KP;
+                    rightPower += 1.0*(targetEncoderRate - approxRateRight)*KP;
+                    leftPower = range(leftPower);
+                    rightPower = range(rightPower);
+
                     System.out.println("Target rate: " + targetEncoderRate + " Left rate: " + approxRateLeft + " Right rate: " + approxRateRight);
                     System.out.println("LPower " + leftPower + " RPower " + rightPower);
 
@@ -107,9 +105,8 @@ public class FlywheelTask extends Thread {
 
             }
 
-            //opMode.telemetry.addData("Flywheel", flywheelRight.getPower());
+            opMode.telemetry.addData("Flywheel", flywheelRight.getPower());
             opMode.telemetry.addData("Flywheel Status", getFlywheelState());
-            opMode.updateTelemetry(opMode.telemetry);
 
         }
         flywheelRight.setPower(0);
