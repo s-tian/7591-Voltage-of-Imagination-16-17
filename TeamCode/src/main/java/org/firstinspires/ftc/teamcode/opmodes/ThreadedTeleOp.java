@@ -25,7 +25,7 @@ import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
 
 public class ThreadedTeleOp extends LinearOpMode {
 
-    DcMotor frontLeft, frontRight, backLeft, backRight, flywheelRight, flywheelLeft, conveyor, sweeper, lift;
+    DcMotor frontLeft, frontRight, backLeft, backRight, flywheelRight, flywheelLeft, conveyor, sweeper, capRight, capLeft;
     Servo gate, button;
     //VOIImu imu;
     boolean xPushed = false;
@@ -40,7 +40,7 @@ public class ThreadedTeleOp extends LinearOpMode {
         //ButtonPusherTask buttonPusherTask = new ButtonPusherTask(this, button);
         FlywheelTask flywheelTask = new FlywheelTask(this, flywheelLeft, flywheelRight);
         IntakeTask intakeTask = new IntakeTask(this, sweeper, conveyor);
-        //CapBallTask capBallTask = new CapBallTask(this, lift);
+        //CapBallTask capBallTask = new CapBallTask(this, capRight, capLeft);
         waitForStart();
         long startTime = System.nanoTime();
 
@@ -92,10 +92,12 @@ public class ThreadedTeleOp extends LinearOpMode {
         sweeper = hardwareMap.dcMotor.get("sweeper");
         gate = hardwareMap.servo.get("gate");
         button = hardwareMap.servo.get("button");
-        //lift = hardwareMap.dcMotor.get("lift");
+        //capRight = hardwareMap.dcMotor.get("capRight");
+        //capLeft = hardwareMap.dcMotor.get("capLeft");
         //gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
         //adaImu = hardwareMap.get(BNO055IMU.class, "imu");
         //imu = new VOIImu(adaImu);
+
         frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -104,12 +106,14 @@ public class ThreadedTeleOp extends LinearOpMode {
         flywheelLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         flywheelRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         flywheelLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        //capRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        //capLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         backRight.setDirection(DcMotorSimple.Direction.REVERSE);
         frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
         flywheelRight.setDirection(DcMotorSimple.Direction.REVERSE);
         conveyor.setDirection(DcMotorSimple.Direction.REVERSE);
-        //lift.setDirection(DcMotor.Direction.REVERSE);
+        //capRight.setDirection(DcMotor.Direction.REVERSE);
         
         //gyro.calibrate();
         //gyro.resetZAxisIntegrator();

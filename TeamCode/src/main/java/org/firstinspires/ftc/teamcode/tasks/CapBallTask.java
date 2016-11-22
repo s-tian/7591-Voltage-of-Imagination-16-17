@@ -11,13 +11,14 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 public class CapBallTask extends Thread {
 
-    private DcMotor lift;
+    private DcMotor capRight, capLeft;
     private LinearOpMode opMode;
     public volatile boolean running = true;
 
 
-    public CapBallTask(LinearOpMode opMode, DcMotor lift) {
-        this.lift = lift;
+    public CapBallTask(LinearOpMode opMode, DcMotor capRight, DcMotor capLeft) {
+        this.capRight = capRight;
+        this.capLeft = capLeft;
         this.opMode = opMode;
 
     }
@@ -25,14 +26,17 @@ public class CapBallTask extends Thread {
     @Override
     public void run() {
         while(opMode.opModeIsActive() && running) {
-            if (opMode.gamepad2.right_bumper) {
-                lift.setPower(1);
+            if (opMode.gamepad1.right_bumper) {
+                capRight.setPower(1);
+                capLeft.setPower(capRight.getPower());
             }
-            else if (opMode.gamepad2.left_bumper){
-                lift.setPower(-1);
+            else if (opMode.gamepad1.left_bumper) {
+                capRight.setPower(-1);
+                capLeft.setPower(capRight.getPower());
             }
             else {
-                lift.setPower(0);
+                capRight.setPower(0);
+                capLeft.setPower(capRight.getPower());
             }
         }
     }
