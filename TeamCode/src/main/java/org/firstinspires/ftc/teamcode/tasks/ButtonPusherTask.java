@@ -19,7 +19,14 @@ public class ButtonPusherTask extends Thread {
     private boolean yPushed = false;
     public volatile boolean running = true;
 
-
+/* initailize servos upwards
+encoder on slide motors
+make it automated
+get out forklift driver 1
+1. raise slides
+2. lower slides
+Open servo, 5 secs, close servo
+  */
     public ButtonPusherTask(LinearOpMode opMode, Servo servo) {
         this.servo = servo;
         this.opMode = opMode;
