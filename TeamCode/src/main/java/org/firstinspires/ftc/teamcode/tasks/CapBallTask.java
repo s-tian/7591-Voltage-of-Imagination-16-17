@@ -42,7 +42,7 @@ public class CapBallTask extends Thread {
             else {
                 setCapPower(0);
             }
-            if (opMode.gamepad1.a && !aPushed) {
+            if (opMode.gamepad1.a || opMode.gamepad2.a && !aPushed) {
                 if (down){
                     forkLeft.setPosition(startLeft);
                     forkRight.setPosition(startRight);
@@ -54,7 +54,7 @@ public class CapBallTask extends Thread {
                 }
                 aPushed = true;
             }
-            if (!opMode.gamepad1.a){
+            if (!opMode.gamepad1.a && !opMode.gamepad2.a){
                 aPushed = false;
             }
         }
