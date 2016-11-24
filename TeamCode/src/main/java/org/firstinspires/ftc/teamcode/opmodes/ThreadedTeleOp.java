@@ -91,9 +91,11 @@ public class ThreadedTeleOp extends LinearOpMode {
             }
             if(capBallTask.isBallUp()) {
                 driveTrainTask.joyStickMultiplier = 0.5;
+                capBallTask.setBallUp(false);
             }
             if(capBallTask.isSlideIn()) {
                 driveTrainTask.joyStickMultiplier = 1;
+                capBallTask.setSlideIn(false);
             }
 
             telemetry.update();

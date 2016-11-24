@@ -16,7 +16,6 @@ public class CapBallTask extends Thread {
     private DcMotor capLeft, capRight;
     private Servo forkLeft, forkRight;
     private LinearOpMode opMode;
-    boolean down = false;
     private ElapsedTime timer  = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     double startLeft = 0.8, startRight = 0.12, downLeft = 0.3, downRight = 0.62;
     boolean aPushed = false;
@@ -81,17 +80,11 @@ public class CapBallTask extends Thread {
                 slideOut = false;
                 while(timer.time()<500 && !slideOut) {
                     setCapPower(1);
-                    if(slideRunning) {
-                        break;
-                    }
+                }
+                while(timer.time()>500 && timer.time()<1400 && !slideOut) {
+                    setCapPower(-1);
                 }
                 slideOut = true;
-                while(timer.time()>500 && timer.time()<1400 && slideOut) {
-                    setCapPower(-1);
-                    if(slideRunning) {
-                        break;
-                    }
-                }
                 ballUp = true;
             }
         }
@@ -104,7 +97,13 @@ public class CapBallTask extends Thread {
     public boolean isBallUp() {
         return slideRunning && ballUp;
     }
+    public void setBallUp(boolean ballUp) {
+        this.ballUp = ballUp;
+    }
     public boolean isSlideIn() {
         return slideIn;
+    }
+    public void setSlideIn(boolean slideIn) {
+        this.slideIn = slideIn;
     }
 }
