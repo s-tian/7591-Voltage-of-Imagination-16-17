@@ -43,24 +43,6 @@ public class DriveTrainTask extends Thread {
                 joy2X = Math.abs(joy2X) > 0.15 ? joy2X * 3 / 4 : 0;
                 joy1Y *= joyStickFactor;
                 joy1X *= joyStickFactor;
-                if (Math.abs(joy1Y) == 0 && Math.abs(joy1X) == 0 && Math.abs(joy2X) == 0) {
-                    joy2X = 0.3 * (opMode.gamepad2.right_trigger - opMode.gamepad2.left_trigger);
-                    if (joy2X == 0) {
-                        //joy2X = 0.3 * (opMode.gamepad1.right_trigger - opMode.gamepad1.left_trigger);
-                    }
-                    joy1Y = -opMode.gamepad2.left_stick_y;
-                    joy1Y = Math.abs(joy1Y) > 0.15 ? joy1Y * 0.3 : 0;
-                    joy1X = opMode.gamepad2.left_stick_x;
-                    joy1X = Math.abs(joy1X) > 0.15 ? joy1X * 0.3 : 0;
-                    /*if (joy1X == 0 && joy1Y == 0) {
-                        if (opMode.gamepad1.left_bumper) {
-                            joy1X = -0.3;
-                        }
-                        if (opMode.gamepad1.right_bumper) {
-                            joy1X = 0.3;
-                        }
-                    }*/
-                }
                 frontLeft.setPower(Math.max(-1, Math.min(1, joyStickMultiplier*(joy1Y + joy2X + joy1X))));
                 backLeft.setPower(Math.max(-1, joyStickMultiplier*Math.min(1, joy1Y + joy2X - joy1X)));
                 frontRight.setPower(Math.max(-1, joyStickMultiplier*Math.min(1, joy1Y - joy2X - joy1X)));

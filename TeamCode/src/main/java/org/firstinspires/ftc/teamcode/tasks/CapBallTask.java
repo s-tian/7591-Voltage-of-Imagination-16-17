@@ -17,12 +17,18 @@ public class CapBallTask extends Thread {
     private Servo forkLeft, forkRight;
     private LinearOpMode opMode;
     boolean down = false;
+    private ElapsedTime timer  = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     double startLeft = 0.8, startRight = 0.12, downLeft = 0.3, downRight = 0.62;
     boolean aPushed = false;
     public volatile boolean running = true;
+    boolean slideOut = true;
+    boolean slideRunning = false;
+    boolean ballUp = false;
+    boolean slideIn = false;
 
 
     public CapBallTask(LinearOpMode opMode, DcMotor capLeft, DcMotor capRight, Servo forkLeft, Servo forkRight) {
+
         this.capLeft = capLeft;
         this.capRight = capRight;
         this.forkLeft = forkLeft;
@@ -33,16 +39,20 @@ public class CapBallTask extends Thread {
     @Override
     public void run() {
         while(opMode.opModeIsActive() && running) {
-            if (opMode.gamepad1.right_bumper) {
+            if (opMode.gamepad1.right_bumper||opMode.gamepad2.right_trigger-opMode.gamepad2.left_trigger>0.15) {
                 setCapPower(1);
+                slideRunning = true;
             }
-            else if (opMode.gamepad1.left_bumper){
+            else if (opMode.gamepad1.left_bumper||opMode.gamepad2.left_trigger-opMode.gamepad2.right_trigger>0.15){
                 setCapPower(-1);
+                slideRunning = true;
             }
             else {
                 setCapPower(0);
+                slideRunning = false;
             }
-            if (opMode.gamepad1.a || opMode.gamepad2.a && !aPushed) {
+            /*
+            if (opMode.gamepad1.dpad_down || opMode.gamepad2.a && !aPushed) {
                 if (down){
                     forkLeft.setPosition(startLeft);
                     forkRight.setPosition(startRight);
@@ -54,8 +64,35 @@ public class CapBallTask extends Thread {
                 }
                 aPushed = true;
             }
-            if (!opMode.gamepad1.a && !opMode.gamepad2.a){
+            if (!opMode.gamepad1.dpad_down && !opMode.gamepad2.a){
                 aPushed = false;
+            }*/
+            if(opMode.gamepad2.right_bumper) {
+                forkLeft.setPosition(downLeft);
+                forkRight.setPosition(downRight);
+                slideIn = true;
+            }
+            else {
+                forkLeft.setPosition(startLeft);
+                forkRight.setPosition(startRight);
+            }
+            if(opMode.gamepad1.dpad_down) {
+                timer.reset();
+                slideOut = false;
+                while(timer.time()<500 && !slideOut) {
+                    setCapPower(1);
+                    if(slideRunning) {
+                        break;
+                    }
+                }
+                slideOut = true;
+                while(timer.time()>500 && timer.time()<1400 && slideOut) {
+                    setCapPower(-1);
+                    if(slideRunning) {
+                        break;
+                    }
+                }
+                ballUp = true;
             }
         }
     }
@@ -64,5 +101,10 @@ public class CapBallTask extends Thread {
         capLeft.setPower(power);
         capRight.setPower(power);
     }
-
+    public boolean isBallUp() {
+        return slideRunning && ballUp;
+    }
+    public boolean isSlideIn() {
+        return slideIn;
+    }
 }

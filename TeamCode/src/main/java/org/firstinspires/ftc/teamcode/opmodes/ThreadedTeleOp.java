@@ -39,7 +39,7 @@ public class ThreadedTeleOp extends LinearOpMode {
 
         DriveTrainTask driveTrainTask = new DriveTrainTask(this, frontLeft, frontRight, backLeft, backRight);
         //ButtonPusherTask buttonPusherTask = new ButtonPusherTask(this, button);
-        //FlywheelTask flywheelTask = new FlywheelTask(this, flywheelLeft, flywheelRight);
+        FlywheelTask flywheelTask = new FlywheelTask(this, flywheelLeft, flywheelRight);
         //IntakeTask intakeTask = new IntakeTask(this, sweeper, conveyor);
         CapBallTask capBallTask = new CapBallTask(this, capLeft, capRight, forkLeft, forkRight);
         waitForStart();
@@ -47,7 +47,7 @@ public class ThreadedTeleOp extends LinearOpMode {
 
         driveTrainTask.start();
         //buttonPusherTask.start();
-        //flywheelTask.start();
+        flywheelTask.start();
         //intakeTask.start();
         capBallTask.start();
         //driveTrainTask.zeroAngle = imu.getRadians();
@@ -57,19 +57,19 @@ public class ThreadedTeleOp extends LinearOpMode {
             long elapsed = System.nanoTime() - startTime;
             //driveTrainTask.gyroAngle = imu.getRadians();
 
-            if (elapsed > 120 * 1000000000L) {
+            /*if (elapsed > 120 * 1000000000L) {
                 //Stop all tasks, the tasks will stop motors etc.
                 driveTrainTask.running = false;
                 //buttonPusherTask.running = false;
-                //flywheelTask.running = false;
+                flywheelTask.running = false;
                 //intakeTask.running = false;
                 capBallTask.running = false;
                 //Get out of the loop
                 break;
             } else {
                 //telemetry.addData("Time elapsed", (int) (elapsed / 1000000000L));
-                //telemetry.addData("Flywheel status", flywheelTask.getFlywheelStateString());
-            }
+                telemetry.addData("Flywheel status", flywheelTask.getFlywheelStateString());
+            }*/
 
             if (gamepad1.dpad_up && !dpadUpPushed){
                 driveTrainTask.joyStickFactor *= -1;
@@ -89,6 +89,12 @@ public class ThreadedTeleOp extends LinearOpMode {
             if (!gamepad1.x){
                 xPushed = false;
             }
+            if(capBallTask.isBallUp()) {
+                driveTrainTask.joyStickMultiplier = 0.5;
+            }
+            if(capBallTask.isSlideIn()) {
+                driveTrainTask.joyStickMultiplier = 1;
+            }
 
             telemetry.update();
         }
@@ -101,8 +107,8 @@ public class ThreadedTeleOp extends LinearOpMode {
         frontRight = hardwareMap.dcMotor.get("frontRight");
         backLeft = hardwareMap.dcMotor.get("backLeft");
         backRight = hardwareMap.dcMotor.get("backRight");
-        //flywheelRight = hardwareMap.dcMotor.get("flywheelRight");
-        //flywheelLeft = hardwareMap.dcMotor.get("flywheelLeft");
+        flywheelRight = hardwareMap.dcMotor.get("flywheelRight");
+        flywheelLeft = hardwareMap.dcMotor.get("flywheelLeft");
         //conveyor = hardwareMap.dcMotor.get("conveyor");
         //sweeper = hardwareMap.dcMotor.get("sweeper");
         //gate = hardwareMap.servo.get("gate");
@@ -120,16 +126,16 @@ public class ThreadedTeleOp extends LinearOpMode {
         capLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         capRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         capRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        //flywheelRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        //flywheelLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        //flywheelRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        //flywheelLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        flywheelRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        flywheelLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        flywheelRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        flywheelLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         //backRight.setDirection(DcMotorSimple.Direction.REVERSE);
         frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        //flywheelRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        flywheelLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         //conveyor.setDirection(DcMotorSimple.Direction.REVERSE);
         forkLeft.setPosition(0.8);
         forkRight.setPosition(0.12);
@@ -137,7 +143,7 @@ public class ThreadedTeleOp extends LinearOpMode {
         
         //gyro.calibrate();
         //gyro.resetZAxisIntegrator();
-       // int base = gyro.getIntegratedZValue();
+        //int base = gyro.getIntegratedZValue();
         //gate.setPosition(0.4);
 
     }

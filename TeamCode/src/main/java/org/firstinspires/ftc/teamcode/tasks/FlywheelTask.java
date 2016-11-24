@@ -59,7 +59,7 @@ public class FlywheelTask extends Thread {
             } else if (opMode.gamepad2.x){
                 setFlywheelPow(0);
             } else if (opMode.gamepad2.b){
-                setFlywheelPow(1.0);
+                setFlywheelPow(0.6);
             } else if(opMode.gamepad2.dpad_left) {
                 setFlywheelPow(-0.2);
             }
