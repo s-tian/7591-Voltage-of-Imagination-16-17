@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.opmodes.ThreadedTeleOp;
 import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
 
 /**
@@ -14,7 +15,7 @@ public class FlywheelTask extends Thread {
 
     private DcMotor flywheelRight;
     private DcMotor flywheelLeft;
-    private LinearOpMode opMode;
+    private ThreadedTeleOp opMode;
     public volatile boolean running = true;
     private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     public FlywheelState state;
@@ -39,7 +40,7 @@ public class FlywheelTask extends Thread {
     }
 
 
-    public FlywheelTask(LinearOpMode opMode, DcMotor flywheelLeft, DcMotor flywheelRight) {
+    public FlywheelTask(ThreadedTeleOp opMode, DcMotor flywheelLeft, DcMotor flywheelRight) {
         this.flywheelLeft = flywheelLeft;
         this.flywheelRight = flywheelRight;
         flywheelLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);

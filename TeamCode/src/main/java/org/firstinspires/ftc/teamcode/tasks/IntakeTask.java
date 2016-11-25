@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.opmodes.ThreadedTeleOp;
 import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
 
 /**
@@ -14,11 +15,11 @@ public class IntakeTask extends Thread {
 
     private DcMotor sweeper;
     private DcMotor conveyor;
-    private LinearOpMode opMode;
+    private ThreadedTeleOp opMode;
     public volatile boolean running = true;
 
 
-    public IntakeTask(LinearOpMode opMode, DcMotor sweeper, DcMotor conveyor) {
+    public IntakeTask(ThreadedTeleOp opMode, DcMotor sweeper, DcMotor conveyor) {
         this.sweeper = sweeper;
         this.conveyor = conveyor;
         this.opMode = opMode;

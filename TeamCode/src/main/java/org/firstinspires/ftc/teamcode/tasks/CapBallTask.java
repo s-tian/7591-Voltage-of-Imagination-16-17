@@ -5,6 +5,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.opmodes.ThreadedTeleOp;
+
 import static org.firstinspires.ftc.teamcode.R.layout.servo;
 
 /**
@@ -15,7 +17,7 @@ public class CapBallTask extends Thread {
 
     private DcMotor capLeft, capRight;
     private Servo forkLeft, forkRight;
-    private LinearOpMode opMode;
+    private ThreadedTeleOp opMode;
     private ElapsedTime timer  = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     double startLeft = 0.8, startRight = 0.12, downLeft = 0.3, downRight = 0.62;
     boolean aPushed = false;
@@ -26,7 +28,7 @@ public class CapBallTask extends Thread {
     boolean slideIn = false;
 
 
-    public CapBallTask(LinearOpMode opMode, DcMotor capLeft, DcMotor capRight, Servo forkLeft, Servo forkRight) {
+    public CapBallTask(ThreadedTeleOp opMode, DcMotor capLeft, DcMotor capRight, Servo forkLeft, Servo forkRight) {
 
         this.capLeft = capLeft;
         this.capRight = capRight;

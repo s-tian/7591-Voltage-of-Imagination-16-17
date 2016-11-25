@@ -27,9 +27,12 @@ public class ThreadedTeleOp extends LinearOpMode {
 
     DcMotor frontLeft, frontRight, backLeft, backRight, flywheelRight, flywheelLeft, conveyor, sweeper, capLeft, capRight;
     Servo gate, button, forkLeft, forkRight;
+    public DriveTrainTask driveTrainTask;
+    public FlywheelTask flywheelTask;
+    public CapBallTask capBallTask;
+    public IntakeTask intakeTask;
     //VOIImu imu;
-    boolean dpadUpPushed = false;
-    boolean xPushed = false;
+
     //ModernRoboticsI2cGyro gyro;
 
     @Override
@@ -37,11 +40,11 @@ public class ThreadedTeleOp extends LinearOpMode {
 
         initialize();
 
-        DriveTrainTask driveTrainTask = new DriveTrainTask(this, frontLeft, frontRight, backLeft, backRight);
+        driveTrainTask = new DriveTrainTask(this, frontLeft, frontRight, backLeft, backRight);
         //ButtonPusherTask buttonPusherTask = new ButtonPusherTask(this, button);
-        FlywheelTask flywheelTask = new FlywheelTask(this, flywheelLeft, flywheelRight);
+        flywheelTask = new FlywheelTask(this, flywheelLeft, flywheelRight);
         //IntakeTask intakeTask = new IntakeTask(this, sweeper, conveyor);
-        CapBallTask capBallTask = new CapBallTask(this, capLeft, capRight, forkLeft, forkRight);
+        capBallTask = new CapBallTask(this, capLeft, capRight, forkLeft, forkRight);
         waitForStart();
         long startTime = System.nanoTime();
 
@@ -57,7 +60,7 @@ public class ThreadedTeleOp extends LinearOpMode {
             long elapsed = System.nanoTime() - startTime;
             //driveTrainTask.gyroAngle = imu.getRadians();
 
-            /*if (elapsed > 120 * 1000000000L) {
+            if (elapsed > 120 * 1000000000L) {
                 //Stop all tasks, the tasks will stop motors etc.
                 driveTrainTask.running = false;
                 //buttonPusherTask.running = false;
@@ -69,35 +72,7 @@ public class ThreadedTeleOp extends LinearOpMode {
             } else {
                 //telemetry.addData("Time elapsed", (int) (elapsed / 1000000000L));
                 telemetry.addData("Flywheel status", flywheelTask.getFlywheelStateString());
-            }*/
-
-            if (gamepad1.dpad_up && !dpadUpPushed){
-                driveTrainTask.joyStickFactor *= -1;
-                dpadUpPushed = true;
             }
-            if (!gamepad1.dpad_up){
-                dpadUpPushed = false;
-            }
-            if (gamepad1.x && !xPushed){
-                xPushed = true;
-                if (driveTrainTask.joyStickMultiplier == 1) {
-                    driveTrainTask.joyStickMultiplier = 0.5;
-                } else if (driveTrainTask.joyStickMultiplier == 0.5){
-                    driveTrainTask.joyStickMultiplier = 1;
-                }
-            }
-            if (!gamepad1.x){
-                xPushed = false;
-            }
-            if(capBallTask.isBallUp()) {
-                driveTrainTask.joyStickMultiplier = 0.5;
-                capBallTask.setBallUp(false);
-            }
-            if(capBallTask.isSlideIn()) {
-                driveTrainTask.joyStickMultiplier = 1;
-                capBallTask.setSlideIn(false);
-            }
-
             telemetry.update();
         }
     }

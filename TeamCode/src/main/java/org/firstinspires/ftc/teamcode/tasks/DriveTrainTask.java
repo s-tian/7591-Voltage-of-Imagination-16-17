@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.opmodes.ThreadedTeleOp;
 import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
 
 /**
@@ -13,15 +14,19 @@ public class DriveTrainTask extends Thread {
 
     private DcMotor frontLeft, frontRight, backLeft, backRight;
 
-    private LinearOpMode opMode;
+    private ThreadedTeleOp opMode;
 
     public volatile boolean running = true;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     static double joy1X, joy1Y, joy2X;
-    public volatile int joyStickFactor = 1;
-    public volatile double joyStickMultiplier = 1;
+    int joyStickFactor = 1;
+    double joyStickMultiplier = 1;
+
+    boolean dpadUpPushed = false;
+    boolean xPushed = false;
+
     public double zeroAngle, joyStickAngle, gyroAngle;
-    public DriveTrainTask(LinearOpMode opMode, DcMotor frontLeft, DcMotor frontRight, DcMotor backLeft, DcMotor backRight) {
+    public DriveTrainTask(ThreadedTeleOp opMode, DcMotor frontLeft, DcMotor frontRight, DcMotor backLeft, DcMotor backRight) {
         this.frontLeft = frontLeft;
         this.frontRight = frontRight;
         this.backLeft  = backLeft;
@@ -34,6 +39,38 @@ public class DriveTrainTask extends Thread {
         timer.reset();
         while(opMode.opModeIsActive() && running) {
             if (timer.time() > 10) {
+
+                if (opMode.gamepad1.dpad_up) {
+                    if(!dpadUpPushed) {
+                        joyStickFactor *= -1;
+                        dpadUpPushed = true;
+                    }
+                } else {
+                    dpadUpPushed = false;
+                }
+
+                if (opMode.gamepad1.x){
+                    if(!xPushed) {
+                        if (joyStickMultiplier == 1) {
+                            joyStickMultiplier = 0.5;
+                        } else {
+                            joyStickMultiplier = 1;
+                        }
+                        xPushed = true;
+                    }
+                } else {
+                    xPushed = false;
+                }
+
+
+                if(opMode.capBallTask.isBallUp()) {
+                    joyStickMultiplier = 0.5;
+                    opMode.capBallTask.setBallUp(false);
+                }
+                if(opMode.capBallTask.isSlideIn()) {
+                    joyStickMultiplier = 1;
+                    opMode.capBallTask.setSlideIn(false);
+                }
 
                 joy1Y = -opMode.gamepad1.left_stick_y;
                 joy1Y = Math.abs(joy1Y) > 0.15 ? joy1Y * 3 / 4 : 0;

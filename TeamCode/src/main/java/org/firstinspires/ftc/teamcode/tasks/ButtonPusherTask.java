@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.opmodes.ThreadedTeleOp;
 import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
 
 /**
@@ -12,7 +13,7 @@ import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
 public class ButtonPusherTask extends Thread {
 
     private Servo servo;
-    private LinearOpMode opMode;
+    private ThreadedTeleOp opMode;
     private boolean pressing = false;
     private boolean buttonOut = false;
     private boolean xPushed = false;
@@ -27,7 +28,7 @@ get out forklift driver 1
 2. lower slides
 Open servo, 5 secs, close servo
   */
-    public ButtonPusherTask(LinearOpMode opMode, Servo servo) {
+    public ButtonPusherTask(ThreadedTeleOp opMode, Servo servo) {
         this.servo = servo;
         this.opMode = opMode;
     }
