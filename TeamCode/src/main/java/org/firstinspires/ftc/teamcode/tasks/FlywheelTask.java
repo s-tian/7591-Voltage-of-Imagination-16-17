@@ -23,9 +23,9 @@ public class FlywheelTask extends Thread {
     private final int FULL_SPEED_RPM = 1400;
     private final int TICKS_PER_REV = 112;
     private final int MAX_ENCODER_TICKS_PER_SEC = (int) (1.0*FULL_SPEED_RPM/60*TICKS_PER_REV);
-    private final double MAX_ALLOWED_ERROR = 0.1;      //Currently set at 0.05 error, we'll see how this works out.
+    private final double MAX_ALLOWED_ERROR = 0.1;      //When the difference between the actual speed and targeted speed is smaller than this percentage, the state will display as RUNNNING_NEAR_TARGET.
     private final double CLOSE_ERROR = 0.05;
-    private final double KP = 1.0/10/MAX_ENCODER_TICKS_PER_SEC;     //Proportional error constant to tune, temp set at 1/Maximum encoder ticks
+    private final double KP = 1.0/10/MAX_ENCODER_TICKS_PER_SEC;     //Proportional error constant to tune
 
     private int targetEncoderRate = 0;
     private int lastEncoderReadingLeft = 0;
@@ -105,9 +105,6 @@ public class FlywheelTask extends Thread {
                 }
 
             }
-
-            opMode.telemetry.addData("Flywheel", flywheelRight.getPower());
-            opMode.telemetry.addData("Flywheel Status", getFlywheelState());
 
         }
         flywheelRight.setPower(0);

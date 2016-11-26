@@ -55,6 +55,7 @@ public class ThreadedTeleOp extends LinearOpMode {
         capBallTask.start();
         //driveTrainTask.zeroAngle = imu.getRadians();
 
+
         while(opModeIsActive()) {
             //Timer for 2 minute teleop period
             long elapsed = System.nanoTime() - startTime;
@@ -103,8 +104,6 @@ public class ThreadedTeleOp extends LinearOpMode {
         capLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         capRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         capRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        flywheelRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        flywheelLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         flywheelRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         flywheelLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 

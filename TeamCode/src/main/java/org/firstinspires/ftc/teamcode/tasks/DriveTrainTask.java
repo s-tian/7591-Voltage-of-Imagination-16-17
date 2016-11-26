@@ -19,13 +19,13 @@ public class DriveTrainTask extends Thread {
     public volatile boolean running = true;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     static double joy1X, joy1Y, joy2X;
-    int joyStickFactor = 1;
-    double joyStickMultiplier = 1;
-
+    int joyStickSign = 1;
+    volatile double joyStickMultiplier = 1;
     boolean dpadUpPushed = false;
     boolean xPushed = false;
 
     public double zeroAngle, joyStickAngle, gyroAngle;
+
     public DriveTrainTask(ThreadedTeleOp opMode, DcMotor frontLeft, DcMotor frontRight, DcMotor backLeft, DcMotor backRight) {
         this.frontLeft = frontLeft;
         this.frontRight = frontRight;
@@ -42,7 +42,7 @@ public class DriveTrainTask extends Thread {
 
                 if (opMode.gamepad1.dpad_up) {
                     if(!dpadUpPushed) {
-                        joyStickFactor *= -1;
+                        joyStickSign *= -1;
                         dpadUpPushed = true;
                     }
                 } else {
@@ -62,24 +62,14 @@ public class DriveTrainTask extends Thread {
                     xPushed = false;
                 }
 
-
-                if(opMode.capBallTask.isBallUp()) {
-                    joyStickMultiplier = 0.5;
-                    opMode.capBallTask.setBallUp(false);
-                }
-                if(opMode.capBallTask.isSlideIn()) {
-                    joyStickMultiplier = 1;
-                    opMode.capBallTask.setSlideIn(false);
-                }
-
                 joy1Y = -opMode.gamepad1.left_stick_y;
                 joy1Y = Math.abs(joy1Y) > 0.15 ? joy1Y * 3 / 4 : 0;
                 joy1X = opMode.gamepad1.left_stick_x;
                 joy1X = Math.abs(joy1X) > 0.15 ? joy1X * 3 / 4 : 0;
                 joy2X = opMode.gamepad1.right_stick_x;
                 joy2X = Math.abs(joy2X) > 0.15 ? joy2X * 3 / 4 : 0;
-                joy1Y *= joyStickFactor;
-                joy1X *= joyStickFactor;
+                joy1Y *= joyStickSign;
+                joy1X *= joyStickSign;
                 frontLeft.setPower(Math.max(-1, Math.min(1, joyStickMultiplier*(joy1Y + joy2X + joy1X))));
                 backLeft.setPower(Math.max(-1, joyStickMultiplier*Math.min(1, joy1Y + joy2X - joy1X)));
                 frontRight.setPower(Math.max(-1, joyStickMultiplier*Math.min(1, joy1Y - joy2X - joy1X)));
@@ -110,5 +100,9 @@ public class DriveTrainTask extends Thread {
         System.out.println("Zero: " + zeroAngle *180/Math.PI);
         //System.out.println( "After: " + joy1X + " " + joy1Y);
 
+    }
+
+    public void setJoyStickMultiplier(double value) {
+        this.joyStickMultiplier = value;
     }
 }
