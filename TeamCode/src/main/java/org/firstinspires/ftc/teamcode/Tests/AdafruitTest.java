@@ -20,14 +20,14 @@ import org.firstinspires.ftc.teamcode.robotutil.VOIImu;
 
 public class AdafruitTest extends LinearOpMode {
     MecanumDriveTrain driveTrain;
-    DcMotor frontLeft, frontRight, backLeft, backRight, sweeper;
+    DcMotor frontLeft, frontRight, backLeft, backRight;
     VOIImu imu;
     BNO055IMU adaImu;
     @Override
     public void runOpMode() throws InterruptedException {
         initialize();
         waitForStart();
-        driveTrain.rotateDegrees((int)(90*0.7), true);
+        driveTrain.rotateDegreesPrecision(180);
 
     }
     public void initialize(){
@@ -35,9 +35,7 @@ public class AdafruitTest extends LinearOpMode {
         frontRight = hardwareMap.dcMotor.get("frontRight");
         backLeft = hardwareMap.dcMotor.get("backLeft");
         backRight = hardwareMap.dcMotor.get("backRight");
-        sweeper = hardwareMap.dcMotor.get("sweeper");
         adaImu = hardwareMap.get(BNO055IMU.class, "imu");
-        sweeper.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         imu = new VOIImu(adaImu);
         driveTrain = new MecanumDriveTrain(backLeft, backRight, frontLeft, frontRight,imu, this);

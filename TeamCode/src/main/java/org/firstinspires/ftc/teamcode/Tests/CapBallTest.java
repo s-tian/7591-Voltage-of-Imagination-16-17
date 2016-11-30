@@ -31,7 +31,7 @@ public class CapBallTest extends LinearOpMode {
             else {
                 setCapPower(0);
             }
-            if (gamepad1.a){
+            if (gamepad2.a){
                 foldForkLift();
             }
         }

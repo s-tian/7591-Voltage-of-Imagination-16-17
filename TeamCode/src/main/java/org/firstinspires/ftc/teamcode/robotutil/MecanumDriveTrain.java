@@ -11,10 +11,10 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  */
 public class MecanumDriveTrain {
     //export PATH="$PATH:/Users/Howard/Library/Android/sdk/platform-tools"
-    public static final double TICKS_PER_INCH_FORWARD= 57.89;
-    public static final double TICKS_PER_INCH_STRAFE = 61.05;
-    public static final double TICKS_PER_MS_FORWARD = 2.489; // at power = 1
-    public static final double TICKS_PER_MS_STRAFE = 1.961; // at power = 1
+    public static final double TICKS_PER_INCH_FORWARD= 43.46;
+    public static final double TICKS_PER_INCH_STRAFE = 48.97;
+    public static final double TICKS_PER_MS_FORWARD = 2.3875; // power 1
+    public static final double TICKS_PER_MS_STRAFE = 1.912; //  power 1
     public static final double factorFL = 1;
     public static final double factorFR = 1;//0.9072
     public static final double factorBL = 0.9069;//0.9069
@@ -72,8 +72,9 @@ public class MecanumDriveTrain {
         reverseMotors();
     }
     private void reverseMotors() {
-        backRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        //backRight.setDirection(DcMotorSimple.Direction.REVERSE);
         frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
     }
     public void setEncoderMode(DcMotor.RunMode runMode) {
         backLeft.setMode(runMode);
@@ -133,17 +134,18 @@ public class MecanumDriveTrain {
         // Clockwise: degrees > 0
         // CounterClockwise: degrees < 0;
         double velocity, targetGyro = addAngles(imu.getAngle(), degrees);
-        rotateDegrees(degrees, true);
-        while (Math.abs(subtractAngles(imu.getAngle(), targetGyro))> 2 && opMode.opModeIsActive()){
+        rotateDegrees((int)(degrees*0.85), true);
+        while (Math.abs(subtractAngles(imu.getAngle(), targetGyro))> 1 && opMode.opModeIsActive()){
+            opMode.telemetry.addData("Angles",imu.getAngle()+ " " + targetGyro);
+            opMode.updateTelemetry(opMode.telemetry);
             double gyroValue = imu.getAngle();
             if (subtractAngles(targetGyro, gyroValue) > 0)
-                velocity = Math.max(subtractAngles(targetGyro, gyroValue)*0.7/degrees, 0.1);
+                velocity = Math.max(subtractAngles(targetGyro, gyroValue)*0.3/degrees, 0.1);
             else
-                velocity = Math.min(subtractAngles(targetGyro, gyroValue)*0.7/degrees, -0.1);
+                velocity = Math.min(subtractAngles(targetGyro, gyroValue)*0.3/degrees, -0.1);
             startRotation(velocity);
         }
         stopAll();
-        System.out.println(imu.getAngle());
     }
     public void rotateDegrees(int degrees, boolean slowdown) {
         double gyroValue = imu.getAngle();
@@ -160,8 +162,8 @@ public class MecanumDriveTrain {
                 opMode.telemetry.addData("target angle: " ,targetGyro);
                 if (slowdown) {
                     opMode.telemetry.addData("Angle left: ",subtractAngles(targetGyro, gyroValue, false));
-                    //velocity = Math.min(subtractAngles(targetGyro, gyroValue, false) * 0.35 / degrees, -0.2);
-                    //startRotation(velocity);
+                    velocity = Math.min(subtractAngles(targetGyro, gyroValue, false) * 0.15 / degrees, -0.2);
+                    startRotation(velocity);
                 }
                 opMode.telemetry.update();
 
@@ -189,7 +191,6 @@ public class MecanumDriveTrain {
         moveForwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall);
     }
     public void moveBackwardNInch(double power, double inches, double timeout, boolean detectStall) {
-        System.out.println(inches);
         moveBackwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall);
     }
     public void moveLeftNInch(double power, double inches, double timeout, boolean detectStall) {
@@ -329,7 +330,6 @@ public class MecanumDriveTrain {
         if (!forward) {
             expected = (int) (TICKS_PER_MS_STRAFE * 100 * 0.5);
         }
-        int stallingMotors = 0;
         if (ticksBackLeft < expected) BLStall = true;
         if (ticksBackRight < expected) BRStall = true;
         if (ticksFrontRight < expected) FRStall = true;
@@ -364,6 +364,7 @@ public class MecanumDriveTrain {
         } else if (Math.abs(diff2) < Math.abs(diff3)){
             return diff2;
         }
+        System.out.println(diff1 + " " + diff2 + " " + diff3);
         return diff3;
     }
 
@@ -383,4 +384,5 @@ public class MecanumDriveTrain {
         return (int)(angle1 - angle2);
 
     }
+
 }

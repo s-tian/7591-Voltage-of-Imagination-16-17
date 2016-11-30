@@ -62,17 +62,17 @@ public class CapBallTask extends Thread {
             if(opMode.gamepad2.right_bumper) {
                 forkLeft.setPosition(downLeft);
                 forkRight.setPosition(downRight);
-                forkliftOut = false;
+                //forkliftOut = false;
             } else {
                 forkLeft.setPosition(startLeft);
                 forkRight.setPosition(startRight);
             }
 
-            if(opMode.gamepad1.dpad_down) {
-                if(!forkliftOut) {
-                    dropForklift();
-                }
-            }
+//            if(opMode.gamepad1.dpad_down) {
+//                if(!forkliftOut) {
+//                    dropForklift();
+//                }
+//            }
         }
         setLiftPower(0);
     }
@@ -86,22 +86,22 @@ public class CapBallTask extends Thread {
         return capLeft.getPower();
     }
 
-    private void dropForklift() {
-        //Probably want to use encoders for this
-        ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-        timer.reset();
-        while(timer.time() < 1400 && opMode.opModeIsActive()) {
-            if(opMode.gamepad1.right_bumper||opMode.gamepad2.right_trigger-opMode.gamepad2.left_trigger>0.15 || opMode.gamepad1.left_bumper||opMode.gamepad2.left_trigger-opMode.gamepad2.right_trigger>0.15) {
-                return;
-            }
-            if(timer.time() < 500) {
-                setLiftPower(1);
-            } else {
-                setLiftPower(-1);
-            }
-        }
-        setLiftPower(0);
-        forkliftOut = true;
-    }
+//    private void dropForklift() {
+//        //Probably want to use encoders for this
+//        ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+//        timer.reset();
+//        while(timer.time() < 1400 && opMode.opModeIsActive()) {
+//            if(opMode.gamepad1.right_bumper||opMode.gamepad2.right_trigger-opMode.gamepad2.left_trigger>0.15 || opMode.gamepad1.left_bumper||opMode.gamepad2.left_trigger-opMode.gamepad2.right_trigger>0.15) {
+//                return;
+//            }
+//            if(timer.time() < 500) {
+//                setLiftPower(1);
+//            } else {
+//                setLiftPower(-1);
+//            }
+//        }
+//        setLiftPower(0);
+//        forkliftOut = true;
+//    }
 
 }
