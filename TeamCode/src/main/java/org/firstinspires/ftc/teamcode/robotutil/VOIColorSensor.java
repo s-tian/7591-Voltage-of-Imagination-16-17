@@ -46,8 +46,7 @@ public class VOIColorSensor {
         return sensor.blue();
     }
 
-    public int getGreen()
-    {
+    public int getGreen() {
         return sensor.green();
     }
 

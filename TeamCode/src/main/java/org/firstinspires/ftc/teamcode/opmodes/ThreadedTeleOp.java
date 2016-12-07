@@ -35,9 +35,6 @@ public class ThreadedTeleOp extends LinearOpMode {
     public FlywheelTask flywheelTask;
     public CapBallTask capBallTask;
     public IntakeTask intakeTask;
-    //VOIImu imu;
-
-    //ModernRoboticsI2cGyro gyro;
 
     @Override
     public void runOpMode() {
@@ -47,7 +44,7 @@ public class ThreadedTeleOp extends LinearOpMode {
         driveTrainTask = new DriveTrainTask(this, frontLeft, frontRight, backLeft, backRight);
         //ButtonPusherTask buttonPusherTask = new ButtonPusherTask(this, button);
         flywheelTask = new FlywheelTask(this, flywheelLeft, flywheelRight);
-        IntakeTask intakeTask = new IntakeTask(this, sweeper);
+        intakeTask = new IntakeTask(this, sweeper);
         capBallTask = new CapBallTask(this, capLeft, capRight, forkLeft, forkRight);
         waitForStart();
         long startTime = System.nanoTime();
