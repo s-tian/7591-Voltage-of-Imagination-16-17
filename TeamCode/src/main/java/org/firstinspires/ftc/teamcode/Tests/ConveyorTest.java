@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
  * Created by Stephen on 10/6/2016.
  */
 
-@TeleOp(name = "Conveyor Test", group = "Test")
+//@TeleOp(name = "Conveyor Test", group = "Test")
 
 public class ConveyorTest extends LinearOpMode {
 

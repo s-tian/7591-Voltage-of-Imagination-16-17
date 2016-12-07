@@ -75,7 +75,7 @@ public class VOIColorSensor {
                 i++;
                 System.out.println("R: " + sensor.red() + " G: " + sensor.green()+ " B: "  + sensor.blue() );
                 logMessageTimer.reset();
-                if (sensor.red() >= 5 && sensor.blue() >= 5 && sensor.green() >= 5)
+                if (sensor.red() >= 3 && sensor.blue() >= 3 && sensor.green() >= 3)
                     score ++;
             }
         }

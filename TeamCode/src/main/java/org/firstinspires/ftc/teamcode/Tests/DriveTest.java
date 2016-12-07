@@ -28,11 +28,26 @@ public class DriveTest extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         initialize();
         waitForStart();
-        int start = backRight.getCurrentPosition();
-        System.out.println(start);
-        driveTrain.moveRightTicksWithEncoders(0.5, 2000, 10,false);
-        sleep(1000);
-        System.out.println(backRight.getCurrentPosition());
+        System.out.println(1);
+        System.out.println("FL "  + frontLeft.getCurrentPosition());
+        System.out.println("FR "  + frontRight.getCurrentPosition());
+        System.out.println("BL "  + backLeft.getCurrentPosition());
+        System.out.println("BR "  + backRight.getCurrentPosition());
+        driveTrain.strafeRight(1);
+        sleep(500);
+        System.out.println(2);
+        System.out.println("FL "  + frontLeft.getCurrentPosition());
+        System.out.println("FR "  + frontRight.getCurrentPosition());
+        System.out.println("BL "  + backLeft.getCurrentPosition());
+        System.out.println("BR "  + backRight.getCurrentPosition());
+        sleep(2000);
+        System.out.println(3);
+        System.out.println("FL "  + frontLeft.getCurrentPosition());
+        System.out.println("FR "  + frontRight.getCurrentPosition());
+        System.out.println("BL "  + backLeft.getCurrentPosition());
+        System.out.println("BR "  + backRight.getCurrentPosition());
+        driveTrain.stopAll();
+
 
     }
     public void initialize() {
@@ -40,13 +55,9 @@ public class DriveTest extends LinearOpMode {
         frontRight = hardwareMap.dcMotor.get("frontRight");
         backLeft = hardwareMap.dcMotor.get("backLeft");
         backRight = hardwareMap.dcMotor.get("backRight");
-        //adaImu = hardwareMap.get(BNO055IMU.class, "imu");
-        //imu = new VOIImu(adaImu);
-        driveTrain = new MecanumDriveTrain(backLeft, backRight, frontLeft, frontRight, imu, this);
+        driveTrain = new MecanumDriveTrain(backLeft, backRight, frontLeft, frontRight, this);
 
-        backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        driveTrain.setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        driveTrain.setEncoderMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
 }

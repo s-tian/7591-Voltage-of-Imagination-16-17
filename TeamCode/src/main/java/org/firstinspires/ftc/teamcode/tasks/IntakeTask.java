@@ -7,46 +7,38 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.opmodes.ThreadedTeleOp;
 import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
+import org.firstinspires.ftc.teamcode.robotutil.VOISweeper;
 
 /**
  * Created by Howard on 10/15/16.
  */
 public class IntakeTask extends Thread {
 
-    private DcMotor sweeper;
-    private DcMotor conveyor;
     private ThreadedTeleOp opMode;
     public volatile boolean running = true;
+    private VOISweeper sweeper;
 
 
-    public IntakeTask(ThreadedTeleOp opMode, DcMotor sweeper, DcMotor conveyor) {
+    public IntakeTask(ThreadedTeleOp opMode, VOISweeper sweeper) {
         this.sweeper = sweeper;
-        this.conveyor = conveyor;
         this.opMode = opMode;
+        sweeper.setPower(0);
     }
 
     @Override
     public void run() {
         while(opMode.opModeIsActive() && running) {
-            if(opMode.gamepad2.dpad_right){
-                conveyor.setPower(0);
-            }
-            else if(opMode.gamepad2.dpad_up){
-                conveyor.setPower(0.3);
-            }
-            else if(opMode.gamepad2.dpad_down){
-                conveyor.setPower(-0.3);
-            }
-
-            if(opMode.gamepad1.y) {
+            if(opMode.gamepad1.y){
                 sweeper.setPower(1);
-            } else if(opMode.gamepad1.a) {
-                sweeper.setPower(-1);
-            } else if(opMode.gamepad1.b){
+            }
+            else if(opMode.gamepad1.b){
                 sweeper.setPower(0);
             }
+            else if(opMode.gamepad1.a){
+                sweeper.setPower(-1);
+            }
+
         }
-        conveyor.setPower(0);
         sweeper.setPower(0);
     }
 }

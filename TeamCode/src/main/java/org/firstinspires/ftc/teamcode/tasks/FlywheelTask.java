@@ -15,7 +15,7 @@ public class FlywheelTask extends Thread {
 
     private DcMotor flywheelRight;
     private DcMotor flywheelLeft;
-    private ThreadedTeleOp opMode;
+    private LinearOpMode opMode;
     public volatile boolean running = true;
     private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     public FlywheelState state;
@@ -40,7 +40,7 @@ public class FlywheelTask extends Thread {
     }
 
 
-    public FlywheelTask(ThreadedTeleOp opMode, DcMotor flywheelLeft, DcMotor flywheelRight) {
+    public FlywheelTask(LinearOpMode opMode, DcMotor flywheelLeft, DcMotor flywheelRight) {
         this.flywheelLeft = flywheelLeft;
         this.flywheelRight = flywheelRight;
         flywheelLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);

@@ -6,11 +6,13 @@ import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.robotutil.VOIImu;
+import org.firstinspires.ftc.teamcode.robotutil.VOISweeper;
 import org.firstinspires.ftc.teamcode.tasks.ButtonPusherTask;
 import org.firstinspires.ftc.teamcode.tasks.CapBallTask;
 import org.firstinspires.ftc.teamcode.tasks.DriveTrainTask;
@@ -25,8 +27,10 @@ import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
 
 public class ThreadedTeleOp extends LinearOpMode {
 
-    DcMotor frontLeft, frontRight, backLeft, backRight, flywheelRight, flywheelLeft, conveyor, sweeper, capLeft, capRight;
-    Servo gate, button, forkLeft, forkRight;
+    DcMotor frontLeft, frontRight, backLeft, backRight, flywheelRight, flywheelLeft, capLeft, capRight;
+    CRServo sweeper1, sweeper2;
+    VOISweeper sweeper;
+    Servo button, forkLeft, forkRight;
     public DriveTrainTask driveTrainTask;
     public FlywheelTask flywheelTask;
     public CapBallTask capBallTask;
@@ -43,7 +47,7 @@ public class ThreadedTeleOp extends LinearOpMode {
         driveTrainTask = new DriveTrainTask(this, frontLeft, frontRight, backLeft, backRight);
         //ButtonPusherTask buttonPusherTask = new ButtonPusherTask(this, button);
         flywheelTask = new FlywheelTask(this, flywheelLeft, flywheelRight);
-        //IntakeTask intakeTask = new IntakeTask(this, sweeper, conveyor);
+        IntakeTask intakeTask = new IntakeTask(this, sweeper);
         capBallTask = new CapBallTask(this, capLeft, capRight, forkLeft, forkRight);
         waitForStart();
         long startTime = System.nanoTime();
@@ -51,7 +55,7 @@ public class ThreadedTeleOp extends LinearOpMode {
         driveTrainTask.start();
         //buttonPusherTask.start();
         flywheelTask.start();
-        //intakeTask.start();
+        intakeTask.start();
         capBallTask.start();
         //driveTrainTask.zeroAngle = imu.getRadians();
 
@@ -66,7 +70,7 @@ public class ThreadedTeleOp extends LinearOpMode {
                 driveTrainTask.running = false;
                 //buttonPusherTask.running = false;
                 flywheelTask.running = false;
-                //intakeTask.running = false;
+                intakeTask.running = false;
                 capBallTask.running = false;
                 //Get out of the loop
                 break;
@@ -97,6 +101,9 @@ public class ThreadedTeleOp extends LinearOpMode {
         //gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
         //adaImu = hardwareMap.get(BNO055IMU.class, "imu");
         //imu = new VOIImu(adaImu);
+        sweeper1 = hardwareMap.crservo.get("sweeper1");
+        sweeper2 = hardwareMap.crservo.get("sweeper2");
+        sweeper = new VOISweeper(sweeper1, sweeper2);
         frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -108,15 +115,13 @@ public class ThreadedTeleOp extends LinearOpMode {
         flywheelLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
         //backRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        //frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         flywheelLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        //conveyor.setDirection(DcMotorSimple.Direction.REVERSE);
         forkLeft.setPosition(0.8);
         forkRight.setPosition(0.12);
-        //lift.setDirection(DcMotor.Direction.REVERSE);
-        
+
         //gyro.calibrate();
         //gyro.resetZAxisIntegrator();
         //int base = gyro.getIntegratedZValue();

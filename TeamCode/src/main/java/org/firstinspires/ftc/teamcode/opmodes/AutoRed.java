@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.opmodes;
 import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -13,6 +14,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
 import org.firstinspires.ftc.teamcode.robotutil.VOIColorSensor;
 import org.firstinspires.ftc.teamcode.robotutil.VOIImu;
+import org.firstinspires.ftc.teamcode.robotutil.VOISweeper;
 import org.firstinspires.ftc.teamcode.tasks.DriveTrainTask;
 
 
@@ -31,6 +33,7 @@ public class AutoRed extends LinearOpMode {
     static final int bottomSensorID = 0x44;
     static final int ramRotation = -135;
     static double shootPower = 0.8;
+
     boolean pickUp = false;
     // ModernRoboticsI2cGyro gyro;
     BNO055IMU adaImu;
@@ -38,8 +41,10 @@ public class AutoRed extends LinearOpMode {
     ColorSensor colorSensorTop, colorSensorBottom;
     VOIColorSensor voiColorSensorTop, voiColorSensorBottom;
     Servo gate, button;
+    CRServo sweeper1, sweeper2;
+    VOISweeper sweeper;
     MecanumDriveTrain driveTrain;
-    DcMotor frontLeft, frontRight, backLeft, backRight, flywheelRight, flywheelLeft, sweeper, conveyor;
+    DcMotor frontLeft, frontRight, backLeft, backRight, flywheelRight, flywheelLeft, conveyor;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
     public void runOpMode() {
@@ -76,8 +81,6 @@ public class AutoRed extends LinearOpMode {
         flywheelRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         conveyor = hardwareMap.dcMotor.get("conveyor");
         conveyor.setDirection(DcMotorSimple.Direction.REVERSE);
-        sweeper = hardwareMap.dcMotor.get("sweeper");
-        sweeper.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         frontLeft = hardwareMap.dcMotor.get("frontLeft");
         frontRight = hardwareMap.dcMotor.get("frontRight");
         backLeft = hardwareMap.dcMotor.get("backLeft");
@@ -90,6 +93,9 @@ public class AutoRed extends LinearOpMode {
         voiColorSensorBottom = new VOIColorSensor(colorSensorBottom, this);
         gate = hardwareMap.servo.get("gate");
         button = hardwareMap.servo.get("button");
+        sweeper1 = hardwareMap.crservo.get("sweeper1");
+        sweeper2 = hardwareMap.crservo.get("sweeper2");
+        sweeper = new VOISweeper(sweeper1, sweeper2);
         //gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
         //gyro.calibrate();
         //gyro.resetZAxisIntegrator(); //address is 0x20
@@ -238,7 +244,7 @@ public class AutoRed extends LinearOpMode {
         }
         setFlywheelPower(0);
         driveTrain.setMotorPower(conveyor, 0);
-        driveTrain.setMotorPower(sweeper, 0);
+        sweeper.setPower(0);
     }
 
     public void setFlywheelPower(double power) {
@@ -314,12 +320,12 @@ public class AutoRed extends LinearOpMode {
         }
     }
     public void pickUpBall(){
-        sweeper.setPower(1);
         sleep(1500);
-        sweeper.setPower(0);
+        sweeper.setPower(1.0);
         driveTrain.moveLeftNInch(0.5, 10, 5, false);
         driveTrain.rotateDegreesPrecision(pickUpRotation);
     }
+
 
 
 
