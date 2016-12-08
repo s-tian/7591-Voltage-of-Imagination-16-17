@@ -182,6 +182,9 @@ public class MecanumDriveTrain {
     public void moveBackwardNInch(double power, double inches, double timeout, boolean detectStall) {
         moveBackwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall);
     }
+    public void moveBackwardNInch(double power, double inches, double timeout, boolean detectStall, boolean stop) {
+        moveBackwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop);
+    }
     public void moveLeftNInch(double power, double inches, double timeout, boolean detectStall) {
         moveLeftTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_STRAFE), timeout, detectStall);
 }
@@ -257,8 +260,7 @@ public class MecanumDriveTrain {
         }
         stopAll();
     }
-    public void moveBackwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall) {
-
+    public void moveBackwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
         double timeOutMS = timeout*1000;
         int targetPosition = mWheel.getCurrentPosition() - ticks;
         powerAllMotors(-power);
@@ -280,10 +282,14 @@ public class MecanumDriveTrain {
                 }
             }
         }
-
-        stopAll();
+        if (stop)
+            stopAll();
     }
-    public void getTicks(){
+    public void moveBackwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall) {
+        moveBackwardTicksWithEncoders(power, ticks, timeout, detectStall, true);
+    }
+
+        public void getTicks(){
         System.out.println(mWheel.getCurrentPosition());
     }
     public void powerForTime(double power, double time) {

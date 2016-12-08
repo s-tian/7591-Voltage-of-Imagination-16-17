@@ -28,14 +28,19 @@ public class IntakeTask extends Thread {
     @Override
     public void run() {
         while(opMode.opModeIsActive() && running) {
-            if(opMode.gamepad1.y){
+            if(opMode.gamepad2.dpad_up){
                 sweeper.setPower(1);
             }
-            else if(opMode.gamepad1.b){
-                sweeper.setPower(0);
-            }
-            else if(opMode.gamepad1.a){
+            else if (opMode.gamepad2.dpad_down) {
                 sweeper.setPower(-1);
+            }
+            else if(opMode.gamepad1.y){
+                sweeper.setPower(1);
+            }
+            else if(opMode.gamepad1.a) {
+                sweeper.setPower(-1);
+            } else {
+                sweeper.setPower(0);
             }
 
         }

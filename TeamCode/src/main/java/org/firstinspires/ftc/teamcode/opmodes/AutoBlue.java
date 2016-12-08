@@ -29,17 +29,17 @@ public class AutoBlue extends LinearOpMode {
     int delay = 200;
     boolean missed = false, pickUp = false, detectRed1 = false;
     int shootRotation = 95;
-    int shootRotation2 = 40;
-    int sralt = 37;
+    int shootRotation2 = 38;
+    int sralt = 35;
     final int capBallRotation = -180;
     final int pickUpRotation = 152;
-    final boolean REDTEAM = false;
     final int topSensorID = 0x3c;
     final int bottomSensorID = 0x44;
-    int betweenBeacon = 31;
-    int bbalt = 37;
+    int betweenBeacon = 35;
+    int bbalt = 39;
+    int bbalt2 = 18;
     int angle = -35;
-    double shootPower = 0.82;
+    double shootPower = 0.72;
     ColorSensor colorSensorTop, colorSensorBottom;
     VOIColorSensor voiColorSensorTop, voiColorSensorBottom;
     Servo forkLeft, forkRight, button;
@@ -158,7 +158,7 @@ public class AutoBlue extends LinearOpMode {
     public void drivePushButton() {
 
         // move backwards to get behind beacon
-        driveTrain.moveBackwardNInch(0.4, 4, 10, false);
+        driveTrain.moveBackwardNInch(0.2, 4, 10, false);
 
         // move forward until beacon detected
         pause();
@@ -176,6 +176,7 @@ public class AutoBlue extends LinearOpMode {
 
                 if (backRight.getCurrentPosition()-initialTicks > 20*driveTrain.TICKS_PER_INCH_FORWARD || timer2.time()>5000) {
                     //pause();
+                    betweenBeacon = bbalt2;
                     missed = true;
                     return;
                 }
@@ -194,14 +195,10 @@ public class AutoBlue extends LinearOpMode {
     }
 
     public void drivePushButton2() {
-        if (!missed) {
-            driveTrain.moveForwardNInch(0.3,betweenBeacon, 10, false);
-        } else {
-            driveTrain.moveForwardNInch(0.3, betweenBeacon -18, 10, false);
-        }
+        driveTrain.moveForwardNInch(0.4, betweenBeacon, 10, false);
         flywheelTask.setFlywheelPow(shootPower);
         //pause();
-        correctionStrafe(4);
+        correctionStrafe(2);
         boolean detectColor = false;
         driveTrain.powerAllMotors(0.1);
         timer.reset();
@@ -216,7 +213,7 @@ public class AutoBlue extends LinearOpMode {
                 timer.reset();
             }
         }
-        correctionStrafe(2);
+        correctionStrafe(0.5);
         pushButton();
     }
 
@@ -235,14 +232,15 @@ public class AutoBlue extends LinearOpMode {
 
     public void moveFromWall2 (){
         flywheelTask.setFlywheelPow(shootPower);
-        driveTrain.moveLeftNInch(1, 8, 10, false);
+        driveTrain.moveLeftNInch(0.6, 8, 10, false);
         //pause();
         driveTrain.rotateDegreesPrecision(shootRotation2);
         //pause();
         sleep(500);
-        driveTrain.moveBackwardNInch(0.3, 1, 3,false);
-        driveTrain.moveBackwardNInch(0.8,14,3,false);
-        driveTrain.moveBackwardNInch(0.3, 3, 3, false);
+        driveTrain.moveBackwardNInch(0.2, 1, 3,false, false);
+        driveTrain.moveBackwardNInch(0.3,12,3,false, false);
+        driveTrain.moveBackwardNInch(0.15, 5, 3, false);
+        sleep(250);
         sweeper.setPower(1);
         sleep(1500);
     }
@@ -304,6 +302,7 @@ public class AutoBlue extends LinearOpMode {
         timer.reset();
         while (opModeIsActive() && timer.time() < 1000);
         flywheelTask.setFlywheelPow(0.4);
+        sweeper.setPower(0);
         timer.reset();
         while (opModeIsActive() && timer.time() < 1000);
         flywheelTask.setFlywheelPow(0);
@@ -334,7 +333,7 @@ public class AutoBlue extends LinearOpMode {
     }
 
     public void hitCapBall2(){
-        driveTrain.moveBackwardNInch(0.8, 36, 10, false);
+        driveTrain.moveBackwardNInch(0.25, 36, 10, false);
     }
 
     public void pickUpBall(){

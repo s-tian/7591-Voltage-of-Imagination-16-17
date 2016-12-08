@@ -60,9 +60,9 @@ public class FlywheelTask extends Thread {
             } else if (opMode.gamepad2.x){
                 setFlywheelPow(0);
             } else if (opMode.gamepad2.b){
-                setFlywheelPow(0.6);
-            } else if(opMode.gamepad2.dpad_left) {
-                setFlywheelPow(-0.2);
+                setFlywheelPow(0.9);
+            } else if(opMode.gamepad2.y) {
+                setFlywheelPow(-0.4);
             }
 
             currentTime = System.nanoTime();
