@@ -38,4 +38,50 @@ public class VOIImu{
         return getAngle()*Math.PI/180;
     }
 
+    public static int addAngles(int angle1, int angle2){
+        int sum = (angle1 + angle2)%360;
+        if (sum >= 180){
+            sum -= 360;
+        } else if (sum <= -180){
+            sum += 360;
+        }
+        return sum;
+    }
+
+    public static int subtractAngles(double angle1, double angle2){
+        if (angle1 < 0) {
+            angle1 += 360;
+        }
+        if (angle2 < 0) {
+            angle2 += 360;
+        }
+        int diff1 = (int)(angle1 - angle2);
+        int diff2 = diff1 + 360;
+        int diff3 = diff1 - 360;
+        if (Math.abs(diff1) <= Math.abs(diff2) && Math.abs(diff1) <= Math.abs(diff3)){
+            return diff1;
+        } else if (Math.abs(diff2) < Math.abs(diff3)){
+            return diff2;
+        }
+        System.out.println(diff1 + " " + diff2 + " " + diff3);
+        return diff3;
+    }
+
+    public static int subtractAngles(double angle1, double angle2, boolean clockwise) {
+        // angle1 - angle2
+        if (angle1 < 0) {
+            angle1 += 360;
+        }
+        if (angle2 < 0) {
+            angle2 += 360;
+        }
+        if (clockwise && angle1 < angle2) {
+            angle1 += 360;
+        } else if (!clockwise && angle1 > angle2) {
+            angle1 -= 360;
+        }
+        return (int)(angle1 - angle2);
+
+    }
+
 }

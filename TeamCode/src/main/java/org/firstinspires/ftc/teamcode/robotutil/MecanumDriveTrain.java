@@ -27,6 +27,7 @@ public class MecanumDriveTrain {
     //ModernRoboticsI2cGyro gyro;
     VOIImu imu;
     LinearOpMode opMode;
+
     public MecanumDriveTrain(DcMotor backLeft, DcMotor backRight, DcMotor frontLeft, DcMotor frontRight, LinearOpMode opMode) {
         timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         this.backLeft = backLeft;
@@ -42,6 +43,7 @@ public class MecanumDriveTrain {
         setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
         reverseMotors();
     }
+
     public MecanumDriveTrain(DcMotor backLeft, DcMotor backRight, DcMotor frontLeft, DcMotor frontRight, VOIImu imu, LinearOpMode opMode) {
         timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         this.backLeft = backLeft;
@@ -59,18 +61,21 @@ public class MecanumDriveTrain {
         mWheel = backRight;
         reverseMotors();
     }
+
     private void reverseMotors() {
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         //backRight.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         //backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
     }
+
     public void setEncoderMode(DcMotor.RunMode runMode) {
         backLeft.setMode(runMode);
         backRight.setMode(runMode);
         frontLeft.setMode(runMode);
         frontRight.setMode(runMode);
     }
+
     public void setMotorPower(DcMotor motor,double power){
         double factor = 1;
         if (motor == frontLeft){
@@ -84,74 +89,83 @@ public class MecanumDriveTrain {
         }
         motor.setPower(POWER_RATIO*power*factor);
     }
+
     public void powerAllMotors(double power){
         setMotorPower(backLeft, power);
         setMotorPower(backRight, power);
         setMotorPower(frontLeft, power);
         setMotorPower(frontRight, power);
     }
+
     public void stopAll() {
         powerAllMotors(0);
     }
+
     public void powerRight(double power){
         setMotorPower(backRight, power);
         setMotorPower(frontRight, power);
     }
+
     public void powerLeft(double power){
         setMotorPower(backLeft, power);
         setMotorPower(frontLeft, power);
     }
+
     public void startRotation(double power){
         // power > 0 : clockwise
         // power < 0 : counterclockwise
         powerLeft(power);
         powerRight(-power);
     }
+
     public void strafeLeft(double power) {
         setMotorPower(backRight,  -power);
         setMotorPower(backLeft, power);
         setMotorPower(frontLeft, -power);
         setMotorPower(frontRight, power);
     }
+
     public void strafeRight(double power) {
         setMotorPower(backRight, power);
         setMotorPower(backLeft, -power);
         setMotorPower(frontLeft, power);
         setMotorPower(frontRight, -power);
     }
+
     public void rotateDegreesPrecision(int degrees) {
         // Clockwise: degrees > 0
         // CounterClockwise: degrees < 0;
-        double velocity, targetGyro = addAngles(imu.getAngle(), degrees);
+        double velocity, targetGyro = VOIImu.addAngles(imu.getAngle(), degrees);
         rotateDegrees((int)(degrees*0.8), true);
-        while (Math.abs(subtractAngles(imu.getAngle(), targetGyro))> 1 && opMode.opModeIsActive()){
+        while (Math.abs(VOIImu.subtractAngles(imu.getAngle(), targetGyro))> 1 && opMode.opModeIsActive()){
             opMode.telemetry.addData("Angles",imu.getAngle()+ " " + targetGyro);
             opMode.updateTelemetry(opMode.telemetry);
             double gyroValue = imu.getAngle();
-            if (subtractAngles(targetGyro, gyroValue) > 0)
-                velocity = Math.max(subtractAngles(targetGyro, gyroValue)*0.2/degrees, 0.07);
+            if (VOIImu.subtractAngles(targetGyro, gyroValue) > 0)
+                velocity = Math.max(VOIImu.subtractAngles(targetGyro, gyroValue)*0.2/degrees, 0.07);
             else
-                velocity = Math.min(subtractAngles(targetGyro, gyroValue)*0.2/degrees, -0.07);
+                velocity = Math.min(VOIImu.subtractAngles(targetGyro, gyroValue)*0.2/degrees, -0.07);
             startRotation(velocity);
         }
         stopAll();
     }
+
     public void rotateDegrees(int degrees, boolean slowdown) {
         double gyroValue = imu.getAngle();
-        int targetGyro = addAngles(imu.getAngle(), degrees);
+        int targetGyro = VOIImu.addAngles(imu.getAngle(), degrees);
         double velocity;
         timer.reset();
         if (degrees < 0){
 
             startRotation(-0.30);
-            while ((subtractAngles(targetGyro, gyroValue)) <  -2 && opMode.opModeIsActive()) {
+            while ((VOIImu.subtractAngles(targetGyro, gyroValue)) <  -2 && opMode.opModeIsActive()) {
 
                 gyroValue = imu.getAngle();
                 opMode.telemetry.addData("imu angle: " ,gyroValue);
                 opMode.telemetry.addData("target angle: " ,targetGyro);
                 if (slowdown) {
-                    opMode.telemetry.addData("Angle left: ",subtractAngles(targetGyro, gyroValue, false));
-                    velocity = Math.min(subtractAngles(targetGyro, gyroValue, false) * 0.15 / degrees, -0.2);
+                    opMode.telemetry.addData("Angle left: ",VOIImu.subtractAngles(targetGyro, gyroValue, false));
+                    velocity = Math.min(VOIImu.subtractAngles(targetGyro, gyroValue, false) * 0.15 / degrees, -0.2);
                     startRotation(velocity);
                 }
                 opMode.telemetry.update();
@@ -160,12 +174,12 @@ public class MecanumDriveTrain {
         }
         else{
             startRotation(0.30);
-            while ((subtractAngles(targetGyro, imu.getAngle())) > 2 && opMode.opModeIsActive()){
+            while ((VOIImu.subtractAngles(targetGyro, imu.getAngle())) > 2 && opMode.opModeIsActive()){
                 gyroValue = imu.getAngle();
                 opMode.telemetry.addData("imu angle: " ,gyroValue);
                 opMode.telemetry.addData("target angle: " ,targetGyro);
                 if (slowdown){
-                    opMode.telemetry.addData("Angle left: ",subtractAngles(targetGyro, gyroValue, false));
+                    opMode.telemetry.addData("Angle left: ",VOIImu.subtractAngles(targetGyro, gyroValue, false));
 
                     //velocity = Math.max(subtractAngles(targetGyro, imu.getAngle(), true)*0.35/degrees, 0.2);
                     //startRotation(velocity);
@@ -176,22 +190,24 @@ public class MecanumDriveTrain {
         }
         stopAll();
     }
-    public void moveForwardNInch(double power, double inches, double timeout, boolean detectStall)  {
-        moveForwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall);
+
+    public boolean moveForwardNInch(double power, double inches, double timeout, boolean detectStall, boolean stop)  {
+        return moveForwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop);
     }
-    public void moveBackwardNInch(double power, double inches, double timeout, boolean detectStall) {
-        moveBackwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall);
+
+    public boolean moveBackwardNInch(double power, double inches, double timeout, boolean detectStall, boolean stop) {
+        return moveBackwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop);
     }
-    public void moveBackwardNInch(double power, double inches, double timeout, boolean detectStall, boolean stop) {
-        moveBackwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop);
+
+    public boolean moveLeftNInch(double power, double inches, double timeout, boolean detectStall, boolean stop) {
+        return moveLeftTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_STRAFE), timeout, detectStall, stop);
     }
-    public void moveLeftNInch(double power, double inches, double timeout, boolean detectStall) {
-        moveLeftTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_STRAFE), timeout, detectStall);
-}
-    public void moveRightNInch(double power, double inches, double timeout, boolean detectStall) {
-        moveRightTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_STRAFE), timeout, detectStall);
+
+    public boolean moveRightNInch(double power, double inches, double timeout, boolean detectStall, boolean stop) {
+        return moveRightTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_STRAFE), timeout, detectStall, stop);
     }
-    public void moveLeftTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall) {
+
+    public boolean moveLeftTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
         double timeOutMS = timeout*1000;
         int targetPosition = mWheel.getCurrentPosition() - ticks;
         strafeLeft(power);
@@ -206,22 +222,28 @@ public class MecanumDriveTrain {
                 }
                 if (startDetectingStall && System.currentTimeMillis() - currentTime > 100) {
                     if (stalling(false)) {
-                        return;
+                        return false;
                     }
                 }
             }
         }
-        timer.reset();
-        stopAll();
+        if (timer.time() > timeOutMS) {
+            stopAll();
+        }
+        if (timer.time() >= timeOutMS) {
+            return false;
+        }
+        return true;
     }
-    public void moveRightTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall) {
-        double timeOutMS = timeout*1000;
+
+    public boolean moveRightTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
+        double timeOutMS = timeout * 1000;
         int targetPosition = mWheel.getCurrentPosition() + ticks;
         strafeRight(power);
         timer.reset();
         long currentTime = System.currentTimeMillis();
         boolean startDetectingStall = false;
-        while(mWheel.getCurrentPosition() < targetPosition && opMode.opModeIsActive() && timer.time() < timeOutMS) {
+        while (mWheel.getCurrentPosition() < targetPosition && opMode.opModeIsActive() && timer.time() < timeOutMS) {
             if (detectStall) {
                 if (System.currentTimeMillis() - currentTime > 1000) {
                     startDetectingStall = true;
@@ -230,14 +252,21 @@ public class MecanumDriveTrain {
                     currentTime = System.currentTimeMillis();
                     if (stalling(false)) {
                         stopAll();
-                        return;
+                        return false;
                     }
                 }
             }
         }
-        stopAll();
+        if (stop) {
+            stopAll();
+        }
+        if (timer.time() >= timeOutMS) {
+            return false;
+        }
+        return true;
     }
-    public void moveForwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall) {
+
+    public boolean moveForwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
         double timeOutMS = timeout*1000;
         int targetPosition = mWheel.getCurrentPosition() + ticks;
         powerAllMotors(power);
@@ -253,14 +282,21 @@ public class MecanumDriveTrain {
                     currentTime = System.currentTimeMillis();
                     if (stalling(true)) {
                         stopAll();
-                        return;
+                        return false;
                     }
                 }
             }
         }
-        stopAll();
+        if (stop) {
+            stopAll();
+        }
+        if (timer.time() >= timeOutMS) {
+            return false;
+        }
+        return true;
     }
-    public void moveBackwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
+
+    public boolean moveBackwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
         double timeOutMS = timeout*1000;
         int targetPosition = mWheel.getCurrentPosition() - ticks;
         powerAllMotors(-power);
@@ -277,29 +313,28 @@ public class MecanumDriveTrain {
                     if (stalling(true)) {
                         System.out.println("Stalling " + timeout);
                         stopAll();
-                        return;
+                        return false;
                     }
                 }
             }
         }
-        if (stop)
+        if (stop) {
             stopAll();
-    }
-    public void moveBackwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall) {
-        moveBackwardTicksWithEncoders(power, ticks, timeout, detectStall, true);
+        }
+        if (timer.time() > timeOutMS) {
+            return false;
+        }
+        return true;
     }
 
-        public void getTicks(){
+    public boolean moveBackwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall) {
+        return moveBackwardTicksWithEncoders(power, ticks, timeout, detectStall, true);
+    }
+
+    public void getTicks(){
         System.out.println(mWheel.getCurrentPosition());
     }
-    public void powerForTime(double power, double time) {
-        double timeMS = time*1000;
-        long currentTime = System.currentTimeMillis();
-        powerAllMotors(power);
-        while (opMode.opModeIsActive() && (System.currentTimeMillis()-currentTime) < timeMS){
-        }
-        stopAll();
-    }
+
     public boolean stalling(boolean forward) {
         int initialBackRight = backRight.getCurrentPosition();
         int initialFrontRight = frontRight.getCurrentPosition();
@@ -331,49 +366,6 @@ public class MecanumDriveTrain {
         return (BLStall || BRStall) && (FLStall || FRStall);
 
     }
-    public int addAngles(int angle1, int angle2){
-        int sum = (angle1 + angle2)%360;
-        if (sum >= 180){
-            sum -= 360;
-        } else if (sum <= -180){
-            sum += 360;
-        }
-        return sum;
-    }
-    public int subtractAngles(double angle1, double angle2){
-        if (angle1 < 0) {
-            angle1 += 360;
-        }
-        if (angle2 < 0) {
-            angle2 += 360;
-        }
-        int diff1 = (int)(angle1 - angle2);
-        int diff2 = diff1 + 360;
-        int diff3 = diff1 - 360;
-        if (Math.abs(diff1) <= Math.abs(diff2) && Math.abs(diff1) <= Math.abs(diff3)){
-            return diff1;
-        } else if (Math.abs(diff2) < Math.abs(diff3)){
-            return diff2;
-        }
-        System.out.println(diff1 + " " + diff2 + " " + diff3);
-        return diff3;
-    }
 
-    public int subtractAngles(double angle1, double angle2, boolean clockwise) {
-        // angle1 - angle2
-        if (angle1 < 0) {
-            angle1 += 360;
-        }
-        if (angle2 < 0) {
-            angle2 += 360;
-        }
-        if (clockwise && angle1 < angle2) {
-            angle1 += 360;
-        } else if (!clockwise && angle1 > angle2) {
-            angle1 -= 360;
-        }
-        return (int)(angle1 - angle2);
-
-    }
 
 }

@@ -35,15 +35,21 @@ public class ThreadedTeleOp extends LinearOpMode {
     public FlywheelTask flywheelTask;
     public CapBallTask capBallTask;
     public IntakeTask intakeTask;
+    public double voltageLevel;
 
     @Override
     public void runOpMode() {
 
         initialize();
-
+        double mc7 = hardwareMap.voltageSensor.get("Motor Controller 7").getVoltage();
+        double mc6 = hardwareMap.voltageSensor.get("Motor Controller 6").getVoltage();
+        double mc3 = hardwareMap.voltageSensor.get("Motor Controller 3").getVoltage();
+        double mc2 = hardwareMap.voltageSensor.get("Motor Controller 2").getVoltage();
+        voltageLevel = (mc7 + mc6 + mc3 + mc2) / 4;
         driveTrainTask = new DriveTrainTask(this, frontLeft, frontRight, backLeft, backRight);
         //ButtonPusherTask buttonPusherTask = new ButtonPusherTask(this, button);
         flywheelTask = new FlywheelTask(this, flywheelLeft, flywheelRight);
+        flywheelTask.voltage = voltageLevel;
         intakeTask = new IntakeTask(this, sweeper);
         capBallTask = new CapBallTask(this, capLeft, capRight, forkLeft, forkRight);
         waitForStart();

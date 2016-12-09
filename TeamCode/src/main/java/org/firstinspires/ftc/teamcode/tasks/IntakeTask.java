@@ -34,12 +34,13 @@ public class IntakeTask extends Thread {
             else if (opMode.gamepad2.dpad_down) {
                 sweeper.setPower(-1);
             }
-            else if(opMode.gamepad1.y){
+            else if(opMode.gamepad1.right_trigger > 0){
                 sweeper.setPower(1);
             }
-            else if(opMode.gamepad1.a) {
+            else if (opMode.gamepad1.left_trigger > 0) {
                 sweeper.setPower(-1);
-            } else {
+            }
+            else {
                 sweeper.setPower(0);
             }
 

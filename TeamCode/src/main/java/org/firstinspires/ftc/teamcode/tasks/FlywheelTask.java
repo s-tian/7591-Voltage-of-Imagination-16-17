@@ -34,6 +34,8 @@ public class FlywheelTask extends Thread {
     private long currentTime = 0;
     private double leftPower = 0;
     private double rightPower = 0;
+    public double voltage = 17;
+    private double maxVoltage = 17;
 
     public enum FlywheelState {
         STATE_STOPPED, STATE_ACCELERATING, STATE_ADJUSTING, STATE_RUNNING_NEAR_TARGET
@@ -132,7 +134,7 @@ public class FlywheelTask extends Thread {
 
         timer.reset();
         targetEncoderRate = (int) (MAX_ENCODER_TICKS_PER_SEC * power);
-        leftPower = rightPower = power*FULL_SPEED_RPM/THEORETICAL_MAX_RPM;
+        leftPower = rightPower = power*FULL_SPEED_RPM/THEORETICAL_MAX_RPM * voltage / maxVoltage;
         updatePowers();
         //We intentionally set the power so that it is highly likely to be lower than the
         //"correct" value so that it continues to adjust upwards.

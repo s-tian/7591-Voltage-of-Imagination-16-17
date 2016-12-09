@@ -28,26 +28,21 @@ public class DriveTest extends LinearOpMode {
     public void runOpMode() throws InterruptedException {
         initialize();
         waitForStart();
-        System.out.println(1);
-        System.out.println("FL "  + frontLeft.getCurrentPosition());
-        System.out.println("FR "  + frontRight.getCurrentPosition());
-        System.out.println("BL "  + backLeft.getCurrentPosition());
-        System.out.println("BR "  + backRight.getCurrentPosition());
-        driveTrain.strafeRight(1);
-        sleep(500);
-        System.out.println(2);
-        System.out.println("FL "  + frontLeft.getCurrentPosition());
-        System.out.println("FR "  + frontRight.getCurrentPosition());
-        System.out.println("BL "  + backLeft.getCurrentPosition());
-        System.out.println("BR "  + backRight.getCurrentPosition());
-        sleep(2000);
-        System.out.println(3);
-        System.out.println("FL "  + frontLeft.getCurrentPosition());
-        System.out.println("FR "  + frontRight.getCurrentPosition());
-        System.out.println("BL "  + backLeft.getCurrentPosition());
-        System.out.println("BR "  + backRight.getCurrentPosition());
-        driveTrain.stopAll();
+        // MC 7 has frontLeft motor, MC 6 is back motors
+        System.out.println("MC 7: " + hardwareMap.voltageSensor.get("Motor Controller 7").getVoltage());
+        System.out.println("MC 6: " + hardwareMap.voltageSensor.get("Motor Controller 6").getVoltage());
+        System.out.println("MC 3: " + hardwareMap.voltageSensor.get("Motor Controller 3").getVoltage());
+        System.out.println("MC 2: " + hardwareMap.voltageSensor.get("Motor Controller 2").getVoltage());
 
+
+        frontLeft.setPower(1);
+        frontRight.setPower(1);
+        sleep(2000);
+        System.out.println("after");
+        System.out.println("MC 7: " + hardwareMap.voltageSensor.get("Motor Controller 7").getVoltage());
+        System.out.println("MC 6: " + hardwareMap.voltageSensor.get("Motor Controller 6").getVoltage());
+        System.out.println("MC 3: " + hardwareMap.voltageSensor.get("Motor Controller 3").getVoltage());
+        System.out.println("MC 2: " + hardwareMap.voltageSensor.get("Motor Controller 2").getVoltage());
 
     }
     public void initialize() {
