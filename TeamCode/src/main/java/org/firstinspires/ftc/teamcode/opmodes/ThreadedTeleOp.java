@@ -78,7 +78,7 @@ public class ThreadedTeleOp extends LinearOpMode {
                 //Get out of the loop
                 break;
             } else {
-                //telemetry.addData("Time elapsed", (int) (elapsed / 1000000000L));
+                telemetry.addData("Time elapsed", (int) (elapsed / 1000000000L));
                 telemetry.addData("Flywheel status", flywheelTask.getFlywheelStateString());
             }
             telemetry.update();

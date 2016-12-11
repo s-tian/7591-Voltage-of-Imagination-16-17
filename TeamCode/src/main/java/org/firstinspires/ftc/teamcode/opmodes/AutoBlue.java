@@ -27,22 +27,42 @@ import static java.lang.Thread.sleep;
 
 public class AutoBlue extends LinearOpMode {
     int delay = 200;
-    boolean missed = false, pickUp = false, detectRed1 = false;
+
+    // Options
+    boolean missed = false,  detectRed1 = false;
     boolean missedLineUp = false;
-    int shootRotation = 90;
-    int shootRotation2 = 38;
-    int sralt = 35;
-    int parallelAngle;
-    final int capBallRotation = -180;
-    final int pickUpRotation = 152;
+    boolean shootFirst = false;
+
     final int topSensorID = 0x3c;
     final int bottomSensorID = 0x44;
-    int betweenBeacon = 32;
-    int bbalt = 36;
-    int bbalt2 = 25;
-    int angle = -35;
-    double shootPower = 0.70;
-    double spalt = 0.62;
+
+    double voltageLevel;
+    int shootTime = 2500;
+
+    // Distances
+    int betweenBeacon = 30; // far beacon distance
+    int bbalt = 36; // near beacon distance
+    int bbalt2 = 5; // miss first beacon distance
+
+    // Angles
+    final double pickUpRotation = 152;
+    double shootRotation = 108; // first beacon shoot rotation near
+    double shootRotation2 = 43; // near shoot rotation
+    double sralt = 39; // far shoot rotation
+    double sralt3 = 90; // first beacons shoot rotation far
+    double parallelAngle; // angle perpendicular to start wall (should be approx equal to wallAngle)
+    double angle = -35; // normal white line rotation angle
+    double sfAngle = -125; // shoot first alignment angle
+    double angleAlt = -55; // shoot first rotation angle
+    double wallAngle; // angle parallel to beacon wall
+
+    // Powers
+    double shootPower = 0.66; // normal shoot power
+    double spalt = 0.6; // short shoot power (from first beacon)
+    double spalt2 = .8; // shoot first (from starting position)
+    double bpPower = 0.11; // beacon pressing driveTrain power
+
+    // Hardware
     ColorSensor colorSensorTop, colorSensorBottom;
     VOIColorSensor voiColorSensorTop, voiColorSensorBottom;
     Servo forkLeft, forkRight, button;
@@ -59,25 +79,30 @@ public class AutoBlue extends LinearOpMode {
     public void runOpMode() {
         initialize();
         //options();
+        double mc7 = hardwareMap.voltageSensor.get("Motor Controller 7").getVoltage();
+        double mc6 = hardwareMap.voltageSensor.get("Motor Controller 6").getVoltage();
+        double mc3 = hardwareMap.voltageSensor.get("Motor Controller 3").getVoltage();
+        double mc2 = hardwareMap.voltageSensor.get("Motor Controller 2").getVoltage();
+        voltageLevel = (mc7 + mc6 + mc3 + mc2) / 4;
+        flywheelTask.voltage = voltageLevel;
+        telemetry.addData("Ready!", "");
+        telemetry.update();
         waitForStart();
-        if (pickUp){
-            pickUpBall();
-            lineUpToWall(40);
+        if (shootFirst) {
+            shoot();
+            lineUpToWall(35);
         } else {
-            lineUpToWall(50);
+            lineUpToWall(48);
         }
-        drivePushButton();
+        dpb();
+        //drivePushButton();
         drivePushButton2();
         if (missed){
-            flywheelTask.setFlywheelPow(spalt);
+            //flywheelTask.setFlywheelPow(spalt);
             checkFirst();
             moveFromWall();
-            coolDown();
-            hitCapBall();
         }else {
             moveFromWall2();
-            coolDown();
-            hitCapBall2();
         }
     }
 
@@ -114,7 +139,7 @@ public class AutoBlue extends LinearOpMode {
         forkRight.setPosition(0.12);
         adaImu = hardwareMap.get(BNO055IMU.class, "imu");
         imu = new VOIImu(adaImu);
-        button.setPosition(0.1);
+        button.setPosition(0);
         driveTrain = new MecanumDriveTrain(backLeft,backRight,frontLeft,frontRight,imu,this);
         driveTrain.setEncoderMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         driveTrain.setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -124,41 +149,54 @@ public class AutoBlue extends LinearOpMode {
 
     }
 
+    public void shoot() {
+        flywheelTask.setFlywheelPow(spalt2);
+        driveTrain.moveBackwardNInch(0.2, 12, 5, false, true);
+        angle = angleAlt;
+        sleep(1000);
+        sweeper.setPower(1);
+        sleep(1500);
+        coolDown();
+        driveTrain.moveBackwardNInch(0.2, 5, 5, false, true);
+        driveTrain.rotateDegreesPrecision(sfAngle);
+    }
+
     public void lineUpToWall(int distance) {
+        telemetry.addData("lineUpToWall", "");
+        telemetry.update();
+        int wlTimeout = 700; // timeout for white line detection (used for missing line)
         driveTrain.moveForwardNInch(0.2, 0.5, 10, false, false);
-        driveTrain.moveForwardNInch(0.6, distance-0.5, 10, false, true);
+        driveTrain.moveForwardNInch(0.5, distance-0.5, 10, false, false);
         //pause();
         driveTrain.powerAllMotors(0.15);
         boolean detectColor = false;
         timer.reset();
-        int initialTicks = frontRight.getCurrentPosition();
+        timer2.reset();
         while (!detectColor && opModeIsActive()) {
             if (timer.time() > 30) {
                 if (voiColorSensorBottom.isWhite()) {
                     detectColor = true;
                 }
                 timer.reset();
-                if (frontRight.getCurrentPosition() - initialTicks > 35 * driveTrain.TICKS_PER_INCH_FORWARD ){
+                if (timer2.time() > wlTimeout){
                     driveTrain.stopAll();
                     break;
                 }
             }
         }
-        //pause();
-        // align with wall
-        if (detectColor) {
+        //if (detectColor) {
             driveTrain.rotateDegreesPrecision(angle);
-        } else {
-            missedLineUp = true;
-            driveTrain.moveBackwardNInch(0.2, 3, 3, false, true);
-            int rotationAngle = VOIImu.subtractAngles(parallelAngle, imu.getAngle(), false);
-            driveTrain.rotateDegreesPrecision(rotationAngle);
-        }
+//        } else {
+//            missedLineUp = true;
+//            driveTrain.moveBackwardNInch(0.2, 3, 3, false, true);
+//            int rotationAngle = VOIImu.subtractAngles(parallelAngle, imu.getAngle(), false);
+//            driveTrain.rotateDegreesPrecision(rotationAngle);
+//        }
 
-        //pause();
         // ram into wall to straighten out
-        driveTrain.moveRightNInch(1, 40, 10, true, true);
-        //pause();
+        driveTrain.moveRightNInch(0.75, 40, 10, true, true);
+        correctionStrafe();
+        wallAngle = imu.getAngle();
 
     }
 
@@ -177,7 +215,7 @@ public class AutoBlue extends LinearOpMode {
         timer2.reset();
         missed = false;
         while (!detectColor && opModeIsActive()) {
-            if (timer.time() > 30) {
+            if (timer.time() > 15) {
                 detectColor = voiColorSensorTop.isBlue();
                 timer.reset();
                 if (voiColorSensorTop.isRed() && !detectRed1) {
@@ -205,60 +243,191 @@ public class AutoBlue extends LinearOpMode {
         pushButton();
     }
 
+    public void dpb() {
+        telemetry.addData("dpb", "");
+        telemetry.update();
+        int icto = 1000; // initial check timeout
+        int scto = 3000; // secondary check timeout
+        boolean behind = false;
+        boolean pushBlue = false;
+        if (voiColorSensorTop.isBlue()) {
+            // if detect blue then just push button
+            pushButton();
+            pushBlue = true;
+        } else if (voiColorSensorTop.isRed()) {
+            firstRed();
+        } else {
+            // if no color detected, first move backwards to check for blue
+            driveTrain.powerAllMotors(-bpPower);
+            timer.reset();
+            while (opModeIsActive() && timer.time() < icto) {
+
+                if (voiColorSensorTop.isBlue()) {
+                    driveTrain.stopAll();
+                    correctionStrafe();
+                    pushButton();
+                    pushBlue = true;
+                    break;
+                } else if (voiColorSensorTop.isRed()) {
+                    firstRed();
+                    pushBlue = true;
+                    break;
+                }
+                if (VOIImu.subtractAngles(imu.getAngle(), wallAngle) <= -2) {
+                    behind = true;
+                    driveTrain.moveForwardNInch(0.2,1.5, 3, false, true);
+                    driveTrain.rotateDegreesPrecision(3);
+                    break;
+                }
+            }
+
+            if (!pushBlue && (timer.time() >= icto || behind)) {
+                boolean addedTime = false;
+                driveTrain.powerAllMotors(bpPower);
+                timer.reset();
+                while (opModeIsActive() && timer.time() < scto) {
+                    if (voiColorSensorTop.isBlue()) {
+                        driveTrain.stopAll();
+                        correctionStrafe();
+                        pushButton();
+                        pushBlue = true;
+                        break;
+                    }
+                    else if (voiColorSensorTop.isRed() && !addedTime) {
+                        scto += 1000;
+                        addedTime = true;
+                    }
+                }
+                if (timer.time() >= scto && !pushBlue) {
+                    correctionStrafe();
+                    missed = true;
+                    betweenBeacon = bbalt2;
+                }
+            }
+        }
+    }
+
+    public void firstRed() {
+        telemetry.addData("firstRed", "");
+        telemetry.update();
+        /*
+        The algorithm must work for detecting red on both sides of the beacon.
+        I go backwards until I don't sense red anymore.
+        Now, there are 2 situations that the robot may be in:
+            1. Behind the beacon entirely
+            2. Between the red and blue parts of the beacon
+        In order to test for condition 2, I must go backwards for a certain length of time while looking for blue.
+        However, if the time has passed and blue is still not detected, I can assume that the situation is condition 1.
+         */
+        int timeout = 600; // This timeout is the "certain length of time" referenced above.
+        driveTrain.powerAllMotors(-bpPower);
+        boolean pushedBlue = false;
+        while(opModeIsActive() && voiColorSensorTop.isRed()) {
+        }
+        timer.reset();
+        while (opModeIsActive() && timer.time() < timeout) {
+            if (voiColorSensorTop.isBlue()) {
+                driveTrain.stopAll();
+                betweenBeacon = bbalt;
+                correctionStrafe();
+                pushButton();
+                pushedBlue = true;
+                break;
+            }
+        }
+        // if blue is not behind red, then drive forward until blue detected
+        if (!pushedBlue && timer.time() >= timeout) {
+            correctionStrafe();
+            driveTrain.powerAllMotors(0.15);
+            while (opModeIsActive() && !voiColorSensorTop.isBlue());
+            driveTrain.stopAll();
+            correctionStrafe();
+            pushButton();
+        }
+    }
+
     public void drivePushButton2() {
-        driveTrain.moveForwardNInch(0.6, betweenBeacon, 10, false, false);
-        flywheelTask.setFlywheelPow(shootPower);
+        telemetry.addData("drivePushButton2", "");
+        telemetry.update();
+        int timeo = 5000;
+        driveTrain.moveForwardNInch(0.45, betweenBeacon, 10, false, false);
         //pause();
         correctionStrafe(1);
+        wallAngle = imu.getAngle();
         boolean detectColor = false;
-        driveTrain.powerAllMotors(0.1);
+        driveTrain.powerAllMotors(bpPower);
         timer.reset();
         ElapsedTime timeout = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         timeout.reset();
-        while (!detectColor && opModeIsActive() && timeout.time() < 5000) {
+        while (!detectColor && opModeIsActive() && timeout.time() < timeo) {
             if (timer.time() > 30) {
                 // determine which side of beacon
                 if (voiColorSensorTop.isRed()){
                     shootRotation2 = sralt;
+                    timeo += 1000;
                 }
                 detectColor = voiColorSensorTop.isBlue();
                 timer.reset();
             }
-            if (timeout.time() >= 5000) {
+            if (timeout.time() >= timeo) {
                 giveUpSecond();
             }
         }
-        correctionStrafe(0.5);
+        correctionStrafe();
         pushButton();
     }
 
     public void moveFromWall(){
+        telemetry.addData("moveFromWall", "");
+        telemetry.update();
+        wallAngle = imu.getAngle();
         driveTrain.moveLeftNInch(0.6, 6, 10, false, true);
-        //pause();
+        double offset = VOIImu.subtractAngles(imu.getAngle(), wallAngle);
+
+        shootRotation = VOIImu.subtractAngles(shootRotation, offset, true);
+
         driveTrain.rotateDegreesPrecision(shootRotation);
-        sleep(200);
-        //pause();
-        //conveyor.setPower(0.3);
-        sweeper.setPower(1);
-        sleep(1500);
+        if (shootFirst) {
+            hitCapBall();
+        } else {
+            sleep(200);
+            flywheelTask.setFlywheelPow(shootPower);
+            sleep(2000);
+            sweeper.setPower(1);
+            sleep(shootTime);
+            coolDown();
+        }
+        parkSide();
     }
 
-    public void moveFromWall2 (){
-        flywheelTask.setFlywheelPow(shootPower);
-        driveTrain.moveLeftNInch(0.6, 8, 10, false, true);
-        //pause();
+    public void moveFromWall2(){
+        telemetry.addData("moveFromWall2", "");
+        telemetry.update();
+        driveTrain.moveLeftNInch(0.6, 3, 10, false, true);
+        double offset = VOIImu.subtractAngles(imu.getAngle(), wallAngle);
+        shootRotation2 = VOIImu.subtractAngles(shootRotation2, offset, true);
         driveTrain.rotateDegreesPrecision(shootRotation2);
-        //pause();
-        sleep(500);
-        driveTrain.moveBackwardNInch(0.2, 1, 3,false, false);
-        driveTrain.moveBackwardNInch(0.3,12,3,false, false);
-        driveTrain.moveBackwardNInch(0.15, 5, 3, false, true);
-        sleep(250);
-        sweeper.setPower(1);
-        sleep(1500);
+        flywheelTask.setFlywheelPow(shootPower);
+        if (shootFirst) {
+            driveTrain.moveBackwardNInch(0.5, 50, 10, false, true);
+        }
+        else {
+            sleep(500);
+            driveTrain.moveBackwardNInch(0.2, 1, 3, false, false);
+            driveTrain.moveBackwardNInch(0.3, 12, 3, false, false);
+            driveTrain.moveBackwardNInch(0.15, 5, 3, false, true);
+            sleep(2000);
+            sweeper.setPower(1);
+            sleep(shootTime);
+            coolDown();
+            hitCapBall2();
+        }
     }
 
     public void checkFirst() {
+        telemetry.addData("checkFirst", "");
+        shootPower = spalt;
+        telemetry.update();
         driveTrain.moveBackwardNInch(0.4,42, 10, false, true);
         correctionStrafe();
         driveTrain.powerAllMotors(-0.15);
@@ -288,29 +457,21 @@ public class AutoBlue extends LinearOpMode {
             correctionStrafe();
             pushButton();
         }
+        if (!isRed) {
+            shootRotation = sralt3;
+        }
     }
 
     public void coolDown() {
-        timer.reset();
-        while (opModeIsActive() && timer.time() < 1000);
-        flywheelTask.setFlywheelPow(0.4);
         sweeper.setPower(0);
-        timer.reset();
-        while (opModeIsActive() && timer.time() < 1000);
         flywheelTask.setFlywheelPow(0);
-        flywheelTask.running = false;
-    }
-
-    public void goBackAndPress() {
-        driveTrain.powerAllMotors(0.15);
-        while (opModeIsActive() && !voiColorSensorTop.isBlue());
-        correctionStrafe();
-        pushButton();
     }
 
     public void giveUpSecond() {
-        driveTrain.moveBackwardNInch(0.3, 20, 5, false, true);
-        correctionStrafe(2);
+        telemetry.addData("giveUpSecond", "");
+        telemetry.update();
+        driveTrain.moveBackwardNInch(0.3, 35, 10, false, true);
+        correctionStrafe(1);
         driveTrain.powerAllMotors(-0.2);
         timer.reset();
         while (opModeIsActive() && !voiColorSensorBottom.isWhite() && timer.time() < 10000) {
@@ -333,15 +494,26 @@ public class AutoBlue extends LinearOpMode {
     }
 
     public void hitCapBall(){
-        int initialDirection = imu.getAngle();
+        telemetry.addData("hitCapBall", "");
+        telemetry.update();
         driveTrain.moveBackwardNInch(1, 50, 10, true, true);
-        driveTrain.rotateDegrees((int) (capBallRotation * 0.3), false);
-        driveTrain.rotateDegrees((int)((initialDirection-imu.getAngle())*0.25), false);
+        driveTrain.rotateDegrees(-270, 1, false);
         driveTrain.moveBackwardNInch(1, 18, 10, true, true);
     }
 
+    public void parkSide() {
+        telemetry.addData("parkSide", "");
+        telemetry.update();
+        //driveTrain.moveForwardNInch(0.3, 4, 5, false, true);
+        double rotation = VOIImu.subtractAngles(wallAngle, imu.getAngle(), true);
+        driveTrain.rotateDegrees(rotation, 0.8, false);
+        driveTrain.moveForwardNInch(1, 25, 5 , false, true);
+    }
+
     public void hitCapBall2(){
-        driveTrain.moveBackwardNInch(0.25, 36, 10, false, true);
+        telemetry.addData("hitCapBall2", "");
+        telemetry.update();
+        driveTrain.moveBackwardNInch(0.4, 45, 10, false, true);
     }
 
     public void pickUpBall(){
@@ -360,39 +532,21 @@ public class AutoBlue extends LinearOpMode {
     }
 
     public void options(){
-        telemetry.addData("Pick up ball?", pickUp);
+        telemetry.addData("Shoot first?", shootFirst ? "Yes" : "No");
         telemetry.update();
         boolean confirmed = false;
-        boolean dPadUpPressed = false;
-        boolean dPadDownPressed = false;
         while(!confirmed){
             if (gamepad1.a){
-                pickUp = true;
+                shootFirst = true;
             }
             if (gamepad1.b){
-                pickUp = false;
+                shootFirst = false;
             }
-            if (gamepad1.dpad_down&& !dPadDownPressed && shootPower > 0){
-                dPadDownPressed = true;
-                shootPower -= 0.01;
-            }
-            if (gamepad1.dpad_up && !dPadUpPressed && shootPower < 1){
-                dPadUpPressed = true;
-                shootPower += 0.01;
-            }
-            if (!gamepad1.dpad_down){
-                dPadDownPressed = false;
-            }
-            if (!gamepad1.dpad_up){
-                dPadUpPressed = false;
-            }
-            telemetry.addData("Shoot power", shootPower);
-            telemetry.addData("Pick up ball?", pickUp);
+            telemetry.addData("Shoot first?", shootFirst ? "Yes" : "No");
             telemetry.update();
 
             if (gamepad1.left_stick_button && gamepad1.right_stick_button){
-                telemetry.addData("Shoot power", shootPower);
-                telemetry.addData("Pick up ball?", pickUp);
+                telemetry.addData("Shoot first?", shootFirst ? "Yes" : "No");
                 telemetry.addData("Confirmed!", "");
                 telemetry.update();
                 confirmed = true;

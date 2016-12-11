@@ -22,6 +22,7 @@ public class CapBallTask extends Thread {
     boolean aPushed = false;
     public volatile boolean running = true;
     boolean forkliftOut = false;
+    ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
 
     public CapBallTask(ThreadedTeleOp opMode, DcMotor capLeft, DcMotor capRight, Servo forkLeft, Servo forkRight) {
@@ -42,22 +43,17 @@ public class CapBallTask extends Thread {
             } else {
                 setLiftPower(0);
             }
-            /*
-            if (opMode.gamepad1.dpad_down || opMode.gamepad2.a && !aPushed) {
-                if (down){
-                    forkLeft.setPosition(startLeft);
-                    forkRight.setPosition(startRight);
-                    down = false;
-                } else {
-                    forkLeft.setPosition(downLeft);
-                    forkRight.setPosition(downRight);
-                    down = true;
-                }
-                aPushed = true;
+            if (opMode.gamepad1.dpad_down && !forkliftOut) {
+                forkliftOut = true;
+                timer.reset();
+                setLiftPower(1);
+                while(opMode.opModeIsActive() && timer.time() < 600) ;
+                timer.reset();
+                setLiftPower(-1);
+                while(opMode.opModeIsActive() && timer.time() < 600);
+                setLiftPower(0);
+                forkliftOut = false;
             }
-            if (!opMode.gamepad1.dpad_down && !opMode.gamepad2.a){
-                aPushed = false;
-            }*/
 
             if(opMode.gamepad2.right_bumper) {
                 forkLeft.setPosition(downLeft);

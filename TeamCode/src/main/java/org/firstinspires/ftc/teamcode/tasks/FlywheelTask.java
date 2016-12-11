@@ -25,7 +25,7 @@ public class FlywheelTask extends Thread {
     private final int MAX_ENCODER_TICKS_PER_SEC = (int) (1.0*FULL_SPEED_RPM/60*TICKS_PER_REV);
     private final double MAX_ALLOWED_ERROR = 0.1;      //When the difference between the actual speed and targeted speed is smaller than this percentage, the state will display as RUNNNING_NEAR_TARGET.
     private final double CLOSE_ERROR = 0.05;
-    private final double KP = 1.0/10/MAX_ENCODER_TICKS_PER_SEC;     //Proportional error constant to tune
+    private final double KP = 1.0/15/MAX_ENCODER_TICKS_PER_SEC;     //Proportional error constant to tune
 
     private int targetEncoderRate = 0;
     private int lastEncoderReadingLeft = 0;
@@ -34,8 +34,8 @@ public class FlywheelTask extends Thread {
     private long currentTime = 0;
     private double leftPower = 0;
     private double rightPower = 0;
-    public double voltage = 17;
-    private double maxVoltage = 17;
+    public double voltage = 12;
+    private double expectedVoltage = 12;
 
     public enum FlywheelState {
         STATE_STOPPED, STATE_ACCELERATING, STATE_ADJUSTING, STATE_RUNNING_NEAR_TARGET
@@ -131,10 +131,10 @@ public class FlywheelTask extends Thread {
         } else {
             state = state.STATE_ACCELERATING;
         }
-
+        double ratio = Math.min(expectedVoltage/voltage, 1);
         timer.reset();
         targetEncoderRate = (int) (MAX_ENCODER_TICKS_PER_SEC * power);
-        leftPower = rightPower = power*FULL_SPEED_RPM/THEORETICAL_MAX_RPM * voltage / maxVoltage;
+        leftPower = rightPower = power*FULL_SPEED_RPM/THEORETICAL_MAX_RPM * expectedVoltage / voltage;
         updatePowers();
         //We intentionally set the power so that it is highly likely to be lower than the
         //"correct" value so that it continues to adjust upwards.

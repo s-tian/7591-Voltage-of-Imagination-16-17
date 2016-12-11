@@ -132,59 +132,48 @@ public class MecanumDriveTrain {
         setMotorPower(frontRight, -power);
     }
 
-    public void rotateDegreesPrecision(int degrees) {
+    public void rotateDegreesPrecision(double degrees) {
         // Clockwise: degrees > 0
         // CounterClockwise: degrees < 0;
         double velocity, targetGyro = VOIImu.addAngles(imu.getAngle(), degrees);
-        rotateDegrees((int)(degrees*0.8), true);
+        rotateDegrees(degrees*0.8, 0.25, true);
         while (Math.abs(VOIImu.subtractAngles(imu.getAngle(), targetGyro))> 1 && opMode.opModeIsActive()){
-            opMode.telemetry.addData("Angles",imu.getAngle()+ " " + targetGyro);
-            opMode.updateTelemetry(opMode.telemetry);
             double gyroValue = imu.getAngle();
             if (VOIImu.subtractAngles(targetGyro, gyroValue) > 0)
-                velocity = Math.max(VOIImu.subtractAngles(targetGyro, gyroValue)*0.2/degrees, 0.07);
+                velocity = Math.max(VOIImu.subtractAngles(targetGyro, gyroValue)*0.2/degrees, 0.12);
             else
-                velocity = Math.min(VOIImu.subtractAngles(targetGyro, gyroValue)*0.2/degrees, -0.07);
+                velocity = Math.min(VOIImu.subtractAngles(targetGyro, gyroValue)*0.2/degrees, -0.12);
             startRotation(velocity);
         }
         stopAll();
     }
 
-    public void rotateDegrees(int degrees, boolean slowdown) {
+    public void rotateDegrees(double degrees, double power, boolean slowdown) {
         double gyroValue = imu.getAngle();
-        int targetGyro = VOIImu.addAngles(imu.getAngle(), degrees);
+        double targetGyro = VOIImu.addAngles(imu.getAngle(), degrees);
         double velocity;
         timer.reset();
         if (degrees < 0){
 
-            startRotation(-0.30);
+            startRotation(-power);
             while ((VOIImu.subtractAngles(targetGyro, gyroValue)) <  -2 && opMode.opModeIsActive()) {
 
                 gyroValue = imu.getAngle();
-                opMode.telemetry.addData("imu angle: " ,gyroValue);
-                opMode.telemetry.addData("target angle: " ,targetGyro);
                 if (slowdown) {
-                    opMode.telemetry.addData("Angle left: ",VOIImu.subtractAngles(targetGyro, gyroValue, false));
                     velocity = Math.min(VOIImu.subtractAngles(targetGyro, gyroValue, false) * 0.15 / degrees, -0.2);
                     startRotation(velocity);
                 }
-                opMode.telemetry.update();
-
             }
         }
         else{
-            startRotation(0.30);
+            startRotation(power);
             while ((VOIImu.subtractAngles(targetGyro, imu.getAngle())) > 2 && opMode.opModeIsActive()){
                 gyroValue = imu.getAngle();
-                opMode.telemetry.addData("imu angle: " ,gyroValue);
-                opMode.telemetry.addData("target angle: " ,targetGyro);
                 if (slowdown){
-                    opMode.telemetry.addData("Angle left: ",VOIImu.subtractAngles(targetGyro, gyroValue, false));
 
                     //velocity = Math.max(subtractAngles(targetGyro, imu.getAngle(), true)*0.35/degrees, 0.2);
                     //startRotation(velocity);
                 }
-                opMode.telemetry.update();
 
             }
         }
