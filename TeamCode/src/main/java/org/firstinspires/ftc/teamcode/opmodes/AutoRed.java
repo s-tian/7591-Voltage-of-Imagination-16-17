@@ -32,6 +32,7 @@ public class AutoRed extends LinearOpMode {
     boolean missed = false,  detectBlue1 = false;
     boolean missedLineUp = false;
     boolean shootFirst = false;
+    boolean defense = false;
 
     final int topSensorID = 0x3c;
     final int bottomSensorID = 0x44;
@@ -48,7 +49,7 @@ public class AutoRed extends LinearOpMode {
     final double pickUpRotation = 152;
     double shootRotation = 80; // first beacon shoot rotation near
     double shootRotation2 = 135.5; // near shoot rotation
-    double sralt = 141.5; // far shoot rotation
+    double sralt = 139.5; // far shoot rotation
     double sralt3 = 95; // first beacons shoot rotation far
     double parallelAngle; // angle perpendicular to start wall (should be approx equal to wallAngle)
     double angle = 35; // normal white line rotation angle
@@ -101,7 +102,11 @@ public class AutoRed extends LinearOpMode {
             checkFirst();
             moveFromWall();
         }else {
-            moveFromWall2();
+            if (defense) {
+                trollGS();
+            } else {
+                moveFromWall2();
+            }
         }
     }
 
@@ -380,8 +385,8 @@ public class AutoRed extends LinearOpMode {
         telemetry.update();
         wallAngle = imu.getAngle();
         driveTrain.moveLeftNInch(0.6, 6, 10, false, true);
-        double offset = VOIImu.subtractAngles(imu.getAngle(), wallAngle);
-        shootRotation = VOIImu.subtractAngles(shootRotation, offset, false);
+        //double offset = VOIImu.subtractAngles(imu.getAngle(), wallAngle);
+        //shootRotation = VOIImu.subtractAngles(shootRotation, offset, false);
         flywheelTask.setFlywheelPow(shootPower);
         driveTrain.rotateDegreesPrecision(shootRotation);
         if (shootFirst) {
@@ -392,14 +397,14 @@ public class AutoRed extends LinearOpMode {
             sleep(shootTime);
             coolDown();
         }
-        parkSide();
+        //parkSide();
     }
 
     public void moveFromWall2(){
         telemetry.addData("moveFromWall2", "");
         telemetry.update();
         driveTrain.moveLeftNInch(0.6, 3, 10, false, true);
-        //int offset = VOIImu.subtractAngles(imu.getAngle(), wallAngle);
+        //double offset = VOIImu.subtractAngles(imu.getAngle(), wallAngle);
         //shootRotation2 = VOIImu.subtractAngles(shootRotation2, offset, false);
         driveTrain.rotateDegreesPrecision(shootRotation2);
         if (shootFirst) {
@@ -479,6 +484,12 @@ public class AutoRed extends LinearOpMode {
         stop();
     }
 
+    public void trollGS() {
+        driveTrain.moveLeftNInch(1,35,10, false, true);
+        sleep(1000);
+        driveTrain.moveBackwardNInch(0.5, 15, 10, false, true);
+    }
+
     public void correctionStrafe() {
         correctionStrafe(0.5);
     }
@@ -526,21 +537,27 @@ public class AutoRed extends LinearOpMode {
     }
 
     public void options(){
-        telemetry.addData("Shoot first?", shootFirst ? "Yes" : "No");
+        //telemetry.addData("Shoot first?", shootFirst ? "Yes" : "No");
+        telemetry.addData("Defense?", defense ? "Yes" : "No");
         telemetry.update();
         boolean confirmed = false;
         while(!confirmed){
             if (gamepad1.a){
-                shootFirst = true;
+                //shootFirst = true;
+                defense = true;
             }
             if (gamepad1.b){
-                shootFirst = false;
+                //shootFirst = false;
+                defense = false;
             }
-            telemetry.addData("Shoot first?", shootFirst ? "Yes" : "No");
+            //telemetry.addData("Shoot first?", shootFirst ? "Yes" : "No");
+            telemetry.addData("Defense?", defense ? "Yes" : "No");
+
             telemetry.update();
 
             if (gamepad1.left_stick_button && gamepad1.right_stick_button){
-                telemetry.addData("Shoot first?", shootFirst ? "Yes" : "No");
+                //telemetry.addData("Shoot first?", shootFirst ? "Yes" : "No");
+                telemetry.addData("Defense?", defense ? "Yes" : "No");
                 telemetry.addData("Confirmed!", "");
                 telemetry.update();
                 confirmed = true;

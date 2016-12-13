@@ -48,7 +48,7 @@ public class AutoBlue extends LinearOpMode {
     final double pickUpRotation = 152;
     double shootRotation = 108; // first beacon shoot rotation near
     double shootRotation2 = 43; // near shoot rotation
-    double sralt = 39; // far shoot rotation
+    double sralt = 38; // far shoot rotation
     double sralt3 = 90; // first beacons shoot rotation far
     double parallelAngle; // angle perpendicular to start wall (should be approx equal to wallAngle)
     double angle = -35; // normal white line rotation angle
@@ -397,7 +397,7 @@ public class AutoBlue extends LinearOpMode {
             sleep(shootTime);
             coolDown();
         }
-        parkSide();
+        //parkSide();
     }
 
     public void moveFromWall2(){

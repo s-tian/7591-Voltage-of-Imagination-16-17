@@ -49,6 +49,9 @@ public class CapBallTask extends Thread {
                 setLiftPower(1);
                 while(opMode.opModeIsActive() && timer.time() < 600) ;
                 timer.reset();
+                setLiftPower(0);
+                while(opMode.opModeIsActive() && timer.time() < 500);
+                timer.reset();
                 setLiftPower(-1);
                 while(opMode.opModeIsActive() && timer.time() < 600);
                 setLiftPower(0);
