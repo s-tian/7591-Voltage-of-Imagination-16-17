@@ -32,7 +32,11 @@ public class VOIImu{
     public double getAngle(){
         angles = adafruit.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
         double angle = (AngleUnit.DEGREES.normalize(AngleUnit.DEGREES.fromUnit(angles.angleUnit, angles.firstAngle)));
-        return -angle;
+        angle = -angle;
+        if (angle < 0) {
+            angle += 360;
+        }
+        return angle;
     }
     public double getRadians(){
         return getAngle()*Math.PI/180;
@@ -40,47 +44,23 @@ public class VOIImu{
 
     public static double addAngles(double angle1, double angle2){
         double sum = (angle1 + angle2)%360;
-        if (sum >= 180){
-            sum -= 360;
-        } else if (sum <= -180){
+        if (sum < 0) {
             sum += 360;
         }
         return sum;
     }
 
     public static double subtractAngles(double angle1, double angle2){
-        if (angle1 < 0) {
-            angle1 += 360;
+        double diff1 = (angle1 - angle2);
+        int posNeg = 1;
+        if (diff1 < 0) {
+            posNeg = -1;
+            diff1 *= -1;
         }
-        if (angle2 < 0) {
-            angle2 += 360;
+        if (diff1 > 180) {
+            diff1 -= 360;
         }
-        int diff1 = (int)(angle1 - angle2);
-        int diff2 = diff1 + 360;
-        int diff3 = diff1 - 360;
-        if (Math.abs(diff1) <= Math.abs(diff2) && Math.abs(diff1) <= Math.abs(diff3)){
-            return diff1;
-        } else if (Math.abs(diff2) < Math.abs(diff3)){
-            return diff2;
-        }
-        return diff3;
-    }
-
-    public static double subtractAngles(double angle1, double angle2, boolean clockwise) {
-        // angle1 - angle2
-        if (angle1 < 0) {
-            angle1 += 360;
-        }
-        if (angle2 < 0) {
-            angle2 += 360;
-        }
-        if (clockwise && angle1 < angle2) {
-            angle1 += 360;
-        } else if (!clockwise && angle1 > angle2) {
-            angle1 -= 360;
-        }
-        return (int)(angle1 - angle2);
-
+        return diff1 * posNeg;
     }
 
 }

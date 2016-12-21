@@ -47,7 +47,6 @@ public class ThreadedTeleOp extends LinearOpMode {
         double mc2 = hardwareMap.voltageSensor.get("Motor Controller 2").getVoltage();
         voltageLevel = (mc7 + mc6 + mc3 + mc2) / 4;
         driveTrainTask = new DriveTrainTask(this, frontLeft, frontRight, backLeft, backRight);
-        //ButtonPusherTask buttonPusherTask = new ButtonPusherTask(this, button);
         flywheelTask = new FlywheelTask(this, flywheelLeft, flywheelRight);
         flywheelTask.voltage = voltageLevel;
         intakeTask = new IntakeTask(this, sweeper);
@@ -56,7 +55,6 @@ public class ThreadedTeleOp extends LinearOpMode {
         long startTime = System.nanoTime();
 
         driveTrainTask.start();
-        //buttonPusherTask.start();
         flywheelTask.start();
         intakeTask.start();
         capBallTask.start();

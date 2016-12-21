@@ -506,15 +506,6 @@ public class AutoRed extends LinearOpMode {
         driveTrain.moveBackwardNInch(1, 18, 10, true, true);
     }
 
-    public void parkSide() {
-        telemetry.addData("parkSide", "");
-        telemetry.update();
-        //driveTrain.moveForwardNInch(0.3, 4, 5, false, true);
-        double rotation = VOIImu.subtractAngles(wallAngle, imu.getAngle(), false);
-        driveTrain.rotateDegrees(rotation, 0.8, true);
-        driveTrain.moveForwardNInch(1, 25, 5 , false, true);
-    }
-
     public void hitCapBall2(){
         telemetry.addData("hitCapBall2", "");
         telemetry.update();
