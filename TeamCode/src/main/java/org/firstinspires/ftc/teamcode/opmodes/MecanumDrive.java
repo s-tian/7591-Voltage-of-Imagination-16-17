@@ -12,7 +12,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
  * Created by Stephen on 9/11/2016.
  */
 
-//@TeleOp(name = "Mecanum Drive", group = "Drive")
+@TeleOp(name = "Mecanum Drive", group = "Drive")
 
 public class MecanumDrive extends LinearOpMode {
 
@@ -30,11 +30,10 @@ public class MecanumDrive extends LinearOpMode {
         backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
 
         waitForStart();
         while(opModeIsActive()) {
-
             double joy1Y = -gamepad1.left_stick_y;
             joy1Y = Math.abs(joy1Y) > 0.15 ? joy1Y*3/4: 0;
             double joy1X = gamepad1.left_stick_x;
