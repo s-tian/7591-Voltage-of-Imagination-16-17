@@ -96,7 +96,7 @@ public class ShootRotationTest extends LinearOpMode{
 
         sweeper1 = hardwareMap.crservo.get("sweeper1");
         sweeper2 = hardwareMap.crservo.get("sweeper2");
-        sweeper = new VOISweeper(sweeper1, sweeper2);
+        //sweeper = new VOISweeper(sweeper1, sweeper2);
         frontLeft = hardwareMap.dcMotor.get("frontLeft");
         frontRight = hardwareMap.dcMotor.get("frontRight");
         backLeft = hardwareMap.dcMotor.get("backLeft");
@@ -135,7 +135,7 @@ public class ShootRotationTest extends LinearOpMode{
         telemetry.update();
         driveTrain.moveLeftNInch(0.6, 3, 10, false, true);
         double offset = VOIImu.subtractAngles(imu.getAngle(), wallAngle);
-        shootRotation2 = VOIImu.subtractAngles(shootRotation2, offset, true);
+        shootRotation2 = VOIImu.subtractAngles(shootRotation2, offset);
         driveTrain.rotateDegreesPrecision(shootRotation2);
         if (shootFirst) {
             driveTrain.moveBackwardNInch(0.5, 50, 10, false, true);

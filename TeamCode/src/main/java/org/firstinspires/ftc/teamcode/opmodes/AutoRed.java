@@ -125,7 +125,7 @@ public class AutoRed extends LinearOpMode {
 
         sweeper1 = hardwareMap.crservo.get("sweeper1");
         sweeper2 = hardwareMap.crservo.get("sweeper2");
-        sweeper = new VOISweeper(sweeper1, sweeper2);
+        //sweeper = new VOISweeper(sweeper1, sweeper2);
         frontLeft = hardwareMap.dcMotor.get("frontLeft");
         frontRight = hardwareMap.dcMotor.get("frontRight");
         backLeft = hardwareMap.dcMotor.get("backLeft");

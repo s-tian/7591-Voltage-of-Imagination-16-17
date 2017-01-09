@@ -17,20 +17,22 @@ public class CapBallTask extends Thread {
 
     private DcMotor capLeft, capRight;
     private Servo forkLeft, forkRight;
-    private ThreadedTeleOp opMode;
+    private LinearOpMode opMode;
     double startLeft = 0.8, startRight = 0.12, downLeft = 0.3, downRight = 0.62;
     boolean aPushed = false;
     public volatile boolean running = true;
     boolean forkliftOut = false;
+    public static final double flStart = 0.55, frStart = 0.12; // fork left initialize positions
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
 
-    public CapBallTask(ThreadedTeleOp opMode, DcMotor capLeft, DcMotor capRight, Servo forkLeft, Servo forkRight) {
-        this.capLeft = capLeft;
-        this.capRight = capRight;
-        this.forkLeft = forkLeft;
-        this.forkRight = forkRight;
+    public CapBallTask(LinearOpMode opMode) {
+        forkLeft = opMode.hardwareMap.servo.get("forkLeft");
+        forkRight = opMode.hardwareMap.servo.get("forkRight");
+        capLeft = opMode.hardwareMap.dcMotor.get("capBottom");
+        capRight = opMode.hardwareMap.dcMotor.get("capTop");
         this.opMode = opMode;
+        setForkPosition();
     }
 
     @Override
@@ -83,6 +85,11 @@ public class CapBallTask extends Thread {
 
     public double getLiftPower() {
         return capLeft.getPower();
+    }
+
+    public void setForkPosition() {
+        forkLeft.setPosition(flStart);
+        forkRight.setPosition(frStart);
     }
 
 //    private void dropForklift() {

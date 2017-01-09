@@ -17,7 +17,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 public class MecanumDrive extends LinearOpMode {
 
     DcMotor frontLeft, frontRight, backLeft, backRight;
-
+    final double maxPower = 1;
     @Override
     public void runOpMode() throws InterruptedException {
         frontLeft = hardwareMap.dcMotor.get("frontLeft");
@@ -40,10 +40,10 @@ public class MecanumDrive extends LinearOpMode {
             joy1X = Math.abs(joy1X) > 0.15 ? joy1X*3/4: 0;
             double joy2X = gamepad1.right_stick_x;
             joy2X = Math.abs(joy2X) > 0.15 ? joy2X*3/4: 0;
-            frontLeft.setPower(Math.max(-1, Math.min(1, joy1Y + joy2X + joy1X)));
-            backLeft.setPower(Math.max(-1, Math.min(1, joy1Y + joy2X - joy1X)));
-            frontRight.setPower(Math.max(-1, Math.min(1, joy1Y - joy2X - joy1X)));
-            backRight.setPower(Math.max(-1, Math.min(1, joy1Y - joy2X + joy1X)));
+            frontLeft.setPower(Math.max(-maxPower, Math.min(maxPower, joy1Y + joy2X + joy1X)));
+            backLeft.setPower(Math.max(-maxPower, Math.min(maxPower, joy1Y + joy2X - joy1X)));
+            frontRight.setPower(Math.max(-maxPower, Math.min(maxPower, joy1Y - joy2X - joy1X)));
+            backRight.setPower(Math.max(-maxPower, Math.min(maxPower, joy1Y - joy2X + joy1X)));
         }
     }
 }

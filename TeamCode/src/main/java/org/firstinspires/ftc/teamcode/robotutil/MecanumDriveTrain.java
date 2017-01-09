@@ -54,7 +54,7 @@ public class MecanumDriveTrain {
         this.backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         this.frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         this.frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
+        backRight.setDirection(DcMotorSimple.Direction.REVERSE);
         this.imu = imu;
         this.opMode = opMode;
         setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -65,7 +65,6 @@ public class MecanumDriveTrain {
     private void reverseMotors() {
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         //backRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         //backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 

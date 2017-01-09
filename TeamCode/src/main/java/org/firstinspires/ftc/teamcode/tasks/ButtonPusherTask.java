@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.tasks;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -12,13 +13,10 @@ import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
  */
 public class ButtonPusherTask extends Thread {
 
-    private Servo servo;
     private ThreadedTeleOp opMode;
-    private boolean pressing = false;
-    private boolean buttonOut = false;
-    private boolean xPushed = false;
-    private boolean yPushed = false;
+    CRServo pusher;
     public volatile boolean running = true;
+    double power = 0;
 
 /* initailize servos upwards
 encoder on slide motors
@@ -28,39 +26,40 @@ get out forklift driver 1
 2. lower slides
 Open servo, 5 secs, close servo
   */
-    public ButtonPusherTask(ThreadedTeleOp opMode, Servo servo) {
-        this.servo = servo;
+    public ButtonPusherTask(ThreadedTeleOp opMode, CRServo pusher) {
+        this.pusher = pusher;
         this.opMode = opMode;
+        pusher.setPower(0);
+
     }
 
     @Override
     public void run() {
-        ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+        boolean rPushed = false, lPushed = false;
         while(opMode.opModeIsActive() && running) {
-            if (opMode.gamepad1.x) {
-                if (!xPushed && !buttonOut) {
-                    buttonOut = true;
-                    servo.setPosition(1);
-                    timer.reset();
-                    pressing = true;
-                    xPushed = true;
-                }
+
+            if (opMode.gamepad2.right_bumper && !rPushed) {
+                //pusher.setPower(1);
+                power += 0.005;
+                rPushed = true;
+            } else if(opMode.gamepad2.left_bumper && !lPushed) {
+                //pusher.setPower(-1);
+                power -= 0.005;
+                lPushed = true;
             } else {
-                xPushed = false;
-                buttonOut = false;
-                servo.setPosition(0);
+                //pusher.setPower(0);
             }
-            if(opMode.gamepad2.y) {
-                servo.setPosition(1);
-                buttonOut = true;
-                pressing = false;
-                yPushed = true;
-            } else if (yPushed) {
-                servo.setPosition(0);
-                buttonOut = false;
-                yPushed = false;
+            if (!opMode.gamepad2.right_bumper) {
+                rPushed = false;
             }
+            if (!opMode.gamepad2.left_bumper) {
+                lPushed = false;
+            }
+            pusher.setPower(power);
+            opMode.telemetry.addData("power", power);
+            opMode.telemetry.update();
 
         }
     }
+
 }

@@ -14,10 +14,11 @@ import org.firstinspires.ftc.teamcode.robotutil.VOIColorSensor;
 @TeleOp(name = "Color Test", group = "Test")
 
 public class ColorTest extends LinearOpMode {
-    static final int topSensorID = 0x44;
-    static final int bottomSensorID = 0x3c;
-    VOIColorSensor voiTop, voiBottom;
-    ColorSensor colorTop, colorBottom;
+    static final int topSensorID = 0x3a;
+    static final int bottomBackID = 0x3c;
+    static final int bottomFrontID = 0x44;
+    VOIColorSensor voiTop, voiBottomBack, voiBottomFront;
+    ColorSensor colorTop, colorBottomBack, colorBottomFront;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -27,7 +28,8 @@ public class ColorTest extends LinearOpMode {
 
         while(opModeIsActive()) {
             telemetry.addData("Top:", "Red: " + voiTop.getRed() + " Blue: " + voiTop.getBlue() + " Green " + voiTop.getGreen());
-            telemetry.addData("Bottom: ", "Red: " + voiBottom.getRed() + " Blue: " + voiBottom.getBlue() + " Green " + voiBottom.getGreen());
+            telemetry.addData("BottomBack: ", "Red: " + voiBottomBack.getRed() + " Blue: " + voiBottomBack.getBlue() + " Green " + voiBottomBack.getGreen());
+            telemetry.addData("BottomFront: ", "Red: " + voiBottomFront.getRed() + " Blue: " + voiBottomFront.getBlue() + " Green " + voiBottomFront.getGreen());
             telemetry.addData("Blue: ", voiTop.isBlue());
             telemetry.addData("Red: ", voiTop.isRed());
             telemetry.update();
@@ -35,10 +37,14 @@ public class ColorTest extends LinearOpMode {
     }
     public void initialize(){
         colorTop = hardwareMap.colorSensor.get("colorTop");
-        colorBottom = hardwareMap.colorSensor.get("colorBottom");
+        colorBottomBack = hardwareMap.colorSensor.get("colorBottomBack");
+        colorBottomFront = hardwareMap.colorSensor.get("colorBottomFront");
         colorTop.setI2cAddress(I2cAddr.create8bit(topSensorID));
-        colorBottom.setI2cAddress(I2cAddr.create8bit(bottomSensorID));
+        colorBottomBack.setI2cAddress(I2cAddr.create8bit(bottomBackID));
+        colorBottomFront.setI2cAddress(I2cAddr.create8bit(bottomFrontID));
+
         voiTop = new VOIColorSensor(colorTop, this);
-        voiBottom = new VOIColorSensor(colorBottom, this);
+        voiBottomBack = new VOIColorSensor(colorBottomBack, this);
+        voiBottomFront = new VOIColorSensor(colorBottomFront, this);
     }
 }

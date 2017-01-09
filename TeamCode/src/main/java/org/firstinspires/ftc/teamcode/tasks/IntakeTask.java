@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.tasks;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -14,13 +15,16 @@ import org.firstinspires.ftc.teamcode.robotutil.VOISweeper;
  */
 public class IntakeTask extends Thread {
 
-    private ThreadedTeleOp opMode;
+    private LinearOpMode opMode;
     public volatile boolean running = true;
     private VOISweeper sweeper;
+    CRServo sweeper1, sweeper2, sweeper3;
 
-
-    public IntakeTask(ThreadedTeleOp opMode, VOISweeper sweeper) {
-        this.sweeper = sweeper;
+    public IntakeTask(LinearOpMode opMode) {
+        sweeper1 = opMode.hardwareMap.crservo.get("sweeper1");
+        sweeper2 = opMode.hardwareMap.crservo.get("sweeper2");
+        sweeper3 = opMode.hardwareMap.crservo.get("sweeper3");
+        this.sweeper = new VOISweeper(sweeper1, sweeper2, sweeper3);
         this.opMode = opMode;
         sweeper.setPower(0);
     }
@@ -47,4 +51,5 @@ public class IntakeTask extends Thread {
         }
         sweeper.setPower(0);
     }
+
 }

@@ -121,7 +121,7 @@ public class AutoBlue extends LinearOpMode {
 
         sweeper1 = hardwareMap.crservo.get("sweeper1");
         sweeper2 = hardwareMap.crservo.get("sweeper2");
-        sweeper = new VOISweeper(sweeper1, sweeper2);
+        //sweeper = new VOISweeper(sweeper1, sweeper2, sweeper3);
         frontLeft = hardwareMap.dcMotor.get("frontLeft");
         frontRight = hardwareMap.dcMotor.get("frontRight");
         backLeft = hardwareMap.dcMotor.get("backLeft");
@@ -384,7 +384,7 @@ public class AutoBlue extends LinearOpMode {
         driveTrain.moveLeftNInch(0.6, 6, 10, false, true);
         double offset = VOIImu.subtractAngles(imu.getAngle(), wallAngle);
 
-        shootRotation = VOIImu.subtractAngles(shootRotation, offset, true);
+        shootRotation = VOIImu.subtractAngles(shootRotation, offset);
 
         driveTrain.rotateDegreesPrecision(shootRotation);
         if (shootFirst) {
@@ -405,7 +405,7 @@ public class AutoBlue extends LinearOpMode {
         telemetry.update();
         driveTrain.moveLeftNInch(0.6, 3, 10, false, true);
         double offset = VOIImu.subtractAngles(imu.getAngle(), wallAngle);
-        shootRotation2 = VOIImu.subtractAngles(shootRotation2, offset, true);
+        shootRotation2 = VOIImu.subtractAngles(shootRotation2, offset);
         driveTrain.rotateDegreesPrecision(shootRotation2);
         flywheelTask.setFlywheelPow(shootPower);
         if (shootFirst) {
@@ -505,7 +505,7 @@ public class AutoBlue extends LinearOpMode {
         telemetry.addData("parkSide", "");
         telemetry.update();
         //driveTrain.moveForwardNInch(0.3, 4, 5, false, true);
-        double rotation = VOIImu.subtractAngles(wallAngle, imu.getAngle(), true);
+        double rotation = VOIImu.subtractAngles(wallAngle, imu.getAngle());
         driveTrain.rotateDegrees(rotation, 0.8, false);
         driveTrain.moveForwardNInch(1, 25, 5 , false, true);
     }
