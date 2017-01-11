@@ -83,7 +83,7 @@ public class ThreadedTeleOp extends LinearOpMode {
                 //telemetry.addData("Time elapsed", (int) (elapsed / 1000000000L));
                 //telemetry.addData("Flywheel status", flywheelTask.getFlywheelStateString());
             }
-            telemetry.update();
+            //telemetry.update();
         }
     }
 
@@ -133,7 +133,7 @@ public class ThreadedTeleOp extends LinearOpMode {
         //gyro.resetZAxisIntegrator();
         //int base = gyro.getIntegratedZValue();
         //gate.setPosition(0.4);
-        button.setPower(0);
+        button.setPower(ButtonPusherTask.zeroPower);
 
     }
 }

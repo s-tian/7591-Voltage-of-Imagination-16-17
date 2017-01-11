@@ -14,7 +14,7 @@ public class DriveTrainTask extends Thread {
 
     private DcMotor frontLeft, frontRight, backLeft, backRight;
 
-    private ThreadedTeleOp opMode;
+    private LinearOpMode opMode;
 
     public volatile boolean running = true;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -26,7 +26,7 @@ public class DriveTrainTask extends Thread {
 
     public double zeroAngle, joyStickAngle, gyroAngle;
 
-    public DriveTrainTask(ThreadedTeleOp opMode, DcMotor frontLeft, DcMotor frontRight, DcMotor backLeft, DcMotor backRight) {
+    public DriveTrainTask(LinearOpMode opMode, DcMotor frontLeft, DcMotor frontRight, DcMotor backLeft, DcMotor backRight) {
         this.frontLeft = frontLeft;
         this.frontRight = frontRight;
         this.backLeft  = backLeft;
@@ -84,6 +84,7 @@ public class DriveTrainTask extends Thread {
         backRight.setPower(0);
 
     }
+
     public void convertJoyStick(){
         joyStickAngle = Math.atan2(joy1Y, joy1X);
         //System.out.println("Before: " + joy1X + " " + joy1Y);

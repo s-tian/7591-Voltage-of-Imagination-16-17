@@ -20,6 +20,7 @@ public class MecanumDriveTrain {
     public static final double factorBL = 0.9069;//0.9069
     public static final double factorBR = 0.9323;
 
+    public Team team = Team.BLUE;
     //public ElapsedTime timer, timer2, timer3;
     public ElapsedTime timer;
     static final double POWER_RATIO = 0.78;
@@ -200,7 +201,7 @@ public class MecanumDriveTrain {
         return moveRightTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_STRAFE), timeout, detectStall, stop);
     }
 
-    public boolean moveLeftTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
+    private boolean moveLeftTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
         double timeOutMS = timeout*1000;
         int targetPosition = mWheel.getCurrentPosition() - ticks;
         strafeLeft(power);
@@ -229,7 +230,7 @@ public class MecanumDriveTrain {
         return true;
     }
 
-    public boolean moveRightTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
+    private boolean moveRightTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
         double timeOutMS = timeout * 1000;
         int targetPosition = mWheel.getCurrentPosition() + ticks;
         strafeRight(power);
@@ -259,7 +260,7 @@ public class MecanumDriveTrain {
         return true;
     }
 
-    public boolean moveForwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
+    private boolean moveForwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
         double timeOutMS = timeout*1000;
         int targetPosition = mWheel.getCurrentPosition() + ticks;
         powerAllMotors(power);
@@ -289,7 +290,7 @@ public class MecanumDriveTrain {
         return true;
     }
 
-    public boolean moveBackwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
+    private boolean moveBackwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
         double timeOutMS = timeout*1000;
         int targetPosition = mWheel.getCurrentPosition() - ticks;
         powerAllMotors(-power);
@@ -324,6 +325,29 @@ public class MecanumDriveTrain {
         System.out.println(mWheel.getCurrentPosition());
     }
 
+    public boolean moveUpNInch(double power, double inches, double timeout, boolean detectStall, boolean stop)  {
+        if (team == Team.BLUE) {
+            return moveForwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop);
+        } else {
+            return moveBackwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop);
+        }
+    }
+
+    public boolean moveBackNInch(double power, double inches, double timeout, boolean detectStall, boolean stop) {
+        if (team == Team.BLUE) {
+            return moveBackwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop);
+        } else {
+            return moveForwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop);
+        }
+    }
+
+    public void powerUp(double power) {
+        if (team == Team.BLUE) {
+            powerAllMotors(power);
+        } else {
+            powerAllMotors(-power);
+        }
+    }
     public boolean stalling(boolean forward) {
         int initialBackRight = backRight.getCurrentPosition();
         int initialFrontRight = frontRight.getCurrentPosition();

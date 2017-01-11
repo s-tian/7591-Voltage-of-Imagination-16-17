@@ -18,11 +18,13 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * Created by Stephen on 10/30/2015.
  */
 
+
 public class VOIColorSensor {
 
     ColorSensor sensor;
     private ElapsedTime logMessageTimer;
     LinearOpMode opMode;
+    public Team team = Team.BLUE;
 
     public VOIColorSensor(ColorSensor sensor, LinearOpMode opMode) {
         this.opMode = opMode;
@@ -111,5 +113,19 @@ public class VOIColorSensor {
             }
         }
         return score >= 4;
+    }
+
+    public boolean correctColor() {
+        if (team == Team.BLUE) {
+            return isBlue();
+        }
+        return isRed();
+    }
+
+    public boolean wrongColor() {
+        if (team == Team.BLUE) {
+            return isRed();
+        }
+        return isBlue();
     }
 }

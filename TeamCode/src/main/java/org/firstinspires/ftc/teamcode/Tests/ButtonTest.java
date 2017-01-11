@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.Tests;
 
+import android.widget.Button;
+
 import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -8,6 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
 import org.firstinspires.ftc.teamcode.robotutil.VOIImu;
+import org.firstinspires.ftc.teamcode.tasks.ButtonPusherTask;
 import org.firstinspires.ftc.teamcode.tasks.CapBallTask;
 import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
 
@@ -20,32 +23,26 @@ import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
 public class ButtonTest extends LinearOpMode {
 
     CRServo button;
-    public static double zeroPower = -0.44;
+    ButtonPusherTask buttonPusherTask;
     @Override
     public void runOpMode() throws InterruptedException {
         initialize();
         waitForStart();
-        initPusher();
-        sleep(500);
-        pushButton();
+        buttonPusherTask.start();
+        buttonPusherTask.outPusher();
+        sleep(2000);
+        buttonPusherTask.pushButton();
+        sleep(2000);
+        buttonPusherTask.inPusher();
+        sleep(2000);
+        buttonPusherTask.running = false;
     }
     public void initialize() {
         button = hardwareMap.crservo.get("button");
-        button.setPower(zeroPower);
+        button.setPower(ButtonPusherTask.zeroPower);
+        // initialize these tasks to stop them from moving
         CapBallTask capBallTask = new CapBallTask(this);
         IntakeTask intakeTask = new IntakeTask(this);
+        buttonPusherTask = new ButtonPusherTask(this, button);
     }
-    public void pushButton() {
-        button.setPower(-1);
-        sleep(600);
-        button.setPower(0.12);
-        sleep(600);
-        button.setPower(zeroPower);
-    }
-    public void initPusher() {
-        button.setPower(-1);
-        sleep(1200);
-        button.setPower(zeroPower);
-    }
-
 }

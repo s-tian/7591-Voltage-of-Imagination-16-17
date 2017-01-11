@@ -22,9 +22,9 @@ public class CapBallTask extends Thread {
     boolean aPushed = false;
     public volatile boolean running = true;
     boolean forkliftOut = false;
-    public static final double flStart = 0.55, frStart = 0.12; // fork left initialize positions
+    public static final double flStart = 0.52, frStart = 0.13; // fork left initialize positions
+    // decrease flStart and increase frStart to make forklift more out
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-
 
     public CapBallTask(LinearOpMode opMode) {
         forkLeft = opMode.hardwareMap.servo.get("forkLeft");
@@ -59,7 +59,7 @@ public class CapBallTask extends Thread {
                 setLiftPower(0);
                 forkliftOut = false;
             }
-
+/*
             if(opMode.gamepad2.right_bumper) {
                 forkLeft.setPosition(downLeft);
                 forkRight.setPosition(downRight);
@@ -68,12 +68,7 @@ public class CapBallTask extends Thread {
                 forkLeft.setPosition(startLeft);
                 forkRight.setPosition(startRight);
             }
-
-//            if(opMode.gamepad1.dpad_down) {
-//                if(!forkliftOut) {
-//                    dropForklift();
-//                }
-//            }
+            */
         }
         setLiftPower(0);
     }
