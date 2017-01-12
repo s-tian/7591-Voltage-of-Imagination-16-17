@@ -19,19 +19,26 @@ public class ButtonPusherTask extends Thread {
     public volatile boolean running = true;
     double power = 0;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-    public static final int pushTime = 800;
-    public static final int outTime = 2200;
+    public int pushTime = 600;
+    public int outTime = 2200;
     public static final double zeroPower = 0;
     public static final double outPower = -1;
     public static final double inPower = 1;
-    public boolean pushButton = false;
-    public boolean extendButton = false;
-    public boolean withdrawButton = false;
+    public volatile boolean pushButton = false;
+    public volatile boolean extendButton = false;
+    public volatile boolean withdrawButton = false;
 
     public ButtonPusherTask(LinearOpMode opMode, CRServo pusher) {
         this.button = pusher;
         this.opMode = opMode;
-        pusher.setPower(zeroPower);
+        double mc7 = opMode.hardwareMap.voltageSensor.get("frontDrive").getVoltage();
+        double mc6 = opMode.hardwareMap.voltageSensor.get("backDrive").getVoltage();
+        double mc3 = opMode.hardwareMap.voltageSensor.get("cap").getVoltage();
+        double mc2 = opMode.hardwareMap.voltageSensor.get("flywheels").getVoltage();
+        double voltageLevel = (mc7 + mc6 + mc3 + mc2) / 4;
+        pushTime *= 13.0/voltageLevel;
+        outTime *= 13.0/voltageLevel;
+        pusher.setPower(0);
     }
 
     @Override
@@ -69,9 +76,6 @@ public class ButtonPusherTask extends Thread {
             if (!opMode.gamepad2.left_bumper) {
                 lPushed = false;
             }
-            //button.setPower(power);
-            opMode.telemetry.addData("power", power);
-            opMode.telemetry.update();
         }
         button.setPower(0);
 
@@ -99,7 +103,7 @@ public class ButtonPusherTask extends Thread {
     public void inPusher() {
         timer.reset();
         button.setPower(inPower);
-        while (timer.time() < outTime - 100 && opMode.opModeIsActive());
+        while (timer.time() < outTime - 200 && opMode.opModeIsActive());
         button.setPower(zeroPower);
 
     }

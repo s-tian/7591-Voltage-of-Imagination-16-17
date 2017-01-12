@@ -18,13 +18,14 @@ public class FlywheelTask extends Thread {
     private LinearOpMode opMode;
     public volatile boolean running = true;
     private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-    public FlywheelState state;
+    public volatile FlywheelState state;
     private final int THEORETICAL_MAX_RPM = 2000;
-    private final int FULL_SPEED_RPM = 1400;
+    private final int FULL_SPEED_RPM = 1600;
     private final int TICKS_PER_REV = 112;
     private final int MAX_ENCODER_TICKS_PER_SEC = (int) (1.0*FULL_SPEED_RPM/60*TICKS_PER_REV);
-    private final double MAX_ALLOWED_ERROR = 0.1;      //When the difference between the actual speed and targeted speed is smaller than this percentage, the state will display as RUNNNING_NEAR_TARGET.
+    private final double MAX_ALLOWED_ERROR = 0.15;      //When the difference between the actual speed and targeted speed is smaller than this percentage, the state will display as RUNNNING_NEAR_TARGET.
     private final double CLOSE_ERROR = 0.05;
+    public double currentErrorLeft, currentErrorRight;
     private final double KP = 1.0/15/MAX_ENCODER_TICKS_PER_SEC;     //Proportional error constant to tune
 
     private int targetEncoderRate = 0;
@@ -82,10 +83,12 @@ public class FlywheelTask extends Thread {
                     lastEncoderReadingLeft = encoderReadingLeft;
                     lastEncoderReadingRight = encoderReadingRight;
                     lastTime = currentTime;
-                } else if (deltaTime > 50000000L) {
+                } else if (deltaTime > 200000000L) {
                     int approxRateLeft = (int) ((encoderReadingLeft - lastEncoderReadingLeft)*1.0/deltaTime*1000000000L);
                     int approxRateRight = (int) ((encoderReadingRight - lastEncoderReadingRight)*1.0/deltaTime*1000000000L);
-                    if(Math.abs(approxRateLeft - targetEncoderRate) < targetEncoderRate*MAX_ALLOWED_ERROR && Math.abs(approxRateRight - targetEncoderRate) < targetEncoderRate*MAX_ALLOWED_ERROR) {
+                    currentErrorLeft = (double)(approxRateLeft - targetEncoderRate)/targetEncoderRate;
+                    currentErrorRight = (double)(approxRateRight - targetEncoderRate)/targetEncoderRate;
+                    if(Math.abs(currentErrorLeft) < MAX_ALLOWED_ERROR && Math.abs(currentErrorRight) < MAX_ALLOWED_ERROR) {
                         state = FlywheelState.STATE_RUNNING_NEAR_TARGET;
                     } else {
                         state = FlywheelState.STATE_ADJUSTING;

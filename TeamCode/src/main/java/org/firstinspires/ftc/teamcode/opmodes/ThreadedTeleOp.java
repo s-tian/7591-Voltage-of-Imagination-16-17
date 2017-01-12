@@ -19,6 +19,8 @@ import org.firstinspires.ftc.teamcode.tasks.DriveTrainTask;
 import org.firstinspires.ftc.teamcode.tasks.FlywheelTask;
 import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
 
+import java.text.DecimalFormat;
+
 /**
  * Created by bunnycide on 11/4/16.
  */
@@ -64,7 +66,8 @@ public class ThreadedTeleOp extends LinearOpMode {
         buttonPusherTask.start();
         //driveTrainTask.zeroAngle = imu.getRadians();
 
-
+        DecimalFormat df = new DecimalFormat();
+        df.setMaximumFractionDigits(3);
         while(opModeIsActive()) {
             //Timer for 2 minute teleop period
             long elapsed = System.nanoTime() - startTime;
@@ -80,10 +83,13 @@ public class ThreadedTeleOp extends LinearOpMode {
                 //Get out of the loop
                 break;
             } else {
-                //telemetry.addData("Time elapsed", (int) (elapsed / 1000000000L));
-                //telemetry.addData("Flywheel status", flywheelTask.getFlywheelStateString());
+
+                telemetry.addData("Time elapsed", (int) (elapsed / 1000000000L));
+                telemetry.addData("Left error", df.format(flywheelTask.currentErrorLeft*100));
+                telemetry.addData("Right error", df.format(flywheelTask.currentErrorRight*100));
+                telemetry.addData("Flywheel state", flywheelTask.getFlywheelState());
             }
-            //telemetry.update();
+            telemetry.update();
         }
     }
 

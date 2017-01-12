@@ -26,6 +26,7 @@ public class CapBallTask extends Thread {
     // decrease flStart and increase frStart to make forklift more out
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
+
     public CapBallTask(LinearOpMode opMode) {
         forkLeft = opMode.hardwareMap.servo.get("forkLeft");
         forkRight = opMode.hardwareMap.servo.get("forkRight");

@@ -24,25 +24,24 @@ public class ButtonTest extends LinearOpMode {
 
     CRServo button;
     ButtonPusherTask buttonPusherTask;
+    CapBallTask capBallTask;
+    DcMotor capBottom;
     @Override
     public void runOpMode() throws InterruptedException {
         initialize();
         waitForStart();
         buttonPusherTask.start();
-        buttonPusherTask.outPusher();
-        sleep(2000);
-        buttonPusherTask.pushButton();
-        sleep(2000);
-        buttonPusherTask.inPusher();
-        sleep(2000);
-        buttonPusherTask.running = false;
+        buttonPusherTask.extendButton = true;
+        capBottom.setPower(1);
+        sleep(5000);
     }
     public void initialize() {
         button = hardwareMap.crservo.get("button");
         button.setPower(ButtonPusherTask.zeroPower);
         // initialize these tasks to stop them from moving
-        CapBallTask capBallTask = new CapBallTask(this);
+        capBallTask = new CapBallTask(this);
         IntakeTask intakeTask = new IntakeTask(this);
         buttonPusherTask = new ButtonPusherTask(this, button);
+        capBottom = hardwareMap.dcMotor.get("capBottom");
     }
 }
