@@ -193,7 +193,7 @@ public class Autonomous extends LinearOpMode {
         voiColorBottomFront = new VOIColorSensor(colorBottomFront, this);
         voiColorBottomBack = new VOIColorSensor(colorBottomBack, this);
         button = hardwareMap.crservo.get("button");
-        buttonPusherTask = new ButtonPusherTask(this, button);
+        buttonPusherTask = new ButtonPusherTask(this, button, guide);
 
         forkLeft = hardwareMap.servo.get("forkLeft");
         forkRight = hardwareMap.servo.get("forkRight");

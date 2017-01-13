@@ -17,6 +17,7 @@ public class ButtonPusherTask extends Thread {
 
     private LinearOpMode opMode;
     CRServo button;
+    Servo guide;
     public volatile boolean running = true;
     double power = 0;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -25,15 +26,18 @@ public class ButtonPusherTask extends Thread {
     public static final double zeroPower = 0;
     public static final double outPower = -1;
     public static final double inPower = 1;
+    double upPosition = 0.7;
+    double downPosition = 0.1;
     public volatile boolean pushButton = false;
     public volatile boolean extendButton = false;
     public volatile boolean withdrawButton = false;
 
 
 
-    public ButtonPusherTask(LinearOpMode opMode, CRServo pusher) {
+    public ButtonPusherTask(LinearOpMode opMode, CRServo pusher, Servo guide) {
         this.button = pusher;
         this.opMode = opMode;
+        this.guide = guide;
         double mc7 = opMode.hardwareMap.voltageSensor.get("frontDrive").getVoltage();
         double mc6 = opMode.hardwareMap.voltageSensor.get("backDrive").getVoltage();
         double mc3 = opMode.hardwareMap.voltageSensor.get("cap").getVoltage();
@@ -62,8 +66,11 @@ public class ButtonPusherTask extends Thread {
                 withdrawButton = false;
                 inPusher();
             }
-
-
+            if(Math.abs(opMode.gamepad2.left_stick_y) > 0.15)
+            {
+                button.setPower(opMode.gamepad2.left_stick_y);
+            }
+            /*
             if (opMode.gamepad2.right_bumper && !rPushed) {
                 //pusher.setPower(1);
                 power += 1;
@@ -80,6 +87,11 @@ public class ButtonPusherTask extends Thread {
             }
             if (!opMode.gamepad2.left_bumper) {
                 lPushed = false;
+            }*/
+            if(opMode.gamepad2.left_bumper) {
+                guide.setPosition(downPosition);
+            } else {
+                guide.setPosition(upPosition);
             }
         }
         button.setPower(0);
