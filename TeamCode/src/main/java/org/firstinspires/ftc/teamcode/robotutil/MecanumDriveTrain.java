@@ -133,16 +133,22 @@ public class MecanumDriveTrain {
     }
 
     public void rotateToAngle(double target) {
-        double current = imu.getAngle();
-        double difference = VOIImu.subtractAngles(target, current);
-        rotateDegreesPrecision(difference);
+        rotateToAngle(target, 0.25);
     }
 
+    public void rotateToAngle (double target, double power) {
+        double current = imu.getAngle();
+        double difference = VOIImu.subtractAngles(target, current);
+        rotateDegreesPrecision(difference, power);
+    }
     public void rotateDegreesPrecision(double degrees) {
+        rotateDegreesPrecision(degrees, 0.25);
+    }
+    public void rotateDegreesPrecision(double degrees, double power) {
         // Clockwise: degrees > 0
         // CounterClockwise: degrees < 0;
         double velocity, targetGyro = VOIImu.addAngles(imu.getAngle(), degrees);
-        rotateDegrees(degrees*0.8, 0.25, true);
+        rotateDegrees(degrees*0.8, power, true);
         while (Math.abs(VOIImu.subtractAngles(imu.getAngle(), targetGyro))> 1 && opMode.opModeIsActive()){
             double gyroValue = imu.getAngle();
             if (VOIImu.subtractAngles(targetGyro, gyroValue) > 0) {
@@ -165,7 +171,7 @@ public class MecanumDriveTrain {
             while ((VOIImu.subtractAngles(targetGyro, gyroValue)) <  -2 && opMode.opModeIsActive()) {
                 gyroValue = imu.getAngle();
                 if (slowdown) {
-                    velocity = Math.min(VOIImu.subtractAngles(targetGyro, gyroValue) * 0.35 / degrees, -0.2);
+                    velocity = Math.min(VOIImu.subtractAngles(targetGyro, gyroValue) * power / degrees, -0.2);
                     startRotation(velocity);
                 }
             }

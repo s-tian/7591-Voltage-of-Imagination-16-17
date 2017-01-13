@@ -158,7 +158,7 @@ public class AutoBlue extends LinearOpMode {
         sleep(1500);
         coolDown();
         driveTrain.moveBackwardNInch(0.2, 5, 5, false, true);
-        driveTrain.rotateDegreesPrecision(sfAngle);
+        driveTrain.rotateDegreesPrecision(sfAngle, 0.25);
     }
 
     public void lineUpToWall(int distance) {

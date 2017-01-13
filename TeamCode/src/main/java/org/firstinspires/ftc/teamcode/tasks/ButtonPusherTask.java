@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.tasks;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.I2cController;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -28,6 +29,8 @@ public class ButtonPusherTask extends Thread {
     public volatile boolean extendButton = false;
     public volatile boolean withdrawButton = false;
 
+
+
     public ButtonPusherTask(LinearOpMode opMode, CRServo pusher) {
         this.button = pusher;
         this.opMode = opMode;
@@ -39,6 +42,8 @@ public class ButtonPusherTask extends Thread {
         pushTime *= 13.0/voltageLevel;
         outTime *= 13.0/voltageLevel;
         pusher.setPower(0);
+        //buttonCallback =  buttonController.getI2cPortReadyCallback(button.getPortNumber());
+
     }
 
     @Override
