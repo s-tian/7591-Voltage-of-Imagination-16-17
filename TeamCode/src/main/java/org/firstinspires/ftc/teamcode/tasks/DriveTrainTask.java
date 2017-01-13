@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.tasks;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.opmodes.ThreadedTeleOp;
@@ -26,12 +27,9 @@ public class DriveTrainTask extends Thread {
 
     public double zeroAngle, joyStickAngle, gyroAngle;
 
-    public DriveTrainTask(LinearOpMode opMode, DcMotor frontLeft, DcMotor frontRight, DcMotor backLeft, DcMotor backRight) {
-        this.frontLeft = frontLeft;
-        this.frontRight = frontRight;
-        this.backLeft  = backLeft;
-        this.backRight = backRight;
+    public DriveTrainTask(LinearOpMode opMode) {
         this.opMode = opMode;
+        initialize();
     }
 
     @Override
@@ -105,5 +103,20 @@ public class DriveTrainTask extends Thread {
 
     public void setJoyStickMultiplier(double value) {
         this.joyStickMultiplier = value;
+    }
+
+    public void initialize() {
+        frontLeft = opMode.hardwareMap.dcMotor.get("frontLeft");
+        frontRight = opMode.hardwareMap.dcMotor.get("frontRight");
+        backLeft = opMode.hardwareMap.dcMotor.get("backLeft");
+        backRight = opMode.hardwareMap.dcMotor.get("backRight");
+
+        frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        backRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 }

@@ -21,6 +21,7 @@ public class IntakeTask extends Thread {
     public volatile double power = 0;
     public volatile int sweepTime = 0;
     private VOISweeper sweeper;
+    public boolean teleOp = false;
     CRServo sweeper1, sweeper2, sweeper3;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
@@ -38,20 +39,18 @@ public class IntakeTask extends Thread {
         while(opMode.opModeIsActive() && running) {
 
             // TeleOp commands
-            if(opMode.gamepad2.dpad_up){
-                sweeper.setPower(1);
-            }
-            else if (opMode.gamepad2.dpad_down) {
-                sweeper.setPower(-1);
-            }
-            else if(opMode.gamepad1.right_trigger > 0){
-                sweeper.setPower(1);
-            }
-            else if (opMode.gamepad1.left_trigger > 0) {
-                sweeper.setPower(-1);
-            }
-            else {
-                sweeper.setPower(0);
+            if (teleOp) {
+                if (opMode.gamepad2.dpad_up) {
+                    sweeper.setPower(1);
+                } else if (opMode.gamepad2.dpad_down) {
+                    sweeper.setPower(-1);
+                } else if (opMode.gamepad1.right_trigger > 0) {
+                    sweeper.setPower(1);
+                } else if (opMode.gamepad1.left_trigger > 0) {
+                    sweeper.setPower(-1);
+                } else {
+                    sweeper.setPower(0);
+                }
             }
             if (sweep) {
                 sweeper.setPower(power);

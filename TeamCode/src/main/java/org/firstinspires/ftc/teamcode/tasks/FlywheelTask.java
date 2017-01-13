@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.tasks;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -17,6 +18,7 @@ public class FlywheelTask extends Thread {
     private DcMotor flywheelLeft;
     private LinearOpMode opMode;
     public volatile boolean running = true;
+    public volatile boolean teleOp = false;
     private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     public volatile FlywheelState state;
     private final int THEORETICAL_MAX_RPM = 2000;
@@ -43,13 +45,16 @@ public class FlywheelTask extends Thread {
     }
 
 
-    public FlywheelTask(LinearOpMode opMode, DcMotor flywheelLeft, DcMotor flywheelRight) {
-        this.flywheelLeft = flywheelLeft;
-        this.flywheelRight = flywheelRight;
-        flywheelLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+    public FlywheelTask(LinearOpMode opMode) {
+        flywheelRight = opMode.hardwareMap.dcMotor.get("flywheelRight");
+        flywheelLeft = opMode.hardwareMap.dcMotor.get("flywheelLeft");
         flywheelRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        flywheelLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        flywheelLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         flywheelRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        flywheelLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        flywheelRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        flywheelLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        flywheelLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         this.opMode = opMode;
         this.state = FlywheelState.STATE_STOPPED;
     }
@@ -57,15 +62,16 @@ public class FlywheelTask extends Thread {
     @Override
     public void run() {
         while(opMode.opModeIsActive() && running) {
-
-            if (opMode.gamepad2.a){
-                setFlywheelPow(0.7);
-            } else if (opMode.gamepad2.x){
-                setFlywheelPow(0);
-            } else if (opMode.gamepad2.b){
-                setFlywheelPow(0.8);
-            } else if(opMode.gamepad2.y) {
-                setFlywheelPow(-0.4);
+            if (teleOp) {
+                if (opMode.gamepad2.a) {
+                    setFlywheelPow(0.7);
+                } else if (opMode.gamepad2.x) {
+                    setFlywheelPow(0);
+                } else if (opMode.gamepad2.b) {
+                    setFlywheelPow(0.8);
+                } else if (opMode.gamepad2.y) {
+                    setFlywheelPow(-0.4);
+                }
             }
 
             currentTime = System.nanoTime();

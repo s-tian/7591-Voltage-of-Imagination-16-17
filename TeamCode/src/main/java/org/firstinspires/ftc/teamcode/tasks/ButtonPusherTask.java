@@ -28,70 +28,42 @@ public class ButtonPusherTask extends Thread {
     public static final double inPower = 1;
     double upPosition = 0.7;
     double downPosition = 0.1;
+    public boolean teleOp = false;
     public volatile boolean pushButton = false;
     public volatile boolean extendButton = false;
     public volatile boolean withdrawButton = false;
 
 
 
-    public ButtonPusherTask(LinearOpMode opMode, CRServo pusher, Servo guide) {
-        this.button = pusher;
+    public ButtonPusherTask(LinearOpMode opMode) {
         this.opMode = opMode;
-        this.guide = guide;
-        double mc7 = opMode.hardwareMap.voltageSensor.get("frontDrive").getVoltage();
-        double mc6 = opMode.hardwareMap.voltageSensor.get("backDrive").getVoltage();
-        double mc3 = opMode.hardwareMap.voltageSensor.get("cap").getVoltage();
-        double mc2 = opMode.hardwareMap.voltageSensor.get("flywheels").getVoltage();
-        double voltageLevel = (mc7 + mc6 + mc3 + mc2) / 4;
-        pushTime *= 13.0/voltageLevel;
-        outTime *= 13.0/voltageLevel;
-        pusher.setPower(0);
-        //buttonCallback =  buttonController.getI2cPortReadyCallback(button.getPortNumber());
-
+        initialize();
     }
 
     @Override
     public void run() {
-        boolean rPushed = false, lPushed = false;
         while(opMode.opModeIsActive() && running) {
+            // Autonomous
             if (pushButton) {
                 pushButton = false;
                 pushButton();
-            }
-            else if (extendButton) {
+            } else if (extendButton) {
                 extendButton = false;
                 outPusher();
-            }
-            else if (withdrawButton) {
+            } else if (withdrawButton) {
                 withdrawButton = false;
                 inPusher();
             }
-            if(Math.abs(opMode.gamepad2.left_stick_y) > 0.15)
-            {
-                button.setPower(opMode.gamepad2.left_stick_y);
-            }
-            /*
-            if (opMode.gamepad2.right_bumper && !rPushed) {
-                //pusher.setPower(1);
-                power += 1;
-                rPushed = true;
-            } else if(opMode.gamepad2.left_bumper && !lPushed) {
-                //pusher.setPower(-1);
-                power -= 1;
-                lPushed = true;
-            } else {
-                //pusher.setPower(0);
-            }
-            if (!opMode.gamepad2.right_bumper) {
-                rPushed = false;
-            }
-            if (!opMode.gamepad2.left_bumper) {
-                lPushed = false;
-            }*/
-            if(opMode.gamepad2.left_bumper) {
-                guide.setPosition(downPosition);
-            } else {
-                guide.setPosition(upPosition);
+            //TeleOp
+            if (teleOp) {
+                if (Math.abs(opMode.gamepad2.left_stick_y) > 0.15) {
+                    button.setPower(opMode.gamepad2.left_stick_y);
+                }
+                if (opMode.gamepad2.left_bumper) {
+                    guide.setPosition(downPosition);
+                } else {
+                    guide.setPosition(upPosition);
+                }
             }
         }
         button.setPower(0);
@@ -123,6 +95,22 @@ public class ButtonPusherTask extends Thread {
         while (timer.time() < outTime - 200 && opMode.opModeIsActive());
         button.setPower(zeroPower);
 
+    }
+    //page 1117, 1132 formulas
+    public void initialize() {
+
+        button = opMode.hardwareMap.crservo.get("button");
+        guide = opMode.hardwareMap.servo.get("guide");
+
+        double mc7 = opMode.hardwareMap.voltageSensor.get("frontDrive").getVoltage();
+        double mc6 = opMode.hardwareMap.voltageSensor.get("backDrive").getVoltage();
+        double mc3 = opMode.hardwareMap.voltageSensor.get("cap").getVoltage();
+        double mc2 = opMode.hardwareMap.voltageSensor.get("flywheels").getVoltage();
+        double voltageLevel = (mc7 + mc6 + mc3 + mc2) / 4;
+        pushTime *= 13.0/voltageLevel;
+        outTime *= 13.0/voltageLevel;
+
+        button.setPower(0);
     }
 
 }

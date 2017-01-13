@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.tasks;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -18,11 +19,10 @@ public class CapBallTask extends Thread {
     private DcMotor capBottom, capTop;
     private Servo forkLeft, forkRight;
     private LinearOpMode opMode;
-    double startLeft = 0.55, startRight = 0.12, downLeft = 0.0, downRight = 0.62;
+    double startLeft = 0.55, startRight = 0.12, downLeft = 0.0, downRight = 0.62; // fork lift positions
     boolean aPushed = false;
     public volatile boolean running = true;
     boolean forkliftOut = false;
-    public static final double flStart = 0.55, frStart = 0.13; // fork left initialize positions
 
     double targetPower = 0;
     int bottomPosition = 0;
@@ -45,6 +45,8 @@ public class CapBallTask extends Thread {
         capTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         capBottom.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         capTop.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        capBottom.setDirection(DcMotorSimple.Direction.REVERSE);
+        capTop.setDirection((DcMotorSimple.Direction.REVERSE));
         bottomPosition = capBottom.getCurrentPosition();
         topPosition = capTop.getCurrentPosition();
         setForkPosition();
@@ -66,7 +68,6 @@ public class CapBallTask extends Thread {
                 } else if (pressing) {
                     holdPosition();
                 }
-
             }
             if (opMode.gamepad1.dpad_down && !forkliftOut) {
                 forkliftOut = true;
@@ -108,8 +109,8 @@ public class CapBallTask extends Thread {
     }
 
     public void setForkPosition() {
-        forkLeft.setPosition(flStart);
-        forkRight.setPosition(frStart);
+        forkLeft.setPosition(startLeft);
+        forkRight.setPosition(startRight);
     }
     public void setMode(DcMotor.RunMode mode) {
         capBottom.setMode(mode);
