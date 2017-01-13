@@ -6,6 +6,7 @@ import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
@@ -26,6 +27,8 @@ public class ButtonTest extends LinearOpMode {
     ButtonPusherTask buttonPusherTask;
     CapBallTask capBallTask;
     DcMotor capBottom;
+    Servo guide;
+
     @Override
     public void runOpMode() throws InterruptedException {
         initialize();
@@ -41,7 +44,7 @@ public class ButtonTest extends LinearOpMode {
         // initialize these tasks to stop them from moving
         capBallTask = new CapBallTask(this);
         IntakeTask intakeTask = new IntakeTask(this);
-        buttonPusherTask = new ButtonPusherTask(this, button);
+        buttonPusherTask = new ButtonPusherTask(this, button, guide);
         capBottom = hardwareMap.dcMotor.get("capBottom");
     }
 }

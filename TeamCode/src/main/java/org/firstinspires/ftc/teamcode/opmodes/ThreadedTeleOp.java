@@ -55,7 +55,7 @@ public class ThreadedTeleOp extends LinearOpMode {
         flywheelTask.voltage = voltageLevel;
         intakeTask = new IntakeTask(this);
         capBallTask = new CapBallTask(this);
-        buttonPusherTask = new ButtonPusherTask(this, button);
+        buttonPusherTask = new ButtonPusherTask(this, button, guide);
         waitForStart();
         long startTime = System.nanoTime();
 
@@ -103,9 +103,6 @@ public class ThreadedTeleOp extends LinearOpMode {
         flywheelRight = hardwareMap.dcMotor.get("flywheelRight");
         flywheelLeft = hardwareMap.dcMotor.get("flywheelLeft");
 
-        //conveyor = hardwareMap.dcMotor.get("conveyor");
-        //sweeper = hardwareMap.dcMotor.get("sweeper");
-        //gate = hardwareMap.servo.get("gate");
         button = hardwareMap.crservo.get("button");
         button.setPower(-0.44);
         forkLeft = hardwareMap.servo.get("forkLeft");
@@ -118,6 +115,7 @@ public class ThreadedTeleOp extends LinearOpMode {
         sweeper1 = hardwareMap.crservo.get("sweeper1");
         sweeper2 = hardwareMap.crservo.get("sweeper2");
         sweeper3 = hardwareMap.crservo.get("sweeper3");
+        guide = hardwareMap.servo.get("guide");
         sweeper = new VOISweeper(sweeper1, sweeper2, sweeper3);
         frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -128,10 +126,19 @@ public class ThreadedTeleOp extends LinearOpMode {
         flywheelRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         flywheelLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-        backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        backRight.setDirection(DcMotorSimple.Direction.REVERSE);
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         flywheelLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        guide.setPosition(0.8);
+        capBottom.setDirection(DcMotorSimple.Direction.REVERSE);
+        capTop.setDirection((DcMotorSimple.Direction.REVERSE));
+        forkLeft.setPosition(0.55);
+        forkRight.setPosition(0.12);
+        guide.setPosition(0.7);
+
+        //gyro.calibrate();
+        //gyro.resetZAxisIntegrator();
+        //int base = gyro.getIntegratedZValue();
+        //gate.setPosition(0.4);
         button.setPower(ButtonPusherTask.zeroPower);
 
     }

@@ -18,17 +18,18 @@ public class CapBallTask extends Thread {
     private DcMotor capBottom, capTop;
     private Servo forkLeft, forkRight;
     private LinearOpMode opMode;
-    double startLeft = 0.8, startRight = 0.12, downLeft = 0.3, downRight = 0.62;
+    double startLeft = 0.55, startRight = 0.12, downLeft = 0.0, downRight = 0.62;
     boolean aPushed = false;
     public volatile boolean running = true;
     boolean forkliftOut = false;
+    public static final double flStart = 0.55, frStart = 0.13; // fork left initialize positions
 
     double targetPower = 0;
     int bottomPosition = 0;
     int topPosition = 0;
 
     boolean pressing = false;
-    public static final double flStart = 0.52, frStart = 0.13; // fork left initialize positions
+    public static final double flStart = 0.55, frStart = 0.13; // fork left initialize positions
     // decrease flStart and increase frStart to make forklift more out
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     ElapsedTime timer2 = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -42,8 +43,8 @@ public class CapBallTask extends Thread {
         this.opMode = opMode;
         capBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         capTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        capBottom.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        capTop.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        capBottom.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        capTop.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         bottomPosition = capBottom.getCurrentPosition();
         topPosition = capTop.getCurrentPosition();
         setForkPosition();
@@ -92,7 +93,7 @@ public class CapBallTask extends Thread {
                 forkLeft.setPosition(startLeft);
                 forkRight.setPosition(startRight);
             }
-            
+
         }
         setLiftPower(0);
     }
@@ -100,7 +101,6 @@ public class CapBallTask extends Thread {
     public void setLiftPower(double power){
         capBottom.setPower(power);
         capTop.setPower(power);
-        targetPower = 0;
     }
 
     public double getLiftPower() {
@@ -125,8 +125,8 @@ public class CapBallTask extends Thread {
         capTop.setPower(1);
         capBottom.setPower(1);
     }
-    
-    
+
+
 
 //    private void dropForklift() {
 //        //Probably want to use encoders for this
