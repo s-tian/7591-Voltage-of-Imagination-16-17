@@ -32,7 +32,7 @@ public class ThreadedTeleOp extends LinearOpMode {
     DcMotor frontLeft, frontRight, backLeft, backRight, flywheelRight, flywheelLeft, capBottom, capTop;
     CRServo sweeper1, sweeper2, sweeper3;
     VOISweeper sweeper;
-    Servo forkLeft, forkRight;
+    Servo forkLeft, forkRight, guide;
     CRServo button;
     public DriveTrainTask driveTrainTask;
     public FlywheelTask flywheelTask;
@@ -110,6 +110,7 @@ public class ThreadedTeleOp extends LinearOpMode {
         button.setPower(-0.44);
         forkLeft = hardwareMap.servo.get("forkLeft");
         forkRight = hardwareMap.servo.get("forkRight");
+        guide = hardwareMap.servo.get("guide");
         //lift = hardwareMap.dcMotor.get("lift");
         //gyro = (ModernRoboticsI2cGyro) hardwareMap.gyroSensor.get("gyro");
         //adaImu = hardwareMap.get(BNO055IMU.class, "imu");
@@ -127,18 +128,10 @@ public class ThreadedTeleOp extends LinearOpMode {
         flywheelRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         flywheelLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-        //backRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        //frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         flywheelLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        forkLeft.setPosition(0.8);
-        forkRight.setPosition(0.12);
-
-        //gyro.calibrate();
-        //gyro.resetZAxisIntegrator();
-        //int base = gyro.getIntegratedZValue();
-        //gate.setPosition(0.4);
+        guide.setPosition(0.8);
         button.setPower(ButtonPusherTask.zeroPower);
 
     }

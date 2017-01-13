@@ -17,8 +17,12 @@ public class IntakeTask extends Thread {
 
     private LinearOpMode opMode;
     public volatile boolean running = true;
+    public volatile boolean sweep = false;
+    public volatile double power = 0;
+    public volatile int sweepTime = 0;
     private VOISweeper sweeper;
     CRServo sweeper1, sweeper2, sweeper3;
+    ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
     public IntakeTask(LinearOpMode opMode) {
         sweeper1 = opMode.hardwareMap.crservo.get("sweeper1");
@@ -32,6 +36,8 @@ public class IntakeTask extends Thread {
     @Override
     public void run() {
         while(opMode.opModeIsActive() && running) {
+
+            // TeleOp commands
             if(opMode.gamepad2.dpad_up){
                 sweeper.setPower(1);
             }
@@ -47,6 +53,18 @@ public class IntakeTask extends Thread {
             else {
                 sweeper.setPower(0);
             }
+            if (sweep) {
+                sweeper.setPower(power);
+                timer.reset();
+                while (opMode.opModeIsActive() && timer.time() < sweepTime);
+                sweeper.setPower(0);
+                sweepTime = 0;
+                power = 0;
+                sweep = false;
+            }
+            // Autonomous commands
+
+
 
         }
         sweeper.setPower(0);

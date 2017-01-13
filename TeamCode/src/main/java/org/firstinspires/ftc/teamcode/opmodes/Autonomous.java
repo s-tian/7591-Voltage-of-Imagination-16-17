@@ -22,6 +22,7 @@ import org.firstinspires.ftc.teamcode.robotutil.VOISweeper;
 import org.firstinspires.ftc.teamcode.tasks.ButtonPusherTask;
 import org.firstinspires.ftc.teamcode.tasks.CapBallTask;
 import org.firstinspires.ftc.teamcode.tasks.FlywheelTask;
+import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
 
 import java.text.DecimalFormat;
 
@@ -116,6 +117,7 @@ public class Autonomous extends LinearOpMode {
 
     //Misc
     public FlywheelTask flywheelTask;
+    public IntakeTask intakeTask;
     MecanumDriveTrain driveTrain;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS), gameTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     ElapsedTime timer2 = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -198,7 +200,10 @@ public class Autonomous extends LinearOpMode {
         forkLeft = hardwareMap.servo.get("forkLeft");
         forkRight = hardwareMap.servo.get("forkRight");
         guide = hardwareMap.servo.get("guide");
+
         CapBallTask capBallTask = new CapBallTask(this); // for forklift initialization
+        intakeTask = new IntakeTask(this);
+
         adaImu = hardwareMap.get(BNO055IMU.class, "imu");
         imu = new VOIImu(adaImu);
         driveTrain = new MecanumDriveTrain(backLeft,backRight,frontLeft,frontRight,imu,this);
@@ -784,47 +789,53 @@ public class Autonomous extends LinearOpMode {
     public void pickUpBall(){
         DecimalFormat df = new DecimalFormat();
         df.setMaximumFractionDigits(2);
-        sweeper.setPower(1);
+        powerSweeper(1, 2000);
         flywheelTask.setFlywheelPow(-0.4);
         sleep(1500);
-        sweeper.setPower(0);
-        flywheelTask.setFlywheelPow(0);
         shootTime += 1000;
 
         if (shFirst) {
             double distance = 15 * MecanumDriveTrain.TICKS_PER_INCH_STRAFE;
-            timer2.reset();
-            boolean reversed = false;
             if (team == Team.BLUE) {
-                double target = backRight.getCurrentPosition() + distance;
-                driveTrain.strafeRight(0.5);
-
-                while (opModeIsActive() && backRight.getCurrentPosition() < target) {
-                    if (timer2.time() > 1000 && !reversed) {
-                        sweeper.setPower(-1);
-                        reversed = true;
-                        timer2.reset();
-                    } else if (timer2.time() > 150 && reversed) {
-                        sweeper.setPower(0);
-                    }
-                }
-                driveTrain.stopAll();
+                driveTrain.moveRightNInch(0.5,15, 10, false, true);
+                powerSweeper(-1, 200);
+                driveTrain.rotateToAngle(wallAngle + 180);
             } else if (team == Team.RED) {
-                double target = backRight.getCurrentPosition() - distance;
-                driveTrain.strafeLeft(0.5);
-                while (opModeIsActive() && backRight.getCurrentPosition() > target) {
-                    if (timer2.time() > 300 && !reversed) {
-                        sweeper.setPower(-1);
-                        reversed = true;
-                        timer2.reset();
-                    } else if (timer2.time() > 150 && reversed) {
-                        sweeper.setPower(0);
-                    }
-                }
-                driveTrain.stopAll();
+                driveTrain.moveLeftNInch(0.5, 15, 10, false, true);
+                powerSweeper(-1, 200);
+                driveTrain.rotateToAngle(wallAngle);
             }
-            sweeper.setPower(0);
-            driveTrain.rotateToAngle(wallAngle + 180);
+//            if (team == Team.BLUE) {
+//                double target = backRight.getCurrentPosition() + distance;
+//                driveTrain.strafeRight(0.5);
+//
+//                while (opModeIsActive() && backRight.getCurrentPosition() < target) {
+//                    if (timer2.time() > 1000 && !reversed) {
+//                        sweeper.setPower(-1);
+//                        flywheelTask.setFlywheelPow(0);
+//                        reversed = true;
+//                        timer2.reset();
+//                    } else if (timer2.time() > 150 && reversed) {
+//                        sweeper.setPower(0);
+//                    }
+//                }
+//                driveTrain.stopAll();
+//            } else if (team == Team.RED) {
+//                double target = backRight.getCurrentPosition() - distance;
+//                driveTrain.strafeLeft(0.5);
+//                while (opModeIsActive() && backRight.getCurrentPosition() > target) {
+//                    if (timer2.time() > 300 && !reversed) {
+//                        sweeper.setPower(-1);
+//                        reversed = true;
+//                        timer2.reset();
+//                    } else if (timer2.time() > 150 && reversed) {
+//                        sweeper.setPower(0);
+//                    }
+//                }
+//                driveTrain.stopAll();
+//            }
+            //sweeper.setPower(0);
+            //driveTrain.rotateToAngle(wallAngle + 180);
             timer.reset();
             flywheelTask.setFlywheelPow(shootFirstPower);
             while (flywheelTask.getFlywheelState() != FlywheelTask.FlywheelState.STATE_RUNNING_NEAR_TARGET && opModeIsActive()) {
@@ -841,21 +852,19 @@ public class Autonomous extends LinearOpMode {
             sweeper.setPower(1);
             sleep(shootTime);
             coolDown();
-            if (team == Team.BLUE) {
-                driveTrain.rotateToAngle(threeBall + wallAngle, 0.6);
-            } else if (team == Team.RED) {
-                driveTrain.rotateToAngle(-threeBall + wallAngle, 0.6);
-            }
         }
-        else {
-            if (team == Team.BLUE) {
+        if (team == Team.BLUE) {
+            if (!shFirst) {
                 driveTrain.moveRightNInch(0.5, 20, 5, false, true);
-                driveTrain.rotateToAngle(threeBall + wallAngle, 0.6);
-            } else if (team == Team.RED) {
-                driveTrain.moveLeftNInch(0.5, 20, 5, false, true);
-                driveTrain.rotateToAngle(-threeBall + wallAngle, 0.6);
             }
+            driveTrain.rotateToAngle(threeBall + wallAngle, 0.8);
+        } else if (team == Team.RED) {
+            if (!shFirst) {
+                driveTrain.moveLeftNInch(0.5, 20, 5, false, true);
+            }
+            driveTrain.rotateToAngle(-threeBall + wallAngle, 0.8);
         }
+
 
     }
 
@@ -865,6 +874,11 @@ public class Autonomous extends LinearOpMode {
         sleep(buttonPusherTask.pushTime);
     }
 
+    public void powerSweeper(double power, int time) {
+        intakeTask.power = power;
+        intakeTask.sweepTime = time;
+        intakeTask.sweep = true;
+    }
     public void options(){
         telemetry.addData("Team", team == Team.RED ? "Red" : "Blue");
         telemetry.update();
