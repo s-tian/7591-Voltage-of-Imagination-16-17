@@ -21,7 +21,7 @@ public class IntakeTask extends Thread {
     public volatile double power = 0;
     public volatile int sweepTime = 0;
     private VOISweeper sweeper;
-    public boolean teleOp = false;
+    public volatile boolean teleOp = false;
     CRServo sweeper1, sweeper2, sweeper3;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
@@ -52,17 +52,17 @@ public class IntakeTask extends Thread {
                     sweeper.setPower(0);
                 }
             }
+            // Autonomous commands
             if (sweep) {
                 sweeper.setPower(power);
                 timer.reset();
                 while (opMode.opModeIsActive() && timer.time() < sweepTime);
+
                 sweeper.setPower(0);
                 sweepTime = 0;
                 power = 0;
                 sweep = false;
             }
-            // Autonomous commands
-
 
 
         }

@@ -26,16 +26,14 @@ public class ButtonPusherTask extends Thread {
     public static final double zeroPower = 0;
     public static final double outPower = -1;
     public static final double inPower = 1;
-    public double upPosition = 0.9;
-    public double downPosition = 0.1;
-    public boolean teleOp = false;
+    public static final double upPosition = 1;
+    public static final double downPosition = 0.2;
+    public volatile boolean teleOp = false;
     public boolean guideDown = false;
     public boolean guidePushed = false;
     public volatile boolean pushButton = false;
     public volatile boolean extendButton = false;
     public volatile boolean withdrawButton = false;
-
-
 
     public ButtonPusherTask(LinearOpMode opMode) {
         this.opMode = opMode;
@@ -45,6 +43,7 @@ public class ButtonPusherTask extends Thread {
     @Override
     public void run() {
         while(opMode.opModeIsActive() && running) {
+
             // Autonomous
             if (pushButton) {
                 pushButton = false;
@@ -56,6 +55,7 @@ public class ButtonPusherTask extends Thread {
                 withdrawButton = false;
                 inPusher();
             }
+
             //TeleOp
             if (teleOp) {
                 if (Math.abs(opMode.gamepad2.right_stick_x) > 0.15|| Math.abs(opMode.gamepad2.left_stick_x) > 0.15) {
@@ -110,7 +110,7 @@ public class ButtonPusherTask extends Thread {
     public void inPusher() {
         timer.reset();
         button.setPower(inPower);
-        while (timer.time() < outTime - 200 && opMode.opModeIsActive());
+        while (timer.time() < outTime - 300 && opMode.opModeIsActive());
         button.setPower(zeroPower);
 
     }

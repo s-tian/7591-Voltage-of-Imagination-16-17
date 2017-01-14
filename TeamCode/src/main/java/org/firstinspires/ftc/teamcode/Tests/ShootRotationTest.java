@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.Tests;
 
 import com.qualcomm.hardware.adafruit.BNO055IMU;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -20,6 +21,7 @@ import org.firstinspires.ftc.teamcode.tasks.FlywheelTask;
  * Created by Howard on 12/10/16.
  */
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "ShootRotationTest", group = "Tests")
+@Disabled
 
 public class ShootRotationTest extends LinearOpMode{
     boolean missed = false,  detectRed1 = false;

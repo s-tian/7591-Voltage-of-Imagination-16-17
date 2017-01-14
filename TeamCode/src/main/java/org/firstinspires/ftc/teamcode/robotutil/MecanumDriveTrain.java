@@ -20,7 +20,7 @@ public class MecanumDriveTrain {
     public static final double factorBL = 0.9069;//0.9069
     public static final double factorBR = 0.9323;
 
-    public Team team = Team.BLUE;
+    public Team team = Team.RED;
     //public ElapsedTime timer, timer2, timer3;
     public ElapsedTime timer;
     static final double POWER_RATIO = 0.78;
@@ -148,13 +148,13 @@ public class MecanumDriveTrain {
         // Clockwise: degrees > 0
         // CounterClockwise: degrees < 0;
         double velocity, targetGyro = VOIImu.addAngles(imu.getAngle(), degrees);
-        rotateDegrees(degrees*0.8, power, true);
+        rotateDegrees(degrees*0.8*(1 - power * 0.05), power, true);
         while (Math.abs(VOIImu.subtractAngles(imu.getAngle(), targetGyro))> 1 && opMode.opModeIsActive()){
             double gyroValue = imu.getAngle();
             if (VOIImu.subtractAngles(targetGyro, gyroValue) > 0) {
-                velocity = Math.max(VOIImu.subtractAngles(targetGyro, gyroValue) * 0.2 / degrees, 0.12);
+                velocity = Math.max(VOIImu.subtractAngles(targetGyro, gyroValue) * 0.2 / degrees, 0.10);
             } else {
-                velocity = Math.min(VOIImu.subtractAngles(targetGyro, gyroValue) * 0.2 / degrees, -0.12);
+                velocity = Math.min(VOIImu.subtractAngles(targetGyro, gyroValue) * 0.2 / degrees, -0.10);
             }
             startRotation(velocity);
         }
