@@ -143,7 +143,7 @@ public class AutoBlue extends LinearOpMode {
         driveTrain = new MecanumDriveTrain(backLeft,backRight,frontLeft,frontRight,imu,this);
         driveTrain.setEncoderMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         driveTrain.setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        flywheelTask = new FlywheelTask(this, flywheelLeft, flywheelRight);
+        flywheelTask = new FlywheelTask(this);
         flywheelTask.start();
         parallelAngle = VOIImu.addAngles(imu.getAngle(), angle);
 

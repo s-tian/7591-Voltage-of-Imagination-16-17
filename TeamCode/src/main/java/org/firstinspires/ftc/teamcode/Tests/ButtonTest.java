@@ -44,7 +44,7 @@ public class ButtonTest extends LinearOpMode {
         // initialize these tasks to stop them from moving
         capBallTask = new CapBallTask(this);
         IntakeTask intakeTask = new IntakeTask(this);
-        buttonPusherTask = new ButtonPusherTask(this, button, guide);
+        buttonPusherTask = new ButtonPusherTask(this);
         capBottom = hardwareMap.dcMotor.get("capBottom");
     }
 }

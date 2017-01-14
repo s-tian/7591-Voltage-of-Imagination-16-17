@@ -26,9 +26,11 @@ public class ButtonPusherTask extends Thread {
     public static final double zeroPower = 0;
     public static final double outPower = -1;
     public static final double inPower = 1;
-    double upPosition = 0.7;
-    double downPosition = 0.1;
+    public double upPosition = 0.9;
+    public double downPosition = 0.1;
     public boolean teleOp = false;
+    public boolean guideDown = false;
+    public boolean guidePushed = false;
     public volatile boolean pushButton = false;
     public volatile boolean extendButton = false;
     public volatile boolean withdrawButton = false;
@@ -56,20 +58,36 @@ public class ButtonPusherTask extends Thread {
             }
             //TeleOp
             if (teleOp) {
-                if (Math.abs(opMode.gamepad2.left_stick_y) > 0.15) {
-                    button.setPower(opMode.gamepad2.left_stick_y);
-                }
-                if (opMode.gamepad2.left_bumper) {
-                    guide.setPosition(downPosition);
+                if (Math.abs(opMode.gamepad2.right_stick_x) > 0.15|| Math.abs(opMode.gamepad2.left_stick_x) > 0.15) {
+                    button.setPower(-opMode.gamepad2.right_stick_x-opMode.gamepad2.left_stick_x);
+                    guideDown();
                 } else {
-                    guide.setPosition(upPosition);
+                    button.setPower(0);
+                }
+                if (opMode.gamepad2.left_bumper && !guideDown && !guidePushed) {
+                    guideDown();
+                    guidePushed = true;
+                }
+                else if (opMode.gamepad2.left_bumper && guideDown && !guidePushed){
+                    guideUp();
+                    guidePushed = true;
+                }
+                else if (!opMode.gamepad2.left_bumper){
+                    guidePushed = false;
                 }
             }
         }
         button.setPower(0);
 
     }
-
+    public void guideDown() {
+        guide.setPosition(downPosition);
+        guideDown = true;
+    }
+    public void guideUp() {
+        guide.setPosition(upPosition);
+        guideDown = false;
+    }
     public void pushButton() {
         pushOut();
         timer.reset();

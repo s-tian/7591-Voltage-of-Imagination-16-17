@@ -80,7 +80,7 @@ public class ThreadedTeleOp extends LinearOpMode {
 
     public void initialize(){
         guide = hardwareMap.servo.get("guide");
-        guide.setPosition(0.7);
+        guide.setPosition(0.9);
         double mc7 = hardwareMap.voltageSensor.get("frontDrive").getVoltage();
         double mc6 = hardwareMap.voltageSensor.get("backDrive").getVoltage();
         double mc3 = hardwareMap.voltageSensor.get("cap").getVoltage();

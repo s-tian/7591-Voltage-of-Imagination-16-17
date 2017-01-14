@@ -195,7 +195,7 @@ public class Autonomous extends LinearOpMode {
         voiColorBottomFront = new VOIColorSensor(colorBottomFront, this);
         voiColorBottomBack = new VOIColorSensor(colorBottomBack, this);
         button = hardwareMap.crservo.get("button");
-        buttonPusherTask = new ButtonPusherTask(this, button, guide);
+        buttonPusherTask = new ButtonPusherTask(this);
 
         forkLeft = hardwareMap.servo.get("forkLeft");
         forkRight = hardwareMap.servo.get("forkRight");
@@ -209,7 +209,7 @@ public class Autonomous extends LinearOpMode {
         driveTrain = new MecanumDriveTrain(backLeft,backRight,frontLeft,frontRight,imu,this);
         driveTrain.setEncoderMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         driveTrain.setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        flywheelTask = new FlywheelTask(this, flywheelLeft, flywheelRight);
+        flywheelTask = new FlywheelTask(this);
         flywheelTask.start();
         wallAngle = imu.getAngle();
         guide.setPosition(downPosition);

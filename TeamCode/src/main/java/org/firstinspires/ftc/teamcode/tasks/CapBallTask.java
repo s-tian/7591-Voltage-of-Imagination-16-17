@@ -19,7 +19,7 @@ public class CapBallTask extends Thread {
     private DcMotor capBottom, capTop;
     private Servo forkLeft, forkRight;
     private LinearOpMode opMode;
-    double startLeft = 0.55, startRight = 0.12, downLeft = 0.0, downRight = 0.62; // fork lift positions
+    double startLeft = 0.55, startRight = 0.12, downLeft = 0.00, downRight = 0.62; // fork lift positions
     boolean aPushed = false;
     public volatile boolean running = true;
     boolean forkliftOut = false;
@@ -56,35 +56,29 @@ public class CapBallTask extends Thread {
     public void run() {
         timer2.reset();
         while(opMode.opModeIsActive() && running) {
-            if (timer2.time() > 200) {
-                if (opMode.gamepad1.right_bumper || opMode.gamepad2.right_trigger - opMode.gamepad2.left_trigger > 0.15) {
-                    setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                    setLiftPower(1);
-                    pressing = true;
-                } else if (opMode.gamepad1.left_bumper || opMode.gamepad2.left_trigger - opMode.gamepad2.right_trigger > 0.15) {
-                    setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                    setLiftPower(-0.1);
-                    pressing = true;
-                } else if (pressing) {
-                    holdPosition();
-                }
+            if (opMode.gamepad1.right_bumper || opMode.gamepad2.right_trigger - opMode.gamepad2.left_trigger > 0.15) {
+                setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                setLiftPower(1);
+                pressing = true;
+            } else if (opMode.gamepad1.left_bumper || opMode.gamepad2.left_trigger - opMode.gamepad2.right_trigger > 0.15) {
+                setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                setLiftPower(-0.1);
+                pressing = true;
+            } else if (pressing) {
+                holdPosition();
             }
             if (opMode.gamepad1.dpad_down && !forkliftOut) {
                 forkliftOut = true;
-                timer.reset();
                 setLiftPower(1);
                 while(opMode.opModeIsActive() && timer.time() < 600);
-                timer.reset();
                 setLiftPower(0);
                 while(opMode.opModeIsActive() && timer.time() < 500);
-                timer.reset();
                 setLiftPower(-1);
                 while(opMode.opModeIsActive() && timer.time() < 600);
                 setLiftPower(0);
                 forkliftOut = false;
                 pressing = true;
             }
-            timer2.reset();
 
             if(opMode.gamepad2.right_bumper) {
                 forkLeft.setPosition(downLeft);
@@ -113,8 +107,11 @@ public class CapBallTask extends Thread {
         forkRight.setPosition(startRight);
     }
     public void setMode(DcMotor.RunMode mode) {
-        capBottom.setMode(mode);
-        capTop.setMode(mode);
+        if(capTop.getMode() != mode) {
+            capBottom.setMode(mode);
+            capTop.setMode(mode);
+        }
+
     }
     public void holdPosition() {
         setMode(DcMotor.RunMode.RUN_TO_POSITION);
