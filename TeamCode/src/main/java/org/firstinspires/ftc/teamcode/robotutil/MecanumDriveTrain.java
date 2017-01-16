@@ -11,23 +11,51 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  */
 public class MecanumDriveTrain {
     //export PATH="$PATH:/Users/Howard/Library/Android/sdk/platform-tools"
-    public static final double TICKS_PER_INCH_FORWARD= 43.46;
-    public static final double TICKS_PER_INCH_STRAFE = 48.97;
-    public static final double TICKS_PER_MS_FORWARD = 2.3875; // power 1
-    public static final double TICKS_PER_MS_STRAFE = 1.912; //  power 1
+    public static final double TICKS_PER_INCH_FORWARD= 42.437;
+    public static final double TICKS_PER_INCH_RIGHT = 46.731;
+    public static final double TICKS_PER_INCH_LEFT = 52.5;
+    public static final double TICKS_PER_MS_FORWARD = 1.4; // power 1
+    public static final double TICKS_PER_MS_RIGHT = 1.1649; //  power 1
+    public static final double TICKS_PER_MS_LEFT = 0.979;
     public static final double factorFL = 1;
-    public static final double factorFR = 1;//0.9072
-    public static final double factorBL = 0.9069;//0.9069
-    public static final double factorBR = 0.9323;
-
+    public static final double factorFR = 1;
+    public static final double factorBL = 1;
+    public static final double factorBR = 1;
+    public static final double factorBRL = 0.44; // 0.42
+    public static final double factorBLL = 1; //0.93;
+    public static final double factorFRL = 1;//0.81;
+    public static final double factorFLL = 0.44;
+    public static final double ACF = 0.0025; // Angle Correction Factor
+    public static final double changeFactor = 0.07;
     public Team team = Team.RED;
     //public ElapsedTime timer, timer2, timer3;
     public ElapsedTime timer;
+    public ElapsedTime timer2 = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     static final double POWER_RATIO = 0.78;
     public DcMotor backLeft, backRight, frontLeft, frontRight, mWheel;
     //ModernRoboticsI2cGyro gyro;
     VOIImu imu;
     LinearOpMode opMode;
+
+    public enum DIRECTION {
+        FORWARD, RIGHT, LEFT, BACKWARD;
+
+        @Override
+        public String toString() {
+            switch (this) {
+                case FORWARD:
+                    return "FORWARD";
+                case RIGHT:
+                    return "RIGHT";
+                case LEFT:
+                    return "LEFT";
+                case BACKWARD:
+                    return "BACKWARD";
+            }
+            return "";
+
+        }
+    }
 
     public MecanumDriveTrain(DcMotor backLeft, DcMotor backRight, DcMotor frontLeft, DcMotor frontRight, LinearOpMode opMode) {
         timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -41,6 +69,7 @@ public class MecanumDriveTrain {
         this.frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         this.frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         mWheel = frontLeft;
+
         setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
         reverseMotors();
     }
@@ -65,7 +94,8 @@ public class MecanumDriveTrain {
 
     private void reverseMotors() {
         frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        //backRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        backRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
         //backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
@@ -77,17 +107,13 @@ public class MecanumDriveTrain {
     }
 
     public void setMotorPower(DcMotor motor,double power){
-        double factor = 1;
-        if (motor == frontLeft){
-            factor = factorFL;
-        }else if (motor == frontRight){
-            factor = factorFR;
-        }else if (motor == backLeft){
-            factor = factorBL;
-        }else if (motor == backRight){
-            factor = factorBR;
+        if (power >= 1) {
+            motor.setPower(1);
+        } else if (power <= -1) {
+            motor.setPower(-1);
+        } else {
+            motor.setPower(power);
         }
-        motor.setPower(POWER_RATIO*power*factor);
     }
 
     public void powerAllMotors(double power){
@@ -119,17 +145,17 @@ public class MecanumDriveTrain {
     }
 
     public void strafeLeft(double power) {
-        setMotorPower(backRight,  -power);
-        setMotorPower(backLeft, power);
-        setMotorPower(frontLeft, -power);
-        setMotorPower(frontRight, power);
+        setMotorPower(backRight,  -power*factorBRL);
+        setMotorPower(backLeft, power*factorBLL);
+        setMotorPower(frontLeft, -power*factorFLL);
+        setMotorPower(frontRight, power*factorFRL);
     }
 
     public void strafeRight(double power) {
-        setMotorPower(backRight, power);
-        setMotorPower(backLeft, -power);
-        setMotorPower(frontLeft, power);
-        setMotorPower(frontRight, -power);
+        setMotorPower(backRight, power*factorBR);
+        setMotorPower(backLeft, -power*factorBL);
+        setMotorPower(frontLeft, power*factorFL);
+        setMotorPower(frontRight, -power*factorFR);
     }
 
     public void rotateToAngle(double target) {
@@ -141,20 +167,35 @@ public class MecanumDriveTrain {
         double difference = VOIImu.subtractAngles(target, current);
         rotateDegreesPrecision(difference, power);
     }
+
     public void rotateDegreesPrecision(double degrees) {
         rotateDegreesPrecision(degrees, 0.25);
     }
+
     public void rotateDegreesPrecision(double degrees, double power) {
         // Clockwise: degrees > 0
         // CounterClockwise: degrees < 0;
+        boolean adjust = false;
         double velocity, targetGyro = VOIImu.addAngles(imu.getAngle(), degrees);
         rotateDegrees(degrees*0.8*(1 - power * 0.05), power, true);
         while (Math.abs(VOIImu.subtractAngles(imu.getAngle(), targetGyro))> 1 && opMode.opModeIsActive()){
             double gyroValue = imu.getAngle();
             if (VOIImu.subtractAngles(targetGyro, gyroValue) > 0) {
-                velocity = Math.max(VOIImu.subtractAngles(targetGyro, gyroValue) * 0.2 / degrees, 0.10);
+                if (adjust && degrees > 0) {
+                    break;
+                }
+                if (degrees < 0) {
+                    adjust = true;
+                }
+                velocity = Math.max(VOIImu.subtractAngles(targetGyro, gyroValue) * 0.2 / degrees, 0.08);
             } else {
-                velocity = Math.min(VOIImu.subtractAngles(targetGyro, gyroValue) * 0.2 / degrees, -0.10);
+                if (adjust = true && degrees < 0) {
+                    break;
+                }
+                if (degrees > 0) {
+                    adjust = true;
+                }
+                velocity = Math.min(VOIImu.subtractAngles(targetGyro, gyroValue) * 0.2 / degrees, -0.08);
             }
             startRotation(velocity);
         }
@@ -200,34 +241,63 @@ public class MecanumDriveTrain {
     }
 
     public boolean moveLeftNInch(double power, double inches, double timeout, boolean detectStall, boolean stop) {
-        return moveLeftTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_STRAFE), timeout, detectStall, stop);
+        return moveLeftTicksWithEncoders(power, (inches*TICKS_PER_INCH_LEFT), timeout, detectStall, stop);
     }
 
     public boolean moveRightNInch(double power, double inches, double timeout, boolean detectStall, boolean stop) {
-        return moveRightTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_STRAFE), timeout, detectStall, stop);
+        return moveRightTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_RIGHT), timeout, detectStall, stop);
     }
 
-    private boolean moveLeftTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
+    private boolean moveLeftTicksWithEncoders(double power, double ticks, double timeout, boolean detectStall, boolean stop) {
         double timeOutMS = timeout*1000;
-        int targetPosition = mWheel.getCurrentPosition() - ticks;
+        double targetPosition = frontRight.getCurrentPosition() + ticks;
         strafeLeft(power);
         timer.reset();
+        timer2.reset();
+        double maxDiff = 0;
+        double initAngle = imu.getAngle();
         boolean startDetectingStall = false;
         long currentTime = System.currentTimeMillis();
-        while(mWheel.getCurrentPosition() > targetPosition && opMode.opModeIsActive() && timer.time() < timeOutMS) {
+        System.out.println("initial: " + initAngle);
+        double current;
+        double prev = initAngle;
+        while(frontRight.getCurrentPosition() < targetPosition && opMode.opModeIsActive() && timer.time() < timeOutMS) {
             if (detectStall) {
                 if (System.currentTimeMillis() - currentTime > 1000) {
                     startDetectingStall = true;
                     currentTime = System.currentTimeMillis();
                 }
                 if (startDetectingStall && System.currentTimeMillis() - currentTime > 100) {
-                    if (stalling(false)) {
+                    if (stalling(DIRECTION.LEFT)) {
+                        stopAll();
                         return false;
                     }
+                    currentTime = System.currentTimeMillis();
+
                 }
             }
+//            if (timer2.time() > 100) {
+//                System.out.println("power: " + backRight.getPower());
+//                System.out.println("current: " + imu.getAngle());
+//                current = imu.getAngle();
+//                double diff = VOIImu.subtractAngles(current, initAngle);
+//                maxDiff = Math.max(Math.abs(diff), maxDiff);
+//                double change = VOIImu.subtractAngles(current, prev);
+//                double delta = diff * ACF + change * changeFactor;
+//                double newBR = backRight.getPower() + delta;
+//                double newFL = frontLeft.getPower() - delta;
+//                double newBL = backLeft.getPower() - delta;
+//                double newFR = frontRight.getPower() + delta;
+//
+//                backRight.setPower(newBR);
+//                frontLeft.setPower(newFL);
+//                backLeft.setPower(newBL);
+//                frontRight.setPower(newFR);
+//                prev = current;
+//                timer2.reset();
+//            }
         }
-        if (timer.time() > timeOutMS) {
+        if (stop) {
             stopAll();
         }
         if (timer.time() >= timeOutMS) {
@@ -239,8 +309,10 @@ public class MecanumDriveTrain {
     private boolean moveRightTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
         double timeOutMS = timeout * 1000;
         int targetPosition = mWheel.getCurrentPosition() + ticks;
-        strafeRight(power);
         timer.reset();
+        timer2.reset();
+        double initAngle = imu.getAngle();
+        strafeRight(power);
         long currentTime = System.currentTimeMillis();
         boolean startDetectingStall = false;
         while (mWheel.getCurrentPosition() < targetPosition && opMode.opModeIsActive() && timer.time() < timeOutMS) {
@@ -248,14 +320,30 @@ public class MecanumDriveTrain {
                 if (System.currentTimeMillis() - currentTime > 1000) {
                     startDetectingStall = true;
                     currentTime = System.currentTimeMillis();
-                } else if (startDetectingStall && System.currentTimeMillis() - currentTime > 50) {
+                } else if (startDetectingStall && System.currentTimeMillis() - currentTime > 100) {
                     currentTime = System.currentTimeMillis();
-                    if (stalling(false)) {
+
+                    if (stalling(DIRECTION.RIGHT)) {
                         stopAll();
                         return false;
                     }
+
                 }
             }
+//            if (timer2.time() > 100) {
+//                double diff = imu.getAngle() - initAngle;
+//                double newBR = backRight.getPower() + diff * ACF;
+//                double newFL = frontLeft.getPower() + diff * ACF;
+//                double newBL = backLeft.getPower() - diff * ACF;
+//                double newFR = frontRight.getPower() - diff * ACF;
+//
+//                backRight.setPower(newBR);
+//                frontLeft.setPower(newFL);
+//                backLeft.setPower(newBL);
+//                frontRight.setPower(newFR);
+//                timer2.reset();
+//            }
+
         }
         if (stop) {
             stopAll();
@@ -280,7 +368,7 @@ public class MecanumDriveTrain {
                     currentTime = System.currentTimeMillis();
                 } else if (startDetectingStall && System.currentTimeMillis() - currentTime > 50) {
                     currentTime = System.currentTimeMillis();
-                    if (stalling(true)) {
+                    if (stalling(DIRECTION.FORWARD)) {
                         stopAll();
                         return false;
                     }
@@ -310,7 +398,7 @@ public class MecanumDriveTrain {
                     currentTime = System.currentTimeMillis();
                 } else if (startDetectingStall && System.currentTimeMillis() - currentTime > 50) {
                     currentTime = System.currentTimeMillis();
-                    if (stalling(true)) {
+                    if (stalling(DIRECTION.BACKWARD)) {
                         System.out.println("Stalling " + timeout);
                         stopAll();
                         return false;
@@ -354,7 +442,8 @@ public class MecanumDriveTrain {
             powerAllMotors(-power);
         }
     }
-    public boolean stalling(boolean forward) {
+    
+    public boolean stalling(DIRECTION dir) {
         int initialBackRight = backRight.getCurrentPosition();
         int initialFrontRight = frontRight.getCurrentPosition();
         int initialBackLeft = backLeft.getCurrentPosition();
@@ -370,20 +459,45 @@ public class MecanumDriveTrain {
         boolean BLStall = false;
         boolean FRStall = false;
         boolean FLStall = false;
-        int expected = (int) (TICKS_PER_MS_FORWARD * 100 / 2);
+        double expected = 0;
 
-        if (!forward) {
-            expected = (int) (TICKS_PER_MS_STRAFE * 100 * 0.5);
+        switch (dir) {
+            case FORWARD:
+                expected =  (TICKS_PER_MS_FORWARD * 100 * 0.5);
+                break;
+            case BACKWARD:
+                expected = (TICKS_PER_MS_RIGHT *100 * 0.5);
+                break;
+            case LEFT:
+                expected = TICKS_PER_MS_LEFT * 100 * 0.5;
+                break;
+            case RIGHT:
+                expected = TICKS_PER_MS_FORWARD * 100 * 0.5;
+                break;
+
         }
         if (ticksBackLeft < expected) BLStall = true;
         if (ticksBackRight < expected) BRStall = true;
         if (ticksFrontRight < expected) FRStall = true;
         if (ticksFrontLeft < expected) FLStall = true;
-        if (forward) {
-            return (BLStall || FLStall) && (BRStall || FRStall);
+        switch (dir) {
+            case FORWARD:
+                return (BLStall || FLStall) && (BRStall && FRStall);
+            case BACKWARD:
+                return (BLStall || FLStall) && (BRStall && FRStall);
+            case LEFT:
+                return (FRStall || FLStall) && (BRStall && BLStall);
+            case RIGHT:
+                return (FRStall || FLStall) && (BRStall && BLStall);
         }
-        return (BLStall || BRStall) && (FLStall || FRStall);
+        return false;
 
     }
 
+    public void printPower() {
+        System.out.println("br " + backRight.getPower());
+        System.out.println("bl " + backLeft.getPower());
+        System.out.println("fr " + frontRight.getPower());
+        System.out.println("fl " + frontLeft.getPower());
+    }
 }

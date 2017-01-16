@@ -21,8 +21,8 @@ public class ButtonPusherTask extends Thread {
     public volatile boolean running = true;
     double power = 0;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-    public int pushTime = 600;
-    public int outTime = 2200;
+    public int pushTime = 800;
+    public int outTime = 2000;
     public static final double zeroPower = 0;
     public static final double outPower = -1;
     public static final double inPower = 1;

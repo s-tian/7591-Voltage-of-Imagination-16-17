@@ -21,8 +21,8 @@ public class FlywheelTask extends Thread {
     public volatile boolean teleOp = false;
     private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     public volatile FlywheelState state;
-    private final int THEORETICAL_MAX_RPM = 2000;
-    private final int FULL_SPEED_RPM = 1600;
+    private final int THEORETICAL_MAX_RPM = 1800;
+    private final int FULL_SPEED_RPM = 1300;
     private final int TICKS_PER_REV = 112;
     private final int MAX_ENCODER_TICKS_PER_SEC = (int) (1.0*FULL_SPEED_RPM/60*TICKS_PER_REV);
     private final double MAX_ALLOWED_ERROR = 0.15;      //When the difference between the actual speed and targeted speed is smaller than this percentage, the state will display as RUNNNING_NEAR_TARGET.
@@ -37,8 +37,8 @@ public class FlywheelTask extends Thread {
     private long currentTime = 0;
     private double leftPower = 0;
     private double rightPower = 0;
-    public double voltage = 12;
-    private double expectedVoltage = 12;
+    public double voltage = 13;
+    private double expectedVoltage = 13;
 
     public enum FlywheelState {
         STATE_STOPPED, STATE_ACCELERATING, STATE_ADJUSTING, STATE_RUNNING_NEAR_TARGET
@@ -46,6 +46,11 @@ public class FlywheelTask extends Thread {
 
 
     public FlywheelTask(LinearOpMode opMode) {
+        double mc7 = opMode.hardwareMap.voltageSensor.get("frontDrive").getVoltage();
+        double mc6 = opMode.hardwareMap.voltageSensor.get("backDrive").getVoltage();
+        double mc3 = opMode.hardwareMap.voltageSensor.get("cap").getVoltage();
+        double mc2 = opMode.hardwareMap.voltageSensor.get("flywheels").getVoltage();
+        voltage = (mc7 + mc6 + mc3 + mc2) / 4;
         flywheelRight = opMode.hardwareMap.dcMotor.get("flywheelRight");
         flywheelLeft = opMode.hardwareMap.dcMotor.get("flywheelLeft");
         flywheelRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -56,6 +61,7 @@ public class FlywheelTask extends Thread {
         flywheelLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         flywheelLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         this.opMode = opMode;
+
         this.state = FlywheelState.STATE_STOPPED;
     }
 
@@ -64,11 +70,11 @@ public class FlywheelTask extends Thread {
         while(opMode.opModeIsActive() && running) {
             if (teleOp) {
                 if (opMode.gamepad2.a) {
-                    setFlywheelPow(0.75);
+                    setFlywheelPow(0.65);
                 } else if (opMode.gamepad2.x) {
                     setFlywheelPow(0);
                 } else if (opMode.gamepad2.b) {
-                    setFlywheelPow(0.8);
+                    setFlywheelPow(0.75);
                 } else if (opMode.gamepad2.y) {
                     setFlywheelPow(-0.4);
                 }

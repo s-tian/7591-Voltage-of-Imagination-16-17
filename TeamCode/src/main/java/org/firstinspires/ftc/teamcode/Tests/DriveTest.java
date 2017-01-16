@@ -1,15 +1,21 @@
 package org.firstinspires.ftc.teamcode.Tests;
 
+import android.widget.Button;
+
 import com.qualcomm.hardware.adafruit.AdafruitBNO055IMU;
 import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.opmodes.MecanumDrive;
 import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
 import org.firstinspires.ftc.teamcode.robotutil.VOIImu;
+import org.firstinspires.ftc.teamcode.tasks.ButtonPusherTask;
+import org.firstinspires.ftc.teamcode.tasks.CapBallTask;
+import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
 
 
 /**
@@ -23,36 +29,93 @@ public class DriveTest extends LinearOpMode {
     VOIImu imu;
     BNO055IMU adaImu;
     MecanumDriveTrain driveTrain;
-
+    public static MecanumDriveTrain.DIRECTION dir = MecanumDriveTrain.DIRECTION.FORWARD;
     @Override
     public void runOpMode() throws InterruptedException {
         initialize();
+        chooseDirection();
         waitForStart();
-        // MC 7 has frontLeft motor, MC 6 is back motors
-        System.out.println("MC 7: " + hardwareMap.voltageSensor.get("Motor Controller 7").getVoltage());
-        System.out.println("MC 6: " + hardwareMap.voltageSensor.get("Motor Controller 6").getVoltage());
-        System.out.println("MC 3: " + hardwareMap.voltageSensor.get("Motor Controller 3").getVoltage());
-        System.out.println("MC 2: " + hardwareMap.voltageSensor.get("Motor Controller 2").getVoltage());
 
+        printTicks();
+        switch (dir) {
+            case FORWARD:
+                driveTrain.moveForwardNInch(0.5, 30, 10, false, true);
+                sleep(1000);
+                driveTrain.moveBackwardNInch(0.5, 30, 10, false, true);
+                break;
+            case RIGHT:
+                driveTrain.moveRightNInch(0.5, 30, 10, false, true);
+                sleep(1000);
+                driveTrain.moveLeftNInch(0.5, 30, 10, false, true);
+                break;
 
-        frontLeft.setPower(1);
-        frontRight.setPower(1);
-        sleep(2000);
-        System.out.println("after");
-        System.out.println("MC 7: " + hardwareMap.voltageSensor.get("Motor Controller 7").getVoltage());
-        System.out.println("MC 6: " + hardwareMap.voltageSensor.get("Motor Controller 6").getVoltage());
-        System.out.println("MC 3: " + hardwareMap.voltageSensor.get("Motor Controller 3").getVoltage());
-        System.out.println("MC 2: " + hardwareMap.voltageSensor.get("Motor Controller 2").getVoltage());
+            case LEFT:
+                driveTrain.moveLeftNInch(0.5, 30, 10, false, true);
+                sleep(1000);
+                driveTrain.moveRightNInch(0.5, 30, 10, false, true);
 
+                break;
+            case BACKWARD:
+                driveTrain.moveBackwardNInch(0.5, 30, 10, false, true);
+                sleep(1000);
+
+                driveTrain.moveForwardNInch(0.5, 30, 10, false, true);
+
+                break;
+
+        }
+        printTicks();
+        sleep(500);
+        printTicks();
     }
+
     public void initialize() {
         frontLeft = hardwareMap.dcMotor.get("frontLeft");
         frontRight = hardwareMap.dcMotor.get("frontRight");
         backLeft = hardwareMap.dcMotor.get("backLeft");
         backRight = hardwareMap.dcMotor.get("backRight");
-        driveTrain = new MecanumDriveTrain(backLeft, backRight, frontLeft, frontRight, this);
+        adaImu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu = new VOIImu(adaImu);
+        driveTrain = new MecanumDriveTrain(backLeft,backRight,frontLeft,frontRight,imu,this);        driveTrain.setEncoderMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        driveTrain.setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        Servo guide = hardwareMap.servo.get("guide");
+        guide.setPosition(ButtonPusherTask.upPosition);
+        ButtonPusherTask bpt = new ButtonPusherTask(this);
+        IntakeTask intakeTask = new IntakeTask(this);
+        CapBallTask capBallTask = new CapBallTask(this);
 
-        driveTrain.setEncoderMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+    }
+
+    public void printTicks() {
+        System.out.println("br " + backRight.getCurrentPosition());
+        System.out.println("bl " + backLeft.getCurrentPosition());
+        System.out.println("fr " + frontRight.getCurrentPosition());
+        System.out.println("fl " + frontLeft.getCurrentPosition());
+    }
+
+    public void chooseDirection() {
+        boolean confirmed = false;
+        while (!confirmed) {
+            telemetry.addData("Choose Direction", dir);
+            telemetry.update();
+            if (gamepad1.dpad_up) {
+                dir = MecanumDriveTrain.DIRECTION.FORWARD;
+            } else if (gamepad1.dpad_down) {
+                dir = MecanumDriveTrain.DIRECTION.BACKWARD;
+            } else if (gamepad1.dpad_left) {
+                dir = MecanumDriveTrain.DIRECTION.LEFT;
+            } else if (gamepad1.dpad_right) {
+                dir = MecanumDriveTrain.DIRECTION.RIGHT;
+            }
+
+            if (gamepad1.left_stick_button && gamepad1.right_stick_button) {
+                confirmed = true;
+            }
+        }
+        System.out.println(confirmed);
+        telemetry.addData("Direction", dir);
+        telemetry.addData("Confirmed!", "");
+        telemetry.update();
     }
 
 }

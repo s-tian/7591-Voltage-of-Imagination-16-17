@@ -57,6 +57,7 @@ public class CapBallTask extends Thread {
         bottomPosition = capBottom.getCurrentPosition();
         topPosition = capTop.getCurrentPosition();
         setForkPosition();
+        setLiftPower(0);
     }
 
     @Override
