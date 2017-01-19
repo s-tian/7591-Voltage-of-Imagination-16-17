@@ -23,8 +23,12 @@ public class CapBallTask extends Thread {
     boolean aPushed = false;
     public volatile boolean running = true;
     boolean forkliftOut = false;
-
+    double voltage = 12.5;
+    double expectedVoltage = 12.5;
     double targetPower = 0;
+    public static double holdPower = 0.016;
+    public static double editPower = 0.0002;
+
     int targetPosition = 0;
     int bottomPosition = 0;
     int topPosition = 0;
@@ -38,6 +42,7 @@ public class CapBallTask extends Thread {
     // decrease flStart and increase frStart to make forklift more out
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     ElapsedTime timer2 = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    ElapsedTime timer3 = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
 
     public CapBallTask(LinearOpMode opMode) {
@@ -56,47 +61,31 @@ public class CapBallTask extends Thread {
         capTop.setDirection((DcMotorSimple.Direction.REVERSE));
         bottomPosition = capBottom.getCurrentPosition();
         topPosition = capTop.getCurrentPosition();
+        double mc7 = opMode.hardwareMap.voltageSensor.get("frontDrive").getVoltage();
+        double mc6 = opMode.hardwareMap.voltageSensor.get("backDrive").getVoltage();
+        double mc3 = opMode.hardwareMap.voltageSensor.get("cap").getVoltage();
+        double mc2 = opMode.hardwareMap.voltageSensor.get("flywheels").getVoltage();
+        voltage = (mc7 + mc6 + mc3 + mc2) / 4;
         setForkPosition();
         setLiftPower(0);
+
     }
 
     @Override
     public void run() {
         timer2.reset();
-        boolean toggle = false;
         while(opMode.opModeIsActive() && running) {
-            if (opMode.gamepad2.right_trigger > 0.15) {
-                if (!toggle) {
-                    toggle = true;
-                    toggleMode();
-                }
+
+            if (opMode.gamepad1.right_bumper || opMode.gamepad2.right_trigger > 0.15) {
+                setLiftPower(1);
+            } else if (opMode.gamepad1.left_bumper || opMode.gamepad2.left_trigger > 0.15) {
+                setLiftPower(-0.2);
+            } else if (Math.abs(opMode.gamepad2.right_stick_x) > 0.15 || Math.abs(opMode.gamepad2.right_stick_y) > 0.15){
+                holdPosition();
             } else {
-                toggle = false;
+                setLiftPower(0);
             }
 
-            if (capTop.getMode() == DcMotor.RunMode.RUN_USING_ENCODER) {
-                if (opMode.gamepad1.right_bumper || opMode.gamepad2.right_trigger - opMode.gamepad2.left_trigger > 0.15) {
-                    setLiftPower(1);
-                } else if (opMode.gamepad1.left_bumper || opMode.gamepad2.left_trigger - opMode.gamepad2.right_trigger > 0.15) {
-                    setLiftPower(-0.2);
-                } else {
-                    setLiftPower(0);
-                }
-            } else {
-                if (timer2.time() > 10) {
-                    if (opMode.gamepad1.right_bumper || opMode.gamepad2.right_trigger - opMode.gamepad2.left_trigger > 0.15) {
-                        targetPosition += delta;
-                        pressing = true;
-
-                    } else if (opMode.gamepad1.left_bumper || opMode.gamepad2.left_trigger - opMode.gamepad2.right_trigger > 0.15) {
-                        targetPosition -= delta;
-                        pressing = true;
-                    }
-                    setPosition(targetPosition);
-                    setLiftPower(1);
-                    timer2.reset();
-                }
-            }
 
             if (opMode.gamepad1.dpad_down && !forkliftOut) {
                 forkliftOut = true;
@@ -145,32 +134,26 @@ public class CapBallTask extends Thread {
         capTop.setTargetPosition(pos);
     }
     public void holdPosition() {
-        boolean up = false;
-        if (capBottom.getPower() > 0) {
-            up = true;
-        }
-        setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        pressing = false;
         topPosition = capTop.getCurrentPosition();
         bottomPosition = capBottom.getCurrentPosition();
-        capTop.setTargetPosition(topPosition);
-        capBottom.setTargetPosition(bottomPosition);
-        if (up) {
-            setLiftPower(1);
-        } else {
-            setLiftPower(-1);
-        }
-    }
+        int range = 3;
+        setLiftPower(holdPower * expectedVoltage / voltage);
+        timer3.reset();
+        while (Math.abs(opMode.gamepad2.right_stick_x) > 0.15 || Math.abs(opMode.gamepad2.right_stick_y) > 0.15 && opMode.opModeIsActive()) {
+            if (timer3.time() > 50) {
+                if (capTop.getCurrentPosition() < topPosition - range && capBottom.getCurrentPosition() < bottomPosition - range) {
+                    holdPower += editPower;
+                    setLiftPower(holdPower * expectedVoltage / voltage);
+                }
+                if (capTop.getCurrentPosition() > topPosition + range && capBottom.getCurrentPosition() > bottomPosition + range) {
+                    holdPower -= editPower;
+                    setLiftPower(holdPower * expectedVoltage / voltage);
+                }
+                timer3.reset();
 
-    public void toggleMode () {
-        if (capTop.getMode() == DcMotor.RunMode.RUN_TO_POSITION) {
-            setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            setLiftPower(0);
-        } else {
-            targetPosition = capTop.getCurrentPosition();
-            setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            setLiftPower(1);
+            }
         }
+        setLiftPower(0);
     }
 
 

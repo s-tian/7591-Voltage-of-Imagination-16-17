@@ -21,12 +21,13 @@ public class MecanumDriveTrain {
     public static final double factorFR = 1;
     public static final double factorBL = 1;
     public static final double factorBR = 1;
-    public static final double factorBRL = 0.44; // 0.42
+    public static final double factorBRL = 1; // 0.42
     public static final double factorBLL = 1; //0.93;
     public static final double factorFRL = 1;//0.81;
-    public static final double factorFLL = 0.44;
-    public static final double ACF = 0.0025; // Angle Correction Factor
-    public static final double changeFactor = 0.07;
+    public static final double factorFLL = 1;
+    public static double stallTime = 20;
+    public static double ACF = 0.001; // Angle Correction Factor
+    public static double changeFactor = 0.03;
     public Team team = Team.RED;
     //public ElapsedTime timer, timer2, timer3;
     public ElapsedTime timer;
@@ -251,7 +252,13 @@ public class MecanumDriveTrain {
     private boolean moveLeftTicksWithEncoders(double power, double ticks, double timeout, boolean detectStall, boolean stop) {
         double timeOutMS = timeout*1000;
         double targetPosition = frontRight.getCurrentPosition() + ticks;
+        timer.reset();
+        timer2.reset();
+        backRight.setPower(-1);
+        backLeft.setPower(1);
+        while (opMode.opModeIsActive() && timer.time() < stallTime);
         strafeLeft(power);
+
         timer.reset();
         timer2.reset();
         double maxDiff = 0;
@@ -276,26 +283,26 @@ public class MecanumDriveTrain {
 
                 }
             }
-//            if (timer2.time() > 100) {
-//                System.out.println("power: " + backRight.getPower());
-//                System.out.println("current: " + imu.getAngle());
-//                current = imu.getAngle();
-//                double diff = VOIImu.subtractAngles(current, initAngle);
-//                maxDiff = Math.max(Math.abs(diff), maxDiff);
-//                double change = VOIImu.subtractAngles(current, prev);
-//                double delta = diff * ACF + change * changeFactor;
-//                double newBR = backRight.getPower() + delta;
-//                double newFL = frontLeft.getPower() - delta;
-//                double newBL = backLeft.getPower() - delta;
-//                double newFR = frontRight.getPower() + delta;
-//
-//                backRight.setPower(newBR);
-//                frontLeft.setPower(newFL);
-//                backLeft.setPower(newBL);
-//                frontRight.setPower(newFR);
-//                prev = current;
-//                timer2.reset();
-//            }
+            if (timer2.time() > 200) {
+                current = imu.getAngle();
+                double diff = VOIImu.subtractAngles(current, prev);
+                maxDiff = Math.max(Math.abs(diff), maxDiff);
+                double change = VOIImu.subtractAngles(current, prev);
+                double delta = diff * ACF + change * changeFactor;
+                double newBR = backRight.getPower() + delta;
+                double newFL = frontLeft.getPower() - delta;
+                double newBL = backLeft.getPower() - delta;
+                double newFR = frontRight.getPower() + delta;
+
+                backRight.setPower(newBR);
+                frontLeft.setPower(newFL);
+                backLeft.setPower(newBL);
+                frontRight.setPower(newFR);
+                prev = current;
+                timer2.reset();
+                opMode.telemetry.addData("change", change);
+                opMode.telemetry.update();
+            }
         }
         if (stop) {
             stopAll();
@@ -312,6 +319,11 @@ public class MecanumDriveTrain {
         timer.reset();
         timer2.reset();
         double initAngle = imu.getAngle();
+        backRight.setPower(1);
+        backLeft.setPower(-1);
+        while (opMode.opModeIsActive() && timer.time() < stallTime);
+        timer.reset();
+        timer2.reset();
         strafeRight(power);
         long currentTime = System.currentTimeMillis();
         boolean startDetectingStall = false;
