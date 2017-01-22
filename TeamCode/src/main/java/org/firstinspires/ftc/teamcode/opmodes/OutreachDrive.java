@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 /**
  * Created by Howard on 10/1/16.
  */
-//@TeleOp(name = "Outreach Drive", group = "Drive")
+@TeleOp(name = "Outreach Drive", group = "Drive")
 
 public class OutreachDrive extends LinearOpMode {
 
@@ -22,7 +22,7 @@ public class OutreachDrive extends LinearOpMode {
 
         backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        backRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
         waitForStart();
         while (opModeIsActive()) {

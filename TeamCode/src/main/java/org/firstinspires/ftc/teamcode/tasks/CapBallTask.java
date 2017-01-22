@@ -6,28 +6,20 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.opmodes.ThreadedTeleOp;
-
-import static org.firstinspires.ftc.teamcode.R.layout.servo;
-
 /**
  * Created by Howard on 11/14/16.
  */
 
-public class CapBallTask extends Thread {
+public class CapBallTask extends TaskThread {
 
     private DcMotor capBottom, capTop;
     private Servo forkLeft, forkRight;
-    private LinearOpMode opMode;
     double startLeft = 0.55, startRight = 0.12, downLeft = 0.00, downRight = 0.62; // fork lift positions
     boolean aPushed = false;
-    public volatile boolean running = true;
     boolean forkliftOut = false;
-    double voltage = 12.5;
-    double expectedVoltage = 12.5;
     double targetPower = 0;
-    public static double holdPower = 0.016;
-    public static double editPower = 0.0002;
+    public static double holdPower = 0.5;
+    public static double editPower = 0.05;
 
     int targetPosition = 0;
     int bottomPosition = 0;
@@ -47,28 +39,9 @@ public class CapBallTask extends Thread {
 
     public CapBallTask(LinearOpMode opMode) {
         this.opMode = opMode;
-
-        forkLeft = opMode.hardwareMap.servo.get("forkLeft");
-        forkRight = opMode.hardwareMap.servo.get("forkRight");
-
-        capBottom = opMode.hardwareMap.dcMotor.get("capBottom");
-        capTop = opMode.hardwareMap.dcMotor.get("capTop");
-        capBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        capTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        capBottom.setDirection(DcMotorSimple.Direction.REVERSE);
-        capTop.setDirection((DcMotorSimple.Direction.REVERSE));
-        bottomPosition = capBottom.getCurrentPosition();
-        topPosition = capTop.getCurrentPosition();
-        double mc7 = opMode.hardwareMap.voltageSensor.get("frontDrive").getVoltage();
-        double mc6 = opMode.hardwareMap.voltageSensor.get("backDrive").getVoltage();
-        double mc3 = opMode.hardwareMap.voltageSensor.get("cap").getVoltage();
-        double mc2 = opMode.hardwareMap.voltageSensor.get("flywheels").getVoltage();
-        voltage = (mc7 + mc6 + mc3 + mc2) / 4;
+        initialize();
         setForkPosition();
         setLiftPower(0);
-
     }
 
     @Override
@@ -80,7 +53,7 @@ public class CapBallTask extends Thread {
                 setLiftPower(1);
             } else if (opMode.gamepad1.left_bumper || opMode.gamepad2.left_trigger > 0.15) {
                 setLiftPower(-0.2);
-            } else if (Math.abs(opMode.gamepad2.right_stick_x) > 0.15 || Math.abs(opMode.gamepad2.right_stick_y) > 0.15){
+            } else if (opMode.gamepad2.dpad_right){
                 holdPosition();
             } else {
                 setLiftPower(0);
@@ -90,11 +63,11 @@ public class CapBallTask extends Thread {
             if (opMode.gamepad1.dpad_down && !forkliftOut) {
                 forkliftOut = true;
                 setLiftPower(1);
-                while(opMode.opModeIsActive() && timer.time() < 600);
+                sleep(600);
                 setLiftPower(0);
-                while(opMode.opModeIsActive() && timer.time() < 500);
+                sleep(500);
                 setLiftPower(-1);
-                while(opMode.opModeIsActive() && timer.time() < 600);
+                sleep(600);
                 setLiftPower(0);
                 forkliftOut = false;
                 pressing = true;
@@ -113,7 +86,24 @@ public class CapBallTask extends Thread {
         setLiftPower(0);
     }
 
-    public void setLiftPower(double power){
+    @Override
+    public void initialize()  {
+        forkLeft = opMode.hardwareMap.servo.get("forkLeft");
+        forkRight = opMode.hardwareMap.servo.get("forkRight");
+
+        capBottom = opMode.hardwareMap.dcMotor.get("capBottom");
+        capTop = opMode.hardwareMap.dcMotor.get("capTop");
+        capBottom.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        capTop.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        capBottom.setDirection(DcMotorSimple.Direction.REVERSE);
+        capTop.setDirection((DcMotorSimple.Direction.REVERSE));
+        bottomPosition = capBottom.getCurrentPosition();
+        topPosition = capTop.getCurrentPosition();
+    }
+
+    public void setLiftPower(double power) {
         capBottom.setPower(power);
         capTop.setPower(power);
     }
@@ -122,6 +112,7 @@ public class CapBallTask extends Thread {
         forkLeft.setPosition(startLeft);
         forkRight.setPosition(startRight);
     }
+
     public void setMode(DcMotor.RunMode mode) {
         if(capTop.getMode() != mode) {
             capBottom.setMode(mode);
@@ -133,24 +124,27 @@ public class CapBallTask extends Thread {
         capBottom.setTargetPosition(pos);
         capTop.setTargetPosition(pos);
     }
+
     public void holdPosition() {
         topPosition = capTop.getCurrentPosition();
         bottomPosition = capBottom.getCurrentPosition();
         int range = 3;
-        setLiftPower(holdPower * expectedVoltage / voltage);
+        setLiftPower(holdPower * EXPECTED_VOLTAGE / voltage);
         timer3.reset();
-        while (Math.abs(opMode.gamepad2.right_stick_x) > 0.15 || Math.abs(opMode.gamepad2.right_stick_y) > 0.15 && opMode.opModeIsActive()) {
+        while (opMode.gamepad2.dpad_right && opMode.opModeIsActive()) {
+            if (opMode.gamepad1.right_bumper || opMode.gamepad1.left_bumper) {
+                return;
+            }
             if (timer3.time() > 50) {
                 if (capTop.getCurrentPosition() < topPosition - range && capBottom.getCurrentPosition() < bottomPosition - range) {
-                    holdPower += editPower;
-                    setLiftPower(holdPower * expectedVoltage / voltage);
+                    //holdPower += editPower;
+                    setLiftPower(holdPower * EXPECTED_VOLTAGE / voltage);
                 }
                 if (capTop.getCurrentPosition() > topPosition + range && capBottom.getCurrentPosition() > bottomPosition + range) {
-                    holdPower -= editPower;
-                    setLiftPower(holdPower * expectedVoltage / voltage);
+                    //holdPower -= editPower;
+                    setLiftPower(holdPower * EXPECTED_VOLTAGE / voltage);
                 }
                 timer3.reset();
-
             }
         }
         setLiftPower(0);

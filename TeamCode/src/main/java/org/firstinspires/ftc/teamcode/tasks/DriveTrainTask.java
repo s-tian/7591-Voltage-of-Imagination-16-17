@@ -11,13 +11,10 @@ import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
 /**
  * Created by Howard on 10/15/16.
  */
-public class DriveTrainTask extends Thread {
+public class DriveTrainTask extends TaskThread {
 
     private DcMotor frontLeft, frontRight, backLeft, backRight;
 
-    private LinearOpMode opMode;
-
-    public volatile boolean running = true;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     static double joy1X, joy1Y, joy2X;
     int joyStickSign = 1;
@@ -37,8 +34,6 @@ public class DriveTrainTask extends Thread {
         timer.reset();
         while(opMode.opModeIsActive() && running) {
             if (timer.time() > 10) {
-
-
 
                 joy1Y = -opMode.gamepad1.left_stick_y * 3/4;
                 joy1X = opMode.gamepad1.left_stick_x * 3/4;
@@ -77,6 +72,7 @@ public class DriveTrainTask extends Thread {
 
     }
 
+    @Override
     public void initialize() {
         frontLeft = opMode.hardwareMap.dcMotor.get("frontLeft");
         frontRight = opMode.hardwareMap.dcMotor.get("frontRight");
@@ -89,7 +85,7 @@ public class DriveTrainTask extends Thread {
         backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         backRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        //frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 }

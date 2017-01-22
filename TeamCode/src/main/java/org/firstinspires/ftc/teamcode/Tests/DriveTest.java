@@ -34,40 +34,10 @@ public class DriveTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         initialize();
-        chooseDirection();
+        //chooseDirection();
         waitForStart();
+        driveTrain.driveToPosition(2000,2000,2000,2000);
 
-        printTicks();
-        switch (dir) {
-            case FORWARD:
-                driveTrain.moveForwardNInch(power, distance, 10, false, true);
-                sleep(1000);
-                driveTrain.moveBackwardNInch(power, distance, 10, false, true);
-                break;
-            case RIGHT:
-                driveTrain.moveRightNInch(power, distance, 10, false, true);
-                sleep(1000);
-                driveTrain.moveLeftNInch(power, distance, 10, false, true);
-                break;
-
-            case LEFT:
-                driveTrain.moveLeftNInch(power, distance, 10, false, true);
-                sleep(1000);
-                driveTrain.moveRightNInch(power, distance, 10, false, true);
-
-                break;
-            case BACKWARD:
-                driveTrain.moveBackwardNInch(power, distance, 10, false, true);
-                sleep(1000);
-
-                driveTrain.moveForwardNInch(power, distance, 10, false, true);
-
-                break;
-
-        }
-        printTicks();
-        sleep(500);
-        printTicks();
     }
 
     public void initialize() {
@@ -77,7 +47,8 @@ public class DriveTest extends LinearOpMode {
         backRight = hardwareMap.dcMotor.get("backRight");
         adaImu = hardwareMap.get(BNO055IMU.class, "imu");
         imu = new VOIImu(adaImu);
-        driveTrain = new MecanumDriveTrain(backLeft,backRight,frontLeft,frontRight,imu,this);        driveTrain.setEncoderMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        driveTrain = new MecanumDriveTrain(backLeft,backRight,frontLeft,frontRight,imu,this);
+        driveTrain.setEncoderMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         driveTrain.setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
         Servo guide = hardwareMap.servo.get("guide");
         guide.setPosition(ButtonPusherTask.upPosition);
@@ -168,6 +139,39 @@ public class DriveTest extends LinearOpMode {
         telemetry.addData("Direction", dir);
         telemetry.addData("Confirmed!", "");
         telemetry.update();
+    }
+
+    public void testDrive() {
+        switch (dir) {
+            case FORWARD:
+                driveTrain.moveForwardNInch(power, distance, 10, false, true);
+                sleep(1000);
+                driveTrain.moveBackwardNInch(power, distance, 10, false, true);
+                break;
+            case RIGHT:
+                driveTrain.moveRightNInch(power, distance, 10, false, true);
+                sleep(1000);
+                driveTrain.moveLeftNInch(power, distance, 10, false, true);
+                break;
+
+            case LEFT:
+                driveTrain.moveLeftNInch(power, distance, 10, false, true);
+                sleep(1000);
+                driveTrain.moveRightNInch(power, distance, 10, false, true);
+
+                break;
+            case BACKWARD:
+                driveTrain.moveBackwardNInch(power, distance, 10, false, true);
+                sleep(1000);
+
+                driveTrain.moveForwardNInch(power, distance, 10, false, true);
+
+                break;
+
+        }
+        printTicks();
+        sleep(500);
+        printTicks();
     }
 
 }

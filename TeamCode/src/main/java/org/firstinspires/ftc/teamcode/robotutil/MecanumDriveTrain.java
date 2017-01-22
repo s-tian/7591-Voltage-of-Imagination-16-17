@@ -25,6 +25,23 @@ public class MecanumDriveTrain {
     public static final double factorBLL = 1; //0.93;
     public static final double factorFRL = 1;//0.81;
     public static final double factorFLL = 1;
+
+    public static final double tipR_br = TICKS_PER_INCH_RIGHT;
+    public static final double tipR_bl = 0;
+    public static final double tipR_fr = 0;
+    public static final double tipR_fl = 0;
+    public static final double tipL_br = 0;
+    public static final double tipL_bl = 0;
+    public static final double tipL_fr = 0;
+    public static final double tipL_fl = 0;
+    public static final double tipF_br = 0;
+    public static final double tipF_bl = 0;
+    public static final double tipF_fr = 0;
+    public static final double tipF_fl = 0;
+    public static final double tipB_br = 0;
+    public static final double tipB_bl = 0;
+    public static final double tipB_fr = 0;
+    public static final double tipB_fl = 0;
     public static double stallTime = 20;
     public static double ACF = 0.001; // Angle Correction Factor
     public static double changeFactor = 0.03;
@@ -94,7 +111,7 @@ public class MecanumDriveTrain {
     }
 
     private void reverseMotors() {
-        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        //frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
         backRight.setDirection(DcMotorSimple.Direction.REVERSE);
         frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
         //backLeft.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -105,6 +122,16 @@ public class MecanumDriveTrain {
         backRight.setMode(runMode);
         frontLeft.setMode(runMode);
         frontRight.setMode(runMode);
+        switch (runMode) {
+            case RUN_USING_ENCODER:
+                powerAllMotors(0);
+                break;
+            case RUN_TO_POSITION:
+                powerAllMotors(1);
+                break;
+            default:
+                break;
+        }
     }
 
     public void setMotorPower(DcMotor motor,double power){
@@ -511,5 +538,23 @@ public class MecanumDriveTrain {
         System.out.println("bl " + backLeft.getPower());
         System.out.println("fr " + frontRight.getPower());
         System.out.println("fl " + frontLeft.getPower());
+    }
+
+    public void driveToPosition(int br, int bl, int fr, int fl) {
+        setEncoderMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        setEncoderMode(DcMotor.RunMode.RUN_TO_POSITION);
+        boolean brGood = false;
+        boolean blGood = false;
+        boolean frGood = false;
+        boolean flGood = false;
+        int error = 10;
+        while (!brGood || !blGood || !frGood || !flGood && opMode.opModeIsActive()) {
+            brGood = Math.abs(br - backRight.getCurrentPosition()) < error;
+            blGood = Math.abs(bl - backLeft.getCurrentPosition()) < error;
+            frGood = Math.abs(fr - frontRight.getCurrentPosition()) < error;
+            flGood = Math.abs(fl - frontLeft.getCurrentPosition()) < error;
+        }
+
+        setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 }

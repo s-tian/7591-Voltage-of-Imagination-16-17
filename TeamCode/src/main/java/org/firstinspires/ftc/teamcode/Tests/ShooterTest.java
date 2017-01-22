@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.tasks.FlywheelTask;
 
 /**
  * Created by Stephen on 9/11/2016.
@@ -15,58 +16,64 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 public class ShooterTest extends LinearOpMode {
 
-    DcMotor motorA, motorB, motorC;
+    FlywheelTask flywheelTask;
 
 
     @Override
     public void runOpMode() throws InterruptedException {
-        boolean increased = false ,decreased = false;
-        boolean cIncreased = false, cDecreased = false;
-        motorA = hardwareMap.dcMotor.get("motorA");
-        motorB = hardwareMap.dcMotor.get("motorB");
-        motorC = hardwareMap.dcMotor.get("motorC");
-        motorA.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorB.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        motorA.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        motorB.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        motorA.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorC.setDirection(DcMotorSimple.Direction.REVERSE);
+        flywheelTask = new FlywheelTask(this);
+        flywheelTask.teleOp = true;
+        setPowers();
         waitForStart();
-        while(opModeIsActive()) {
-            telemetry.addData("Flywheel", motorA.getPower());
-            telemetry.addData("Conveyor", motorC.getPower());
-            if (gamepad1.a && motorA.getPower() <= .9 && !increased) {
-                motorA.setPower(motorA.getPower() + .1);
-                motorB.setPower(motorA.getPower());
-                increased = true;
+        flywheelTask.start();
+        while(opModeIsActive());
+    }
+
+    public void setPowers() {
+        boolean confirmed = false;
+        boolean aPressed = false;
+        boolean bPressed = false;
+        boolean xPressed = false;
+        boolean yPressed = false;
+
+        while (!confirmed) {
+            if (gamepad2.a && !aPressed) {
+                aPressed = true;
+                FlywheelTask.lowPow += 0.01;
             }
-            if (gamepad1.b && motorA.getPower() >= .1 && !decreased) {
-                motorA.setPower(motorA.getPower() - .1);
-                motorB.setPower(motorA.getPower());
-                decreased = true;
+            if (gamepad2.b && !bPressed) {
+                bPressed = true;
+                FlywheelTask.lowPow -= 0.01;
             }
-            if (gamepad1.x && motorC.getPower() <= .9 && !cIncreased){
-                motorC.setPower(motorC.getPower() + .1);
-                cIncreased = true;
+            if (gamepad2.x && !xPressed) {
+                xPressed = true;
+                FlywheelTask.highPow += 0.01;
             }
-            if (gamepad1.y && motorC.getPower() >= .1 && !cDecreased){
-                motorC.setPower(motorC.getPower()- .1);
-                cDecreased = true;
-            }
-            if (!gamepad1.a){
-                increased = false;
-            }
-            if (!gamepad1.b) {
-                decreased = false;
-            }
-            if (!gamepad1.x){
-                cIncreased = false;
-            }
-            if (!gamepad1.y){
-                cDecreased = false;
+            if (gamepad2.y && !yPressed) {
+                yPressed = true;
+                FlywheelTask.highPow -= 0.01;
             }
 
+            if (!gamepad2.a){
+                aPressed = false;
+            }
+            if (!gamepad2.b) {
+                bPressed = false;
+            }
+            if (!gamepad2.x){
+                xPressed = false;
+            }
+            if (!gamepad2.y){
+                yPressed = false;
+            }
+            telemetry.addData("A (low)", FlywheelTask.lowPow);
+            telemetry.addData("B (high)", FlywheelTask.highPow);
+            if (gamepad2.left_stick_button && gamepad2.right_stick_button) {
+                confirmed = true;
+                telemetry.addData("Confirmed!", "");
+            }
             telemetry.update();
+
 
         }
     }

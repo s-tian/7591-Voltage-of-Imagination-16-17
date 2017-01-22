@@ -40,35 +40,35 @@ public class CapPowerCalibration extends LinearOpMode {
         boolean aPressed = false, bPressed = false, xPressed = false, yPressed = false;
         while (!confirmed) {
 
-            if (gamepad1.a && !aPressed) {
+            if (gamepad2.a && !aPressed) {
                 aPressed = true;
-                CapBallTask.holdPower += 0.001;
+                CapBallTask.holdPower += 0.01;
             }
-            if (!gamepad1.a) {
+            if (!gamepad2.a) {
                 aPressed = false;
             }
-            if (gamepad1.b && !bPressed) {
+            if (gamepad2.b && !bPressed) {
                 bPressed = true;
-                CapBallTask.holdPower -= 0.001;
+                CapBallTask.holdPower -= 0.01;
             }
-            if (!gamepad1.b) {
+            if (!gamepad2.b) {
                 bPressed = false;
             }
-            if (gamepad1.x && !xPressed) {
+            if (gamepad2.x && !xPressed) {
                 xPressed = true;
-                CapBallTask.editPower += 0.0001;
+                CapBallTask.editPower += 0.01;
             }
-            if (!gamepad1.x) {
+            if (!gamepad2.x) {
                 xPressed = false;
             }
-            if (gamepad1.y && !yPressed) {
+            if (gamepad2.y && !yPressed) {
                 yPressed = true;
-                CapBallTask.editPower -= 0.0001;
+                CapBallTask.editPower -= 0.01;
             }
-            if (!gamepad1.y) {
+            if (!gamepad2.y) {
                 yPressed = false;
             }
-            if (gamepad1.left_stick_button && gamepad1.right_stick_button) {
+            if (gamepad2.left_stick_button && gamepad2.right_stick_button) {
                 confirmed = true;
             }
             if (gamepad2.left_stick_button && gamepad2.right_stick_button) {

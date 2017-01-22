@@ -13,24 +13,25 @@ import org.firstinspires.ftc.teamcode.robotutil.VOISweeper;
 /**
  * Created by Howard on 10/15/16.
  */
-public class IntakeTask extends Thread {
+public class IntakeTask extends TaskThread {
 
-    private LinearOpMode opMode;
-    public volatile boolean running = true;
-    public volatile boolean sweep = false;
     public volatile double power = 0;
     public volatile int sweepTime = 0;
     private VOISweeper sweeper;
-    public volatile boolean teleOp = false;
     CRServo sweeper1, sweeper2, sweeper3;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
     public IntakeTask(LinearOpMode opMode) {
+        this.opMode = opMode;
+        initialize();
+    }
+
+    @Override
+    public void initialize() {
         sweeper1 = opMode.hardwareMap.crservo.get("sweeper1");
         sweeper2 = opMode.hardwareMap.crservo.get("sweeper2");
         sweeper3 = opMode.hardwareMap.crservo.get("sweeper3");
         this.sweeper = new VOISweeper(sweeper1, sweeper2, sweeper3);
-        this.opMode = opMode;
         sweeper.setPower(0);
     }
 
@@ -53,15 +54,12 @@ public class IntakeTask extends Thread {
                 }
             }
             // Autonomous commands
-            if (sweep) {
+            if (power != 0) {
                 sweeper.setPower(power);
-                timer.reset();
-                while (opMode.opModeIsActive() && timer.time() < sweepTime);
-
+                sleep(sweepTime);
                 sweeper.setPower(0);
                 sweepTime = 0;
                 power = 0;
-                sweep = false;
             }
 
 

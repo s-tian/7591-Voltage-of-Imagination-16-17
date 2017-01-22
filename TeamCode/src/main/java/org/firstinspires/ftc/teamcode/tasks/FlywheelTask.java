@@ -3,22 +3,15 @@ package org.firstinspires.ftc.teamcode.tasks;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
-import org.firstinspires.ftc.teamcode.opmodes.ThreadedTeleOp;
-import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
 
 /**
  * Created by Howard on 10/15/16.
  */
-public class FlywheelTask extends Thread {
+public class FlywheelTask extends TaskThread {
 
     private DcMotor flywheelRight;
     private DcMotor flywheelLeft;
-    private LinearOpMode opMode;
-    public volatile boolean running = true;
-    public volatile boolean teleOp = false;
     private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     public volatile FlywheelState state;
     private final int THEORETICAL_MAX_RPM = 1800;
@@ -30,6 +23,8 @@ public class FlywheelTask extends Thread {
     public double currentErrorLeft, currentErrorRight;
     private final double KP = 1.0/15/MAX_ENCODER_TICKS_PER_SEC;     //Proportional error constant to tune
 
+    public static double lowPow = 0.75;
+    public static double highPow = 0.85;
     private int targetEncoderRate = 0;
     private int lastEncoderReadingLeft = 0;
     private int lastEncoderReadingRight = 0;
@@ -37,8 +32,7 @@ public class FlywheelTask extends Thread {
     private long currentTime = 0;
     private double leftPower = 0;
     private double rightPower = 0;
-    public double voltage = 13;
-    private double expectedVoltage = 13;
+
 
     public enum FlywheelState {
         STATE_STOPPED, STATE_ACCELERATING, STATE_ADJUSTING, STATE_RUNNING_NEAR_TARGET
@@ -46,11 +40,12 @@ public class FlywheelTask extends Thread {
 
 
     public FlywheelTask(LinearOpMode opMode) {
-        double mc7 = opMode.hardwareMap.voltageSensor.get("frontDrive").getVoltage();
-        double mc6 = opMode.hardwareMap.voltageSensor.get("backDrive").getVoltage();
-        double mc3 = opMode.hardwareMap.voltageSensor.get("cap").getVoltage();
-        double mc2 = opMode.hardwareMap.voltageSensor.get("flywheels").getVoltage();
-        voltage = (mc7 + mc6 + mc3 + mc2) / 4;
+        this.opMode = opMode;
+        initialize();
+    }
+
+    @Override
+    public void initialize() {
         flywheelRight = opMode.hardwareMap.dcMotor.get("flywheelRight");
         flywheelLeft = opMode.hardwareMap.dcMotor.get("flywheelLeft");
         flywheelRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -60,9 +55,6 @@ public class FlywheelTask extends Thread {
         flywheelRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         flywheelLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         flywheelLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        this.opMode = opMode;
-
-        this.state = FlywheelState.STATE_STOPPED;
     }
 
     @Override
@@ -70,11 +62,11 @@ public class FlywheelTask extends Thread {
         while(opMode.opModeIsActive() && running) {
             if (teleOp) {
                 if (opMode.gamepad2.a) {
-                    setFlywheelPow(0.65);
+                    setFlywheelPow(lowPow);
                 } else if (opMode.gamepad2.x) {
                     setFlywheelPow(0);
                 } else if (opMode.gamepad2.b) {
-                    setFlywheelPow(0.75);
+                    setFlywheelPow(highPow);
                 } else if (opMode.gamepad2.y) {
                     setFlywheelPow(-0.4);
                 }
@@ -146,10 +138,10 @@ public class FlywheelTask extends Thread {
         } else {
             state = state.STATE_ACCELERATING;
         }
-        double ratio = Math.min(expectedVoltage/voltage, 1);
+        double ratio = Math.min(EXPECTED_VOLTAGE /voltage, 1);
         timer.reset();
         targetEncoderRate = (int) (MAX_ENCODER_TICKS_PER_SEC * power);
-        leftPower = rightPower = power*FULL_SPEED_RPM/THEORETICAL_MAX_RPM * expectedVoltage / voltage;
+        leftPower = rightPower = power*FULL_SPEED_RPM/THEORETICAL_MAX_RPM * EXPECTED_VOLTAGE / voltage;
         updatePowers();
         //We intentionally set the power so that it is highly likely to be lower than the
         //"correct" value so that it continues to adjust upwards.

@@ -23,6 +23,7 @@ import org.firstinspires.ftc.teamcode.tasks.ButtonPusherTask;
 import org.firstinspires.ftc.teamcode.tasks.CapBallTask;
 import org.firstinspires.ftc.teamcode.tasks.FlywheelTask;
 import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
+import org.firstinspires.ftc.teamcode.tasks.TaskThread;
 
 import java.text.DecimalFormat;
 
@@ -112,7 +113,7 @@ public class Autonomous extends LinearOpMode {
     CRServo sweeper1, sweeper2, sweeper3;
     BNO055IMU adaImu;
 
-    DcMotor frontLeft, frontRight, backLeft, backRight, flywheelRight, flywheelLeft; //sweeper, conveyor;
+    DcMotor frontLeft, frontRight, backLeft, backRight;
 
     //Misc
     public static AutoMode autoMode = AutoMode.ThreeBall;
@@ -143,12 +144,8 @@ public class Autonomous extends LinearOpMode {
     public void runOpMode() {
         initialize();
         options();
-        double mc7 = hardwareMap.voltageSensor.get("frontDrive").getVoltage();
-        double mc6 = hardwareMap.voltageSensor.get("backDrive").getVoltage();
-        double mc3 = hardwareMap.voltageSensor.get("cap").getVoltage();
-        double mc2 = hardwareMap.voltageSensor.get("flywheels").getVoltage();
-        voltageLevel = (mc7 + mc6 + mc3 + mc2) / 4;
-        flywheelTask.voltage = voltageLevel;
+        TaskThread.calculateVoltage(this);
+
         //telemetry.addData("Ready!", "");
         //telemetry.update();
         waitForStart();
@@ -156,6 +153,7 @@ public class Autonomous extends LinearOpMode {
         gameTimer.reset();
         buttonPusherTask.start();
         intakeTask.start();
+
         if (team == Team.BLUE) {
             threeBallAngle = 43;
         }
@@ -215,12 +213,6 @@ public class Autonomous extends LinearOpMode {
 
     public void initialize(){
         timer.reset();
-        flywheelRight = hardwareMap.dcMotor.get("flywheelRight");
-        flywheelLeft = hardwareMap.dcMotor.get("flywheelLeft");
-        flywheelLeft.setDirection(DcMotorSimple.Direction.REVERSE);
-        flywheelLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        flywheelRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-
         sweeper1 = hardwareMap.crservo.get("sweeper1");
         sweeper2 = hardwareMap.crservo.get("sweeper2");
         sweeper3 = hardwareMap.crservo.get("sweeper3");
@@ -229,15 +221,9 @@ public class Autonomous extends LinearOpMode {
         frontRight = hardwareMap.dcMotor.get("frontRight");
         backLeft = hardwareMap.dcMotor.get("backLeft");
         backRight = hardwareMap.dcMotor.get("backRight");
-        //colorBottomBack = hardwareMap.colorSensor.get("colorBottomBack");
-        //colorBottomFront = hardwareMap.colorSensor.get("colorBottomFront");
         colorSensorTop = hardwareMap.colorSensor.get("colorTop");
-        colorSensorTop.setI2cAddress(I2cAddr.create8bit(topSensorID));//maybe create8bit
-        //colorBottomFront.setI2cAddress(I2cAddr.create8bit(bottomFrontID));
-        //colorBottomBack.setI2cAddress(I2cAddr.create8bit(bottomBackID));
+        colorSensorTop.setI2cAddress(I2cAddr.create8bit(topSensorID));
         voiColorSensorTop = new VOIColorSensor(colorSensorTop, this);
-        //voiColorBottomFront = new VOIColorSensor(colorBottomFront, this);
-        //voiColorBottomBack = new VOIColorSensor(colorBottomBack, this);
         button = hardwareMap.crservo.get("button");
         buttonPusherTask = new ButtonPusherTask(this);
 
@@ -245,15 +231,15 @@ public class Autonomous extends LinearOpMode {
         forkRight = hardwareMap.servo.get("forkRight");
         guide = hardwareMap.servo.get("guide");
 
-        CapBallTask capBallTask = new CapBallTask(this); // for forklift initialization
+        CapBallTask capBallTask = new CapBallTask(this);
         intakeTask = new IntakeTask(this);
+        flywheelTask = new FlywheelTask(this);
 
         adaImu = hardwareMap.get(BNO055IMU.class, "imu");
         imu = new VOIImu(adaImu);
         driveTrain = new MecanumDriveTrain(backLeft,backRight,frontLeft,frontRight,imu,this);
         driveTrain.setEncoderMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         driveTrain.setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        flywheelTask = new FlywheelTask(this);
         flywheelTask.start();
         wallAngle = imu.getAngle();
         guide.setPosition(ButtonPusherTask.upPosition);
@@ -642,7 +628,6 @@ public class Autonomous extends LinearOpMode {
     public void powerSweeper(double power, int time) {
         intakeTask.power = power;
         intakeTask.sweepTime = time;
-        intakeTask.sweep = true;
     }
 
     public void defense() {
