@@ -16,6 +16,7 @@ public class VEX393Encoder {
     private I2cAddr address;
     private I2cDeviceSynchImpl synchDevice;
     private byte[] signedVelocityCache;
+    private byte[] unsignedVelocityCache;
     private byte[] rotationBitsCache;
     private byte[] rotationUpperBitsCache;
 
@@ -28,6 +29,8 @@ public class VEX393Encoder {
         public final static int I2CADDR_DEFAULT = 0x60;     //8 bit address!
         public final static int REG_SIGNED_VELOCITY = 0x3E; //MSB
         public final static int REG_SIGNED_VELOCITY_LENGTH = 2;
+        public final static int REG_UNSIGNED_VELOCITY = 0x44;
+        public final static int REG_UNSIGNED_VELOCITY_LENGTH = 2;
         public final static int REG_READ_ROTATION_BITS = 0x40;
         /*
          * The rotation value is a 48-bit number. The
@@ -62,9 +65,18 @@ public class VEX393Encoder {
      *
      * @return The current signed (positive or negative) velocity of the motor.
      */
-    public short getSignedVelocity() {
+    public int getSignedVelocity() {
         signedVelocityCache = synchDevice.read(VEX393EncoderAddresses.REG_SIGNED_VELOCITY, VEX393EncoderAddresses.REG_SIGNED_VELOCITY_LENGTH);
-        return (short)(((signedVelocityCache[0] & 0xFF) << 8) | (signedVelocityCache[1] & 0xFF));
+        return ((signedVelocityCache[0] << 8) | (signedVelocityCache[1] & 0xFF));
+    }
+
+    /**
+     *
+     * @return The current speed of the motor, unsigned.
+     */
+    public int getUnsignedVelocity() {
+        unsignedVelocityCache = synchDevice.read(VEX393EncoderAddresses.REG_UNSIGNED_VELOCITY, VEX393EncoderAddresses.REG_UNSIGNED_VELOCITY_LENGTH);
+        return (((unsignedVelocityCache[0] & 0xFF) << 8) | (unsignedVelocityCache[1] & 0xFF));
     }
 
     /**
