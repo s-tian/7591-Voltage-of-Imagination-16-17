@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.Tests;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 
 import org.firstinspires.ftc.teamcode.robotutil.VEX393Encoder;
@@ -8,6 +9,7 @@ import org.firstinspires.ftc.teamcode.robotutil.VEX393Encoder;
 /**
  * Created by Stephen on 1/22/2017.
  */
+@TeleOp(name = "VEX Encoder Test", group = "Test")
 
 public class VEXMotorEncoderTest extends LinearOpMode {
     CRServo vexMotor;
