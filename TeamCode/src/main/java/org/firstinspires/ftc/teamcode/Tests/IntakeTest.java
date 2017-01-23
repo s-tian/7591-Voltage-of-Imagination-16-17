@@ -18,6 +18,7 @@ import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
 
 @TeleOp(name = "Intake Test", group = "Test")
 @Disabled
+
 public class IntakeTest extends LinearOpMode {
 
     IntakeTask intakeTask;
@@ -33,6 +34,5 @@ public class IntakeTest extends LinearOpMode {
     public void powerSweeper(double power, int time) {
         intakeTask.power = power;
         intakeTask.sweepTime = time;
-        intakeTask.sweep = true;
     }
 }

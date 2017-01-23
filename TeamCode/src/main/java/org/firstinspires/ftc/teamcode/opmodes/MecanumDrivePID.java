@@ -38,11 +38,10 @@ public class MecanumDrivePID extends LinearOpMode {
     double D;
     double P;
     double prevErr = 0;
+
     @Override
     public void runOpMode() {
-
         initialize();
-
         telemetry.addData("Ready!", "");
         telemetry.update();
         waitForStart();

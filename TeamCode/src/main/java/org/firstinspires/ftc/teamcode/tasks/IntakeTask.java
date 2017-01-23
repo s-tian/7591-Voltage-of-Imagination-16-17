@@ -67,4 +67,8 @@ public class IntakeTask extends TaskThread {
         sweeper.setPower(0);
     }
 
+    public void setPower(double power) {
+        sweeper.setPower(power);
+    }
+
 }

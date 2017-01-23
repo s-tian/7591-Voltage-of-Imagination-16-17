@@ -22,6 +22,7 @@ import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
 
 @TeleOp(name = "Button Test", group = "Test")
 @Disabled
+
 public class ButtonTest extends LinearOpMode {
 
     CRServo button;
@@ -35,16 +36,14 @@ public class ButtonTest extends LinearOpMode {
         initialize();
         waitForStart();
         buttonPusherTask.start();
-        buttonPusherTask.extendButton = true;
-        capBottom.setPower(1);
+        buttonPusherTask.out();
         sleep(5000);
     }
     public void initialize() {
         button = hardwareMap.crservo.get("button");
         button.setPower(ButtonPusherTask.zeroPower);
-        // initialize these tasks to stop them from moving
         capBallTask = new CapBallTask(this);
-        IntakeTask intakeTask = new IntakeTask(this);
+        new IntakeTask(this);
         buttonPusherTask = new ButtonPusherTask(this);
         capBottom = hardwareMap.dcMotor.get("capBottom");
     }

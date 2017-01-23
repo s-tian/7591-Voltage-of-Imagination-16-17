@@ -24,9 +24,9 @@ public class ButtonPusherTask extends TaskThread {
     public volatile boolean teleOp = false;
     public boolean guideDown = false;
     public boolean guidePushed = false;
-    public volatile boolean pushButton = false;
-    public volatile boolean extendButton = false;
-    public volatile boolean withdrawButton = false;
+    private boolean pushButton = false;
+    private boolean extendButton = false;
+    private boolean withdrawButton = false;
 
     public ButtonPusherTask(LinearOpMode opMode) {
         this.opMode = opMode;
@@ -49,7 +49,7 @@ public class ButtonPusherTask extends TaskThread {
             // Autonomous
             if (pushButton) {
                 pushButton = false;
-                pushButton();
+                buttonPush();
             } else if (extendButton) {
                 extendButton = false;
                 outPusher();
@@ -93,7 +93,7 @@ public class ButtonPusherTask extends TaskThread {
         guideDown = false;
     }
 
-    public void pushButton() {
+    private void buttonPush() {
         button.setPower(outPower);
         sleep(pushTime);
         button.setPower(inPower);
@@ -101,19 +101,31 @@ public class ButtonPusherTask extends TaskThread {
         button.setPower(zeroPower);
     }
 
-    public void outPusher() {
+    private void outPusher() {
         timer.reset();
         button.setPower(outPower);
         sleep(outTime);
         button.setPower(zeroPower);
     }
 
-    public void inPusher() {
+    private void inPusher() {
         timer.reset();
         button.setPower(inPower);
         sleep(outTime - 300);
         button.setPower(zeroPower);
 
+    }
+
+    public void out() {
+        extendButton = true;
+    }
+
+    public void in() {
+        withdrawButton = true;
+    }
+
+    public void push() {
+        pushButton = true;
     }
 
 

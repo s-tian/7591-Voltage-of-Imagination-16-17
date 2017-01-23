@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode.robotutil;
 
+import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 /**
  * Created by Stephen on 9/17/2016.
@@ -26,32 +28,30 @@ public class MecanumDriveTrain {
     public static final double factorFRL = 1;//0.81;
     public static final double factorFLL = 1;
 
-    public static final double tipR_br = TICKS_PER_INCH_RIGHT;
-    public static final double tipR_bl = 0;
-    public static final double tipR_fr = 0;
-    public static final double tipR_fl = 0;
-    public static final double tipL_br = 0;
-    public static final double tipL_bl = 0;
-    public static final double tipL_fr = 0;
-    public static final double tipL_fl = 0;
-    public static final double tipF_br = 0;
-    public static final double tipF_bl = 0;
-    public static final double tipF_fr = 0;
-    public static final double tipF_fl = 0;
-    public static final double tipB_br = 0;
-    public static final double tipB_bl = 0;
-    public static final double tipB_fr = 0;
-    public static final double tipB_fl = 0;
+    public static final double tpiR_br = TICKS_PER_INCH_RIGHT;
+    public static final double tpiR_bl = 0;
+    public static final double tpiR_fr = 0;
+    public static final double tpiR_fl = 0;
+    public static final double tpiL_br = TICKS_PER_INCH_LEFT;
+    public static final double tpiL_bl = 0;
+    public static final double tpiL_fr = 0;
+    public static final double tpiL_fl = 0;
+    public static final double tpiF_br = TICKS_PER_INCH_FORWARD;
+    public static final double tpiF_bl = 0;
+    public static final double tpiF_fr = 0;
+    private static final double tpiF_fl = 0;
+    public static final double tpiB_br = TICKS_PER_INCH_FORWARD;
+    public static final double tpiB_bl = 0;
+    public static final double tpiB_fr = 0;
+    public static final double tpiB_fl = 0;
     public static double stallTime = 20;
     public static double ACF = 0.001; // Angle Correction Factor
     public static double changeFactor = 0.03;
     public Team team = Team.RED;
-    //public ElapsedTime timer, timer2, timer3;
-    public ElapsedTime timer;
+    public ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     public ElapsedTime timer2 = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     static final double POWER_RATIO = 0.78;
     public DcMotor backLeft, backRight, frontLeft, frontRight, mWheel;
-    //ModernRoboticsI2cGyro gyro;
     VOIImu imu;
     LinearOpMode opMode;
 
@@ -75,39 +75,24 @@ public class MecanumDriveTrain {
         }
     }
 
-    public MecanumDriveTrain(DcMotor backLeft, DcMotor backRight, DcMotor frontLeft, DcMotor frontRight, LinearOpMode opMode) {
-        timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-        this.backLeft = backLeft;
-        this.backRight = backRight;
-        this.frontLeft = frontLeft;
-        this.frontRight = frontRight;
+    public MecanumDriveTrain(LinearOpMode opMode) {
         this.opMode = opMode;
-        this.backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        this.backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        this.frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        this.frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        mWheel = frontLeft;
+        frontLeft = opMode.hardwareMap.dcMotor.get("frontLeft");
+        frontRight = opMode.hardwareMap.dcMotor.get("frontRight");
+        backLeft = opMode.hardwareMap.dcMotor.get("backLeft");
+        backRight = opMode.hardwareMap.dcMotor.get("backRight");
 
-        setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        reverseMotors();
-    }
+        BNO055IMU adaImu = opMode.hardwareMap.get(BNO055IMU.class, "imu");
+        imu = new VOIImu(adaImu);
 
-    public MecanumDriveTrain(DcMotor backLeft, DcMotor backRight, DcMotor frontLeft, DcMotor frontRight, VOIImu imu, LinearOpMode opMode) {
-        timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-        this.backLeft = backLeft;
-        this.backRight = backRight;
-        this.frontLeft = frontLeft;
-        this.frontRight = frontRight;
-        this.backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        this.backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        this.frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        this.frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        this.imu = imu;
-        this.opMode = opMode;
-        setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        mWheel = backRight;
+        frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         reverseMotors();
+        setEncoderMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        powerAllMotors(0);
     }
 
     private void reverseMotors() {
@@ -135,13 +120,8 @@ public class MecanumDriveTrain {
     }
 
     public void setMotorPower(DcMotor motor,double power){
-        if (power >= 1) {
-            motor.setPower(1);
-        } else if (power <= -1) {
-            motor.setPower(-1);
-        } else {
-            motor.setPower(power);
-        }
+        power = Range.clip(power, -1, 1);
+        motor.setPower(power);
     }
 
     public void powerAllMotors(double power){
@@ -204,26 +184,28 @@ public class MecanumDriveTrain {
         // Clockwise: degrees > 0
         // CounterClockwise: degrees < 0;
         boolean adjust = false;
-        double velocity, targetGyro = VOIImu.addAngles(imu.getAngle(), degrees);
-        rotateDegrees(degrees*0.8*(1 - power * 0.05), power, true);
-        while (Math.abs(VOIImu.subtractAngles(imu.getAngle(), targetGyro))> 1 && opMode.opModeIsActive()){
+        double velocity;
+        double target = VOIImu.addAngles(imu.getAngle(), degrees);
+        rotateDegrees(degrees*0.8*(1 - power * 0.1), power, true);
+        while (VOIImu.subtractAngles(imu.getAngle(), target) > 1);
+        while (Math.abs(VOIImu.subtractAngles(imu.getAngle(), target))> 1 && opMode.opModeIsActive()){
             double gyroValue = imu.getAngle();
-            if (VOIImu.subtractAngles(targetGyro, gyroValue) > 0) {
+            if (VOIImu.subtractAngles(target, gyroValue) > 0) {
                 if (adjust && degrees > 0) {
                     break;
                 }
                 if (degrees < 0) {
                     adjust = true;
                 }
-                velocity = Math.max(VOIImu.subtractAngles(targetGyro, gyroValue) * 0.2 / degrees, 0.08);
+                velocity = Math.max(VOIImu.subtractAngles(target, gyroValue) * 0.2 / degrees, 0.08);
             } else {
-                if (adjust = true && degrees < 0) {
+                if (adjust && degrees < 0) {
                     break;
                 }
                 if (degrees > 0) {
                     adjust = true;
                 }
-                velocity = Math.min(VOIImu.subtractAngles(targetGyro, gyroValue) * 0.2 / degrees, -0.08);
+                velocity = Math.min(VOIImu.subtractAngles(target, gyroValue) * 0.2 / degrees, -0.08);
             }
             startRotation(velocity);
         }
@@ -232,26 +214,26 @@ public class MecanumDriveTrain {
 
     public void rotateDegrees(double degrees, double power, boolean slowdown) {
         double gyroValue = imu.getAngle();
-        double targetGyro = VOIImu.addAngles(imu.getAngle(), degrees);
+        double target = VOIImu.addAngles(imu.getAngle(), degrees);
         double velocity;
         timer.reset();
         if (degrees < 0){
             startRotation(-power);
-            while ((VOIImu.subtractAngles(targetGyro, gyroValue)) <  -2 && opMode.opModeIsActive()) {
+            while ((VOIImu.subtractAngles(target, gyroValue)) <  -2 && opMode.opModeIsActive()) {
                 gyroValue = imu.getAngle();
                 if (slowdown) {
-                    velocity = Math.min(VOIImu.subtractAngles(targetGyro, gyroValue) * power / degrees, -0.2);
+                    velocity = Math.min(VOIImu.subtractAngles(target, gyroValue) * power / degrees, -0.2);
                     startRotation(velocity);
                 }
             }
         }
         else{
             startRotation(power);
-            while ((VOIImu.subtractAngles(targetGyro, imu.getAngle())) > 2 && opMode.opModeIsActive()){
+            while ((VOIImu.subtractAngles(target, imu.getAngle())) > 2 && opMode.opModeIsActive()){
                 gyroValue = imu.getAngle();
                 if (slowdown){
 
-                    velocity = Math.max(VOIImu.subtractAngles(targetGyro, gyroValue)*0.35/degrees, 0.2);
+                    velocity = Math.max(VOIImu.subtractAngles(target, gyroValue)*0.35/degrees, 0.2);
                     startRotation(velocity);
                 }
 
@@ -471,6 +453,22 @@ public class MecanumDriveTrain {
             return moveBackwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop);
         } else {
             return moveForwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop);
+        }
+    }
+
+    public boolean teamStrafeLeftNInch(double power, double inches, double timeout, boolean detectStall, boolean stop) {
+        if (team == Team.BLUE) {
+            return moveLeftTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_LEFT), timeout, detectStall, stop);
+        } else {
+            return moveRightTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_RIGHT), timeout, detectStall, stop);
+        }
+    }
+
+    public boolean teamStrafeRightNInch(double power, double inches, double timeout, boolean detectStall, boolean stop) {
+        if (team == Team.BLUE) {
+            return moveRightTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_RIGHT), timeout, detectStall, stop);
+        } else {
+            return moveLeftTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_LEFT), timeout, detectStall, stop);
         }
     }
 

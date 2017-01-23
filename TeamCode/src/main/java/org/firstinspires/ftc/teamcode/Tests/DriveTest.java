@@ -47,14 +47,13 @@ public class DriveTest extends LinearOpMode {
         backRight = hardwareMap.dcMotor.get("backRight");
         adaImu = hardwareMap.get(BNO055IMU.class, "imu");
         imu = new VOIImu(adaImu);
-        driveTrain = new MecanumDriveTrain(backLeft,backRight,frontLeft,frontRight,imu,this);
-        driveTrain.setEncoderMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        driveTrain.setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        driveTrain = new MecanumDriveTrain(this);
+
         Servo guide = hardwareMap.servo.get("guide");
         guide.setPosition(ButtonPusherTask.upPosition);
-        ButtonPusherTask bpt = new ButtonPusherTask(this);
-        IntakeTask intakeTask = new IntakeTask(this);
-        CapBallTask capBallTask = new CapBallTask(this);
+        new ButtonPusherTask(this);
+        new IntakeTask(this);
+        new CapBallTask(this);
 
     }
 

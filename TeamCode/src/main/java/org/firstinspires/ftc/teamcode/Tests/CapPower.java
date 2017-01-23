@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.calibration;
+package org.firstinspires.ftc.teamcode.Tests;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -15,7 +15,7 @@ import java.text.DecimalFormat;
  */
 @TeleOp(name = "Cap power", group = "Test")
 
-public class CapPowerCalibration extends LinearOpMode {
+public class CapPower extends LinearOpMode {
     CapBallTask capBallTask;
     IntakeTask intakeTask;
     ButtonPusherTask buttonPusherTask;
