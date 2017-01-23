@@ -77,7 +77,7 @@ public class VEX393Encoder {
     public long readRotation() {
         rotationBitsCache = synchDevice.read(VEX393EncoderAddresses.REG_READ_ROTATION_BITS, VEX393EncoderAddresses.REG_READ_ROTATION_LENGTH);
         rotationUpperBitsCache = synchDevice.read(VEX393EncoderAddresses.REG_READ_UPPER_ROTATION_BITS, VEX393EncoderAddresses.REG_READ_UPPER_ROTATION_LENGTH);
-        return ((((long)rotationUpperBitsCache[0] & 0xFF) << 40) | (((long)rotationUpperBitsCache[1] & 0xFF) << 32) | ((rotationBitsCache[2] & 0xFF) << 24) | ((rotationBitsCache[3] & 0xFF) << 16) | ((rotationBitsCache[0] & 0xFF) << 8) | (rotationBitsCache[1] & 0xFF));
+        return ((((long)rotationUpperBitsCache[0]) << 40) | (((long)rotationUpperBitsCache[1] & 0xFF) << 32) | (((long)rotationBitsCache[2] & 0xFF) << 24) | ((rotationBitsCache[3] & 0xFF) << 16) | ((rotationBitsCache[0] & 0xFF) << 8) | (rotationBitsCache[1] & 0xFF));
     }
 
     /**
