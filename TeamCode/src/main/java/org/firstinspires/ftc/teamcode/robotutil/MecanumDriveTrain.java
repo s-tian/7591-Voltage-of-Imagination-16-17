@@ -28,6 +28,7 @@ public class MecanumDriveTrain {
     public static final double factorFRL = 1;//0.81;
     public static final double factorFLL = 1;
 
+    public static final int angleBuffer = 30;
     public static final double tpiR_br = TICKS_PER_INCH_RIGHT;
     public static final double tpiR_bl = 0;
     public static final double tpiR_fr = 0;
@@ -47,11 +48,13 @@ public class MecanumDriveTrain {
     public static double stallTime = 20;
     public static double ACF = 0.001; // Angle Correction Factor
     public static double changeFactor = 0.03;
+
+    public static final double minRotPow = 0.05; // Minimum rotation power
     public Team team = Team.RED;
     public ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     public ElapsedTime timer2 = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     static final double POWER_RATIO = 0.78;
-    public DcMotor backLeft, backRight, frontLeft, frontRight, mWheel;
+    public DcMotor backLeft, backRight, frontLeft, frontRight;
     VOIImu imu;
     LinearOpMode opMode;
 
@@ -176,19 +179,23 @@ public class MecanumDriveTrain {
         rotateDegreesPrecision(difference, power);
     }
 
-    public void rotateDegreesPrecision(double degrees) {
-        rotateDegreesPrecision(degrees, 0.25);
-    }
-
     public void rotateDegreesPrecision(double degrees, double power) {
         // Clockwise: degrees > 0
         // CounterClockwise: degrees < 0;
+
+        // because consistently overshoots by 1 degree
         boolean adjust = false;
         double velocity;
         double target = VOIImu.addAngles(imu.getAngle(), degrees);
-        rotateDegrees(degrees*0.8*(1 - power * 0.1), power, true);
-        while (VOIImu.subtractAngles(imu.getAngle(), target) > 1);
-        while (Math.abs(VOIImu.subtractAngles(imu.getAngle(), target))> 1 && opMode.opModeIsActive()){
+        if (degrees < -angleBuffer) {
+            //degrees += 2;
+            rotateDegrees(VOIImu.subtractAngles(degrees, -angleBuffer), power, false);
+        } else if (degrees > angleBuffer) {
+            //degrees -= 2;
+            rotateDegrees(VOIImu.addAngles(degrees, - angleBuffer), power, false);
+        }
+        //while (VOIImu.subtractAngles(imu.getAngle(), target) > 1);
+        while (Math.abs(VOIImu.subtractAngles(imu.getAngle(), target)) > 3 && opMode.opModeIsActive()){
             double gyroValue = imu.getAngle();
             if (VOIImu.subtractAngles(target, gyroValue) > 0) {
                 if (adjust && degrees > 0) {
@@ -197,7 +204,7 @@ public class MecanumDriveTrain {
                 if (degrees < 0) {
                     adjust = true;
                 }
-                velocity = Math.max(VOIImu.subtractAngles(target, gyroValue) * 0.2 / degrees, 0.08);
+                velocity = Math.max(VOIImu.subtractAngles(target, gyroValue) * minRotPow * 2 / degrees, minRotPow);
             } else {
                 if (adjust && degrees < 0) {
                     break;
@@ -205,49 +212,45 @@ public class MecanumDriveTrain {
                 if (degrees > 0) {
                     adjust = true;
                 }
-                velocity = Math.min(VOIImu.subtractAngles(target, gyroValue) * 0.2 / degrees, -0.08);
+                velocity = Math.min(VOIImu.subtractAngles(target, gyroValue) * 0.2 / degrees, -minRotPow);
             }
             startRotation(velocity);
         }
         stopAll();
     }
 
-    public void rotateDegrees(double degrees, double power, boolean slowdown) {
+    public void rotateDegrees(double degrees, double power, boolean stop) {
         double gyroValue = imu.getAngle();
         double target = VOIImu.addAngles(imu.getAngle(), degrees);
-        double velocity;
         timer.reset();
-        if (degrees < 0){
+        double diff = VOIImu.subtractAngles(target, imu.getAngle());
+        if (diff < 0){
             startRotation(-power);
-            while ((VOIImu.subtractAngles(target, gyroValue)) <  -2 && opMode.opModeIsActive()) {
-                gyroValue = imu.getAngle();
-                if (slowdown) {
-                    velocity = Math.min(VOIImu.subtractAngles(target, gyroValue) * power / degrees, -0.2);
-                    startRotation(velocity);
-                }
-            }
-        }
-        else{
+            while ((VOIImu.subtractAngles(target, imu.getAngle())) <  -2 && opMode.opModeIsActive());
+        } else{
             startRotation(power);
-            while ((VOIImu.subtractAngles(target, imu.getAngle())) > 2 && opMode.opModeIsActive()){
-                gyroValue = imu.getAngle();
-                if (slowdown){
-
-                    velocity = Math.max(VOIImu.subtractAngles(target, gyroValue)*0.35/degrees, 0.2);
-                    startRotation(velocity);
-                }
-
-            }
+            while ((VOIImu.subtractAngles(target, imu.getAngle())) > 2 && opMode.opModeIsActive());
         }
-        stopAll();
+        if (stop) {
+            stopAll();
+        }
     }
 
-    public boolean moveForwardNInch(double power, double inches, double timeout, boolean detectStall, boolean stop)  {
-        return moveForwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop);
+    /**
+     *
+     * @param power the power at which
+     * @param inches distance robot should move
+     * @param timeout time after which movement terminates
+     * @param detectStall if robot should stop if detecting stall
+     * @param stop if robot should stop after reaching distance
+     * @return true if inches reached, false if terminated due to stall or timeout
+     */
+    public boolean moveForwardNInch(double power, double inches, double timeout, boolean detectStall, boolean stop, boolean lean)  {
+        return moveForwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop, lean);
     }
 
-    public boolean moveBackwardNInch(double power, double inches, double timeout, boolean detectStall, boolean stop) {
-        return moveBackwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop);
+    public boolean moveBackwardNInch(double power, double inches, double timeout, boolean detectStall, boolean stop, boolean lean) {
+        return moveBackwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop, lean);
     }
 
     public boolean moveLeftNInch(double power, double inches, double timeout, boolean detectStall, boolean stop) {
@@ -274,7 +277,6 @@ public class MecanumDriveTrain {
         double initAngle = imu.getAngle();
         boolean startDetectingStall = false;
         long currentTime = System.currentTimeMillis();
-        System.out.println("initial: " + initAngle);
         double current;
         double prev = initAngle;
         while(frontRight.getCurrentPosition() < targetPosition && opMode.opModeIsActive() && timer.time() < timeOutMS) {
@@ -283,7 +285,7 @@ public class MecanumDriveTrain {
                     startDetectingStall = true;
                     currentTime = System.currentTimeMillis();
                 }
-                if (startDetectingStall && System.currentTimeMillis() - currentTime > 100) {
+                if (startDetectingStall && System.currentTimeMillis() - currentTime > 50) {
                     if (stalling(DIRECTION.LEFT)) {
                         stopAll();
                         return false;
@@ -324,7 +326,7 @@ public class MecanumDriveTrain {
 
     private boolean moveRightTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
         double timeOutMS = timeout * 1000;
-        int targetPosition = mWheel.getCurrentPosition() + ticks;
+        int targetPosition = backRight.getCurrentPosition() + ticks;
         timer.reset();
         timer2.reset();
         double initAngle = imu.getAngle();
@@ -336,12 +338,12 @@ public class MecanumDriveTrain {
         strafeRight(power);
         long currentTime = System.currentTimeMillis();
         boolean startDetectingStall = false;
-        while (mWheel.getCurrentPosition() < targetPosition && opMode.opModeIsActive() && timer.time() < timeOutMS) {
+        while (backRight.getCurrentPosition() < targetPosition && opMode.opModeIsActive() && timer.time() < timeOutMS) {
             if (detectStall) {
                 if (System.currentTimeMillis() - currentTime > 1000) {
                     startDetectingStall = true;
                     currentTime = System.currentTimeMillis();
-                } else if (startDetectingStall && System.currentTimeMillis() - currentTime > 100) {
+                } else if (startDetectingStall && System.currentTimeMillis() - currentTime > 50) {
                     currentTime = System.currentTimeMillis();
 
                     if (stalling(DIRECTION.RIGHT)) {
@@ -375,14 +377,19 @@ public class MecanumDriveTrain {
         return true;
     }
 
-    private boolean moveForwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
+    private boolean moveForwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop, boolean lean) {
         double timeOutMS = timeout*1000;
-        int targetPosition = mWheel.getCurrentPosition() + ticks;
+        int targetPosition = backRight.getCurrentPosition() + ticks;
         powerAllMotors(power);
+        if (lean) {
+            double boostPower = power + 0.05;
+            backRight.setPower(boostPower);
+            frontLeft.setPower(boostPower);
+        }
         timer.reset();
         long currentTime = System.currentTimeMillis();
         boolean startDetectingStall = false;
-        while(mWheel.getCurrentPosition() < targetPosition && opMode.opModeIsActive() && timer.time() < timeOutMS) {
+        while(backRight.getCurrentPosition() < targetPosition && opMode.opModeIsActive() && timer.time() < timeOutMS) {
             if (detectStall) {
                 if (System.currentTimeMillis() - currentTime > 1000) {
                     startDetectingStall = true;
@@ -405,14 +412,19 @@ public class MecanumDriveTrain {
         return true;
     }
 
-    private boolean moveBackwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
+    private boolean moveBackwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop, boolean lean) {
         double timeOutMS = timeout*1000;
-        int targetPosition = mWheel.getCurrentPosition() - ticks;
+        int targetPosition = backRight.getCurrentPosition() - ticks;
         powerAllMotors(-power);
+        if (lean) {
+            double boostPower = -power - 0.05;
+            backLeft.setPower(boostPower);
+            frontRight.setPower(boostPower);
+        }
         timer.reset();
         long currentTime = System.currentTimeMillis();
         boolean startDetectingStall = false;
-        while(mWheel.getCurrentPosition() > targetPosition && opMode.opModeIsActive() && timer.time() < timeOutMS) {
+        while(backRight.getCurrentPosition() > targetPosition && opMode.opModeIsActive() && timer.time() < timeOutMS) {
             if (detectStall) {
                 if (System.currentTimeMillis() - currentTime > 1000) {
                     startDetectingStall = true;
@@ -436,23 +448,19 @@ public class MecanumDriveTrain {
         return true;
     }
 
-    public void getTicks(){
-        System.out.println(mWheel.getCurrentPosition());
-    }
-
-    public boolean moveUpNInch(double power, double inches, double timeout, boolean detectStall, boolean stop)  {
+    public boolean moveUpNInch(double power, double inches, double timeout, boolean detectStall, boolean stop, boolean lean)  {
         if (team == Team.BLUE) {
-            return moveForwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop);
+            return moveForwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop, lean);
         } else {
-            return moveBackwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop);
+            return moveBackwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop, lean);
         }
     }
 
-    public boolean moveBackNInch(double power, double inches, double timeout, boolean detectStall, boolean stop) {
+    public boolean moveBackNInch(double power, double inches, double timeout, boolean detectStall, boolean stop, boolean lean) {
         if (team == Team.BLUE) {
-            return moveBackwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop);
+            return moveBackwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop, lean);
         } else {
-            return moveForwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop);
+            return moveForwardTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_FORWARD), timeout, detectStall, stop, lean);
         }
     }
 
@@ -486,7 +494,7 @@ public class MecanumDriveTrain {
         int initialBackLeft = backLeft.getCurrentPosition();
         int initialFrontLeft = frontLeft.getCurrentPosition();
         long currentTime = System.currentTimeMillis();
-        while ((System.currentTimeMillis() - currentTime) < 100 && opMode.opModeIsActive()) {
+        while ((System.currentTimeMillis() - currentTime) < 50 && opMode.opModeIsActive()) {
         }
         int ticksBackRight = Math.abs(backRight.getCurrentPosition() - initialBackRight);
         int ticksFrontRight = Math.abs(frontRight.getCurrentPosition() - initialFrontRight);
@@ -500,16 +508,16 @@ public class MecanumDriveTrain {
 
         switch (dir) {
             case FORWARD:
-                expected =  (TICKS_PER_MS_FORWARD * 100 * 0.5);
+                expected =  TICKS_PER_MS_FORWARD * 50 * 0.5;
                 break;
             case BACKWARD:
-                expected = (TICKS_PER_MS_RIGHT *100 * 0.5);
+                expected = TICKS_PER_MS_RIGHT * 50 * 0.5;
                 break;
             case LEFT:
-                expected = TICKS_PER_MS_LEFT * 100 * 0.5;
+                expected = TICKS_PER_MS_LEFT * 50 * 0.5;
                 break;
             case RIGHT:
-                expected = TICKS_PER_MS_FORWARD * 100 * 0.5;
+                expected = TICKS_PER_MS_FORWARD * 50 * 0.5;
                 break;
 
         }
@@ -519,23 +527,26 @@ public class MecanumDriveTrain {
         if (ticksFrontLeft < expected) FLStall = true;
         switch (dir) {
             case FORWARD:
-                return (BLStall || FLStall) && (BRStall && FRStall);
+                return (BLStall || FLStall) && (BRStall || FRStall);
             case BACKWARD:
-                return (BLStall || FLStall) && (BRStall && FRStall);
+                return (BLStall || FLStall) && (BRStall || FRStall);
             case LEFT:
-                return (FRStall || FLStall) && (BRStall && BLStall);
+                return (FRStall || FLStall) && (BRStall || BLStall);
             case RIGHT:
-                return (FRStall || FLStall) && (BRStall && BLStall);
+                return (FRStall || FLStall) && (BRStall || BLStall);
         }
         return false;
 
     }
 
-    public void printPower() {
-        System.out.println("br " + backRight.getPower());
-        System.out.println("bl " + backLeft.getPower());
-        System.out.println("fr " + frontRight.getPower());
-        System.out.println("fl " + frontLeft.getPower());
+    public void holdPosition() {
+        setEncoderMode(DcMotor.RunMode.RUN_TO_POSITION);
+        backLeft.setTargetPosition(backLeft.getCurrentPosition());
+        backRight.setTargetPosition(backRight.getCurrentPosition());
+        frontLeft.setTargetPosition(frontLeft.getCurrentPosition());
+        frontRight.setTargetPosition(frontRight.getCurrentPosition());
+        powerAllMotors(1);
+
     }
 
     public void driveToPosition(int br, int bl, int fr, int fl) {

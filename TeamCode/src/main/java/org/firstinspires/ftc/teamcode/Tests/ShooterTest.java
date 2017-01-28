@@ -7,6 +7,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.tasks.FlywheelTask;
+import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
+import org.firstinspires.ftc.teamcode.tasks.TaskThread;
 
 /**
  * Created by Stephen on 9/11/2016.
@@ -17,15 +19,19 @@ import org.firstinspires.ftc.teamcode.tasks.FlywheelTask;
 public class ShooterTest extends LinearOpMode {
 
     FlywheelTask flywheelTask;
+    IntakeTask intakeTask;
 
 
     @Override
     public void runOpMode() throws InterruptedException {
         flywheelTask = new FlywheelTask(this);
-        flywheelTask.teleOp = true;
+        intakeTask = new IntakeTask(this);
+        TaskThread.calculateVoltage(this);
+        flywheelTask.teleOp = intakeTask.teleOp = true;
         setPowers();
         waitForStart();
         flywheelTask.start();
+        intakeTask.start();
         while(opModeIsActive());
     }
 

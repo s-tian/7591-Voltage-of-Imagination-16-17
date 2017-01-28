@@ -23,6 +23,8 @@ public class VEXMotorEncoderTest extends LinearOpMode {
             vexMotor.setPower(-gamepad1.left_stick_y);
             telemetry.addData("Encoder Ticks ", encoder.readRotation());
             telemetry.addData("Motor speed ", encoder.getSignedVelocity());
+            telemetry.addData("Unsigned velocity", encoder.getUnsignedVelocity());
+            telemetry.update();
         }
 
     }

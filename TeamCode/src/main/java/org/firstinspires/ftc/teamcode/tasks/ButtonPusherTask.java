@@ -14,8 +14,8 @@ public class ButtonPusherTask extends TaskThread {
     Servo guide;
     double power = 0;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-    public int pushTime = 800;
-    public int outTime = 2000;
+    public int pushTime = 650;
+    public int outTime = 1900;
     public static final double zeroPower = 0;
     public static final double outPower = -1;
     public static final double inPower = 1;
@@ -97,6 +97,7 @@ public class ButtonPusherTask extends TaskThread {
         button.setPower(outPower);
         sleep(pushTime);
         button.setPower(inPower);
+        pushTime -= 100;
         sleep(pushTime);
         button.setPower(zeroPower);
     }
@@ -111,7 +112,7 @@ public class ButtonPusherTask extends TaskThread {
     private void inPusher() {
         timer.reset();
         button.setPower(inPower);
-        sleep(outTime - 300);
+        sleep(outTime);
         button.setPower(zeroPower);
 
     }
@@ -121,6 +122,7 @@ public class ButtonPusherTask extends TaskThread {
     }
 
     public void in() {
+        // TODO: 1/25/17 not all the way in 
         withdrawButton = true;
     }
 

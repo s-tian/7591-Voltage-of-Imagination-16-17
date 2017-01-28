@@ -58,6 +58,7 @@ import java.util.Locale;
  * @see <a href="http://www.adafruit.com/products/2472">Adafruit IMU</a>
  */
 @Autonomous(name = "Sensor: Adafruit IMU", group = "Sensor")
+@Disabled
 
 public class SensorAdafruitIMU extends LinearOpMode
     {

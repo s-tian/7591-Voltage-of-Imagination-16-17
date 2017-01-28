@@ -25,7 +25,7 @@ import java.util.Locale;
  *
  * @see <a href="http://www.adafruit.com/products/2472">Adafruit IMU</a>
  */
-@Autonomous(name = "Sensor: Adafruit IMU", group = "Sensor")
+@Autonomous(name = "AdafruitTest", group = "Sensor")
 
 public class AdafruitTest extends LinearOpMode {
     //----------------------------------------------------------------------------------------------
@@ -64,7 +64,8 @@ public class AdafruitTest extends LinearOpMode {
 
         // Set up our telemetry dashboard
         composeTelemetry();
-
+        telemetry.addData("Ready!", "");
+        telemetry.update();
         // Wait until we're told to go
         waitForStart();
 

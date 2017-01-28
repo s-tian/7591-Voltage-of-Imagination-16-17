@@ -50,32 +50,30 @@ public class Autonomous extends LinearOpMode {
     public static Team team = Team.BLUE;
     // Options
     boolean missed = false;
-    //boolean shootFirst = false;
-    boolean shootFirst = true;
-
     final int topSensorID = 0x3a;
 
     int shootTime = 2500;
 
     int betweenBeacon = 33; // far beacon distance
 
+    boolean shootFirst = false;
     // Angles
     double shootRotation = 108; // first beacon shoot rotation near
     double sralt3 = 90; // first beacons shoot rotation far
     double wallAngle; // angle parallel to beacon wall
     int threeBallAngle = 50;
 
-    double sFarRotB = 50; // shoot far rotation Blue near
-    double sFarRotB2 = 48; // shoot far rotation Blue far
+    double sFarRotB = 33; // shoot far rotation Blue near
+    double sFarRotB2 = 33; // shoot far rotation Blue far
     double sFarRotR = 135; // shoot far rotation Red
     double sCloRotB = 108; // shoot close rotation Blue
     double sCloRotR = 80; // shoot close rotation Red
 
     // Powers
     double shootPower = 0.75; // normal shoot power
-    double shootFirstPower = 0.58; // shoot first power
+    double shootFirstPower = 1; // shoot first power
     double spalt = 0.6; // short shoot power (from first beacon)
-    double bpPower = 0.07; // beacon pressing driveTrain power
+    double bpPower = 0.06; // beacon pressing driveTrain power
 
     // Hardware
     ColorSensor colorSensorTop;
@@ -88,11 +86,14 @@ public class Autonomous extends LinearOpMode {
 
     //Misc
     public static AutoMode autoMode = AutoMode.ThreeBall;
+    public static ParkMode parkMode = ParkMode.Corner;
     FlywheelTask flywheelTask;
     IntakeTask intakeTask;
     ButtonPusherTask buttonPusherTask;
 
     DecimalFormat df = new DecimalFormat();
+
+    public static final AutoMode[] modes = {AutoMode.ThreeBall, AutoMode.TwoBall, AutoMode.Defensive};
 
     MecanumDriveTrain driveTrain;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -101,19 +102,10 @@ public class Autonomous extends LinearOpMode {
 
     public enum AutoMode {
         TwoBall, ThreeBall, Defensive;
+    }
 
-        @Override
-        public String toString() {
-            switch (this) {
-                case TwoBall:
-                    return "Two Ball";
-                case ThreeBall:
-                    return "Three Ball";
-                case Defensive:
-                    return "Defensive";
-            }
-            return "";
-        }
+    public enum ParkMode {
+        Corner, Center
     }
 
     @Override
@@ -124,6 +116,7 @@ public class Autonomous extends LinearOpMode {
         //telemetry.addData("Ready!", "");
         //telemetry.update();
         waitForStart();
+        System.out.println("Autonomous started!");
         guide.setPosition(ButtonPusherTask.upPosition);
         gameTimer.reset();
         flywheelTask.start();
@@ -135,31 +128,20 @@ public class Autonomous extends LinearOpMode {
         }
         if (autoMode == AutoMode.ThreeBall) {
             pickUpBall();
-            if (team == Team.BLUE) {
-                lineUpToWall(38);
+            if (shootFirst) {
+                shootFirstLineUp();
             } else {
                 lineUpToWall(32);
             }
         } else if (autoMode == AutoMode.TwoBall){
-            driveTrain.moveBackwardNInch(0.2, 15, 5, false, true);
-            flywheelTask.setFlywheelPow(shootFirstPower);
-            sleep(2000);
-            intakeTask.setPower(1);
-            sleep(shootTime);
-            intakeTask.setPower(0);
-            flywheelTask.setFlywheelPow(0);
-            if (team == Team.BLUE) {
-                driveTrain.rotateToAngle(threeBallAngle + wallAngle, 0.4);
-            } else if (team == Team.RED) {
-                driveTrain.rotateToAngle(-threeBallAngle + wallAngle, 0.4);
-            }
-            if (team == Team.BLUE) {
-                lineUpToWall(38);
+            shootTwo();
+            if (shootFirst) {
+                shootFirstLineUp();
             } else {
                 lineUpToWall(32);
             }
         } else {
-            lineUpToWall(48);
+            lineUpToWall(40);
         }
         drivePushButton();
         drivePushButton2();
@@ -168,7 +150,11 @@ public class Autonomous extends LinearOpMode {
                 moveFromWall();
             } else {
                 if (autoMode != AutoMode.Defensive) {
-                    moveFromWall2();
+                    if (parkMode == ParkMode.Center) {
+                        moveFromWall2();
+                    } else if (parkMode == ParkMode.Corner) {
+                        parkCorner();
+                    }
                     return;
                 }
             }
@@ -178,7 +164,6 @@ public class Autonomous extends LinearOpMode {
 
         flywheelTask.running = false;
         buttonPusherTask.running = false;
-
 
     }
 
@@ -230,6 +215,21 @@ public class Autonomous extends LinearOpMode {
 
     }
 
+    public void shootFirstLineUp() {
+        driveTrain.moveRightNInch(1, 10, 5, false, true);
+        driveTrain.moveForwardNInch(0.5, 30, 5, false, true, false);
+        driveTrain.moveRightNInch(1, 60, 10, true, true);
+    }
+    public void shootTwo() {
+        driveTrain.moveBackwardNInch(0.2, 15, 5, false, true, false);
+        flywheelTask.setFlywheelPow(shootFirstPower);
+        sleep(2000);
+        intakeTask.setPower(1);
+        sleep(shootTime);
+        intakeTask.setPower(0);
+        flywheelTask.setFlywheelPow(0);
+    }
+
     public void pickUpBall(){
         /**
          * This method begins with the robot facing away from the corner vortex. The ball should be
@@ -254,40 +254,40 @@ public class Autonomous extends LinearOpMode {
         shootTime += 1000;
 
         // 2.
-        driveTrain.teamStrafeRightNInch(0.5, 20, 10, false, true);
+        if (shootFirst) {
+            driveTrain.teamStrafeRightNInch(0.5, 1, 0.2, false, false);
+            driveTrain.teamStrafeRightNInch(0.5, 20, 10, false, true);
 
-        // 3.
-        if (team == Team.BLUE) {
-            driveTrain.rotateToAngle(wallAngle + 180, 0.4);
-        } else if (team == Team.RED) {
-            driveTrain.rotateToAngle(wallAngle, 0.4);
-        }
-
-        // 4.
-        timer.reset();
-        flywheelTask.setFlywheelPow(shootFirstPower);
-        while (flywheelTask.getFlywheelState() != FlywheelTask.FlywheelState.STATE_RUNNING_NEAR_TARGET && opModeIsActive()) {
-            // TODO: 1/23/17 Figure out how to get the flywheel state from flywheeltask
-            telemetry.addData("Time", (int)gameTimer.time());
-            telemetry.addData("Left error", df.format(flywheelTask.currentErrorLeft*100));
-            telemetry.addData("Right error", df.format(flywheelTask.currentErrorRight*100));
-            telemetry.addData("Flywheel state", flywheelTask.getFlywheelState());
-            telemetry.update();
-            if (timer.time() > 2000) {
-                // 5000 just for testing, change to 2000
-                break;
+            // 3.
+            if (team == Team.BLUE) {
+                driveTrain.rotateToAngle(wallAngle + 180);
+            } else if (team == Team.RED) {
+                driveTrain.rotateToAngle(wallAngle);
             }
-        }
-        intakeTask.setPower(1);
-        sleep(shootTime);
-        coolDown();
 
-        // 5.
-        if (team == Team.BLUE) {
-            driveTrain.rotateToAngle(threeBallAngle + wallAngle, 0.4);
-        } else if (team == Team.RED) {
-            driveTrain.rotateToAngle(-threeBallAngle + wallAngle, 0.4);
+            // 4.
+            timer.reset();
+            flywheelTask.setFlywheelPow(shootFirstPower);
+            while (flywheelTask.getFlywheelState() != FlywheelTask.FlywheelState.STATE_RUNNING_NEAR_TARGET && opModeIsActive()) {
+                // TODO: 1/23/17 Figure out how to get the flywheel state from flywheeltask
+                telemetry.addData("Time", (int) gameTimer.time());
+                telemetry.addData("Left error", df.format(flywheelTask.currentErrorLeft * 100));
+                telemetry.addData("Right error", df.format(flywheelTask.currentErrorRight * 100));
+                telemetry.addData("Flywheel state", flywheelTask.getFlywheelState());
+                telemetry.update();
+                if (timer.time() > 2000) {
+                    // 5000 just for testing, change to 2000
+                    break;
+                }
+            }
+            intakeTask.setPower(1);
+            sleep(shootTime);
+            coolDown();
+        } else {
+            driveTrain.moveRightNInch(0.3, 5, 5, false, true);
+            driveTrain.rotateToAngle(wallAngle);
         }
+
     }
 
     public void lineUpToWall(double distance) {
@@ -307,14 +307,15 @@ public class Autonomous extends LinearOpMode {
         guide.setPosition(ButtonPusherTask.downPosition);
         int wlTimeout = 0; // timeout for white line detection (used for missing line)
         double fastDistance = distance - 0.5;
-
-        driveTrain.moveUpNInch(0.35, 0.5, 10, false, false);
+        double fastPower = 0.8;
+        if (autoMode == AutoMode.Defensive) {
+            fastPower = 1;
+        }
+        driveTrain.moveUpNInch(0.35, 0.5, 10, false, false, false);
         buttonPusherTask.out();
-        driveTrain.moveUpNInch(0.8, fastDistance, 10, false, true);
+        driveTrain.moveUpNInch(fastPower, fastDistance, 10, false, true, false);
         driveTrain.rotateToAngle(wallAngle);
-        driveTrain.moveRightNInch(1, 40, 10, true, true);
-        //correctionStrafe();
-        wallAngle = imu.getAngle();
+        driveTrain.moveRightNInch(1, 60, 10, true, true);
     }
 
     public void drivePushButton() {
@@ -342,7 +343,6 @@ public class Autonomous extends LinearOpMode {
 
         if (voiColorSensorTop.correctColor()) {
             // 1.
-            correctionStrafe();
             pushButton();
             // If the correct color is detected immediately, then we assume that the we pressed
             // the sid farther from the second beacon. We increase the "betweenBeacon" distance to
@@ -365,15 +365,8 @@ public class Autonomous extends LinearOpMode {
                 // Turning because of known rotation after stopping. Temporary fix.
                 // FIXME: 1/23/17 Solve rotation problem
                 if (voiColorSensorTop.correctColor()) {
-                    correctionStrafe();
-                    if (team == Team.RED) {
-                        frontRight.setPower(-0.5);
-                        frontLeft.setPower(0.5);
-                        sleep(300);
-                    } else {
-                        backLeft.setPower(-0.5);
-                        backRight.setPower(0.5);
-                        sleep(300);
+                    if (autoMode != AutoMode.Defensive) {
+                        correctionStrafe();
                     }
                     pushButton();
                     return;
@@ -399,21 +392,10 @@ public class Autonomous extends LinearOpMode {
         telemetry.addData("drivePushButton2", "");
         telemetry.update();
         int timeo = 8000;
+        double buffer = 8;
         // 1.
-        driveTrain.moveUpNInch(0.35, betweenBeacon - 8, 10, false, false);
-        driveTrain.moveUpNInch(0.15, 8, 3, false, true);
-
-        // FIXME: 1/23/17
-        if (team == Team.RED) {
-            frontRight.setPower(-0.5);
-            frontLeft.setPower(0.5);
-            sleep(300);
-        } else {
-            backLeft.setPower(-0.5);
-            backRight.setPower(0.5);
-            sleep(300);
-        }
-        driveTrain.stopAll();
+        driveTrain.moveUpNInch(0.4, betweenBeacon - buffer, 10, false, false, true);
+        driveTrain.moveUpNInch(0.11, buffer, 3, false, false, true);
 
         // 2.
         driveTrain.powerUp(bpPower);
@@ -433,19 +415,8 @@ public class Autonomous extends LinearOpMode {
                 timer.reset();
             }
         }
-        driveTrain.stopAll();
-        correctionStrafe();
 
-        // FIXME: 1/23/17
-        if (team == Team.RED) {
-            frontRight.setPower(-0.5);
-            frontLeft.setPower(0.5);
-            sleep(300);
-        } else {
-            backLeft.setPower(-0.5);
-            backRight.setPower(0.5);
-            sleep(300);
-        }
+
         // 3.
         pushButton();
         if (far) {
@@ -504,7 +475,7 @@ public class Autonomous extends LinearOpMode {
         guide.setPosition(ButtonPusherTask.upPosition);
 
         // 1.
-        driveTrain.moveLeftNInch(0.6, 1, 10, false, true);
+        driveTrain.moveLeftNInch(0.6, 3, 10, false, true);
 
         // 2.
         if (team == Team.BLUE) {
@@ -515,10 +486,25 @@ public class Autonomous extends LinearOpMode {
         }
 
         // 3.
-        driveTrain.moveBackNInch(0.5, 30, 10, false, false);
+        driveTrain.moveBackNInch(0.5, 30, 10, false, false, false);
         guide.setPosition(ButtonPusherTask.upPosition);
-        driveTrain.moveBackNInch(0.5, 30, 10, false, true);
+        driveTrain.moveBackNInch(0.5, 30, 10, false, true, false);
 
+    }
+
+    public void parkCorner() {
+        guide.setPosition(ButtonPusherTask.upPosition);
+        driveTrain.moveLeftNInch(0.5, 5, 5, false, true);
+        sleep(200);
+        if (autoMode == AutoMode.Defensive) {
+            if (team == Team.BLUE) {
+                driveTrain.rotateDegrees(VOIImu.subtractAngles(wallAngle, imu.getAngle() - 10), 0.3, true);
+            } else if (team == Team.RED) {
+                driveTrain.rotateDegrees(VOIImu.subtractAngles(wallAngle, imu.getAngle() + 10), 0.3, true);
+            }
+        }
+        driveTrain.rotateToAngle(wallAngle);
+        driveTrain.moveBackNInch(1, 90, 10, false, true, false);
     }
 
     public void checkFirst() {
@@ -536,8 +522,8 @@ public class Autonomous extends LinearOpMode {
         shootPower = spalt;
         telemetry.update();
         // 1.
-        driveTrain.moveBackNInch(0.3, betweenBeacon - 5, 10, false, false);
-        driveTrain.moveBackNInch(0.15, 5, 10, false, true);
+        driveTrain.moveBackNInch(0.3, betweenBeacon - 5, 10, false, false, true);
+        driveTrain.moveBackNInch(0.15, 5, 10, false, true, true);
         correctionStrafe();
 
         // 2.
@@ -549,7 +535,7 @@ public class Autonomous extends LinearOpMode {
                 isWrong = true;
                 timer.reset();
             }
-            if (isWrong && timer.time() > 1000) {
+            if (isWrong && timer.time() > 1500) {
                 // If, after detecting the wrong color for 1 second, the correct color is still not
                 // detected, then we can infer that we activated the button pusher incorrectly upon
                 // ramming.
@@ -562,13 +548,9 @@ public class Autonomous extends LinearOpMode {
             correctionStrafe();
             driveTrain.powerUp(bpPower);
             while (opModeIsActive() && !voiColorSensorTop.wrongColor());
-            driveTrain.stopAll();
-            correctionStrafe();
             pushButton();
         } else {
             // press the button if correct color is detected
-            driveTrain.stopAll();
-            correctionStrafe();
             pushButton();
         }
         if (!isWrong) {
@@ -587,21 +569,28 @@ public class Autonomous extends LinearOpMode {
     }
 
     public void correctionStrafe(double seconds) {
+        // Strafing against wall to ensure alignment. Same direction regardless of color because
+        // button pusher is always on the right side.
+        driveTrain.stopAll();
+        driveTrain.rotateToAngle(wallAngle);
+        driveTrain.moveBackNInch(0.05, 1, 0.3, false, true, false);
         driveTrain.moveRightNInch(0.2, 5, seconds, false, true);
     }
 
-    public void hitCapBall(){
+    public void hitCapBall() {
+        // FIXME: 1/24/17 rotation
         telemetry.addData("hitCapBall", "");
         telemetry.update();
-        driveTrain.moveBackwardNInch(1, 50, 10, true, true);
+        driveTrain.moveBackwardNInch(1, 50, 10, true, true, false);
         driveTrain.rotateDegrees(-270, 1, false);
-        driveTrain.moveBackwardNInch(1, 18, 10, true, true);
+        driveTrain.moveBackwardNInch(1, 18, 10, true, true, false);
     }
 
-    public void pushButton(){
+    public void pushButton() {
         // Stop driving and push the button. Wait a little more than the required push time to allow
         // button to partially retract.
-        driveTrain.stopAll();
+
+        correctionStrafe();
         buttonPusherTask.push();
         sleep(buttonPusherTask.pushTime + 200);
     }
@@ -612,26 +601,26 @@ public class Autonomous extends LinearOpMode {
     }
 
     public void defense() {
-        if (team == Team.BLUE) {
-            driveTrain.moveBackwardNInch(0.4, 2, 2, false, true);
-            driveTrain.moveLeftNInch(1, 36, 10, true, true);
-            driveTrain.moveForwardNInch(0.5,20, 5, false, true);
-        } else if (team == Team.RED){
-            driveTrain.moveLeftNInch(1, 43, 10, true, true);
-            driveTrain.moveUpNInch(0.5, 15, 5, false, true);
-        }
-        driveTrain.setEncoderMode(DcMotor.RunMode.RUN_TO_POSITION);
-        backLeft.setTargetPosition(backLeft.getCurrentPosition());
-        backRight.setTargetPosition(backRight.getCurrentPosition());
-        frontLeft.setTargetPosition(frontLeft.getCurrentPosition());
-        frontRight.setTargetPosition(frontRight.getCurrentPosition());
+        driveTrain.moveLeftNInch(1, 43, 10, false, true);
+        driveTrain.rotateToAngle(wallAngle);
+        driveTrain.moveUpNInch(0.5,20, 5, false, true, false);
+        driveTrain.holdPosition();
         telemetry.addData("Time", gameTimer.time()*1.0/1000);
+        System.out.println(gameTimer.time() * 1.0/1000);
         telemetry.update();
-        while (gameTimer.time() < 30000);
+        while (gameTimer.time() < 30000 && opModeIsActive());
 
     }
 
-    public void options(){
+    public void backToFirst() {
+        driveTrain.moveBackNInch(0.4, betweenBeacon - 8, 10, false, false, true);
+        driveTrain.moveBackNInch(0.11, 8, 5, false, true, true);
+        driveTrain.powerUp(-bpPower);
+        while (opModeIsActive() && !voiColorSensorTop.correctColor());
+        driveTrain.stopAll();
+    }
+
+    public void options() {
         boolean confirmed = false;
         while(!confirmed){
 
@@ -642,7 +631,7 @@ public class Autonomous extends LinearOpMode {
                 team = Team.BLUE;
             }
 
-            // select mode
+            // select auto mode
             if (gamepad1.dpad_left) {
                 autoMode = AutoMode.TwoBall;
             } else if (gamepad1.dpad_up) {
@@ -651,18 +640,37 @@ public class Autonomous extends LinearOpMode {
                 autoMode = AutoMode.Defensive;
             }
 
+            // select park mode
+            if (gamepad1.right_bumper) {
+                parkMode = ParkMode.Corner;
+            } else if (gamepad1.left_bumper) {
+                parkMode = ParkMode.Center;
+            }
+
+            // select shoot order
+            if (gamepad1.right_trigger > 0.15) {
+                shootFirst = true;
+            } else if (gamepad1.left_trigger > 0.15) {
+                shootFirst = false;
+            }
+
             telemetry.addData("Team", team == Team.RED ? "Red" : "Blue");
             telemetry.addData("Mode", autoMode);
-            telemetry.update();
+            telemetry.addData("Park", parkMode);
+            telemetry.addData("Shoot First", shootFirst ? "Yes" : "No");
 
-            if (gamepad1.left_stick_button && gamepad1.right_stick_button){
-                telemetry.addData("Team", team == Team.RED ? "Red" : "Blue");
-                telemetry.addData("Mode", autoMode);
+            if ((gamepad1.left_stick_button && gamepad1.right_stick_button) || isStarted()){
                 telemetry.addData("Confirmed!", "");
-                telemetry.update();
                 voiColorSensorTop.team = driveTrain.team = team;
                 confirmed = true;
+                if (autoMode == AutoMode.Defensive) {
+                    betweenBeacon += 3;
+                    bpPower += 0.05;
+                }
             }
+            telemetry.update();
+
         }
     }
+
 }

@@ -24,12 +24,13 @@ public class VEX393Encoder {
 
         /* The following I2C addresses come from the VEX Robotics website.
          * They can be found here: http://www.vexrobotics.com/encoder-modules.html
+         * TODO: 1/24/17 Read the website
          */
 
         public final static int I2CADDR_DEFAULT = 0x60;     //8 bit address!
         public final static int REG_SIGNED_VELOCITY = 0x3E; //MSB
         public final static int REG_SIGNED_VELOCITY_LENGTH = 2;
-        public final static int REG_UNSIGNED_VELOCITY = 0x44;
+        public final static int REG_UNSIGNED_VELOCITY = 0x44; //MSB
         public final static int REG_UNSIGNED_VELOCITY_LENGTH = 2;
         public final static int REG_READ_ROTATION_BITS = 0x40;
         /*
@@ -54,8 +55,9 @@ public class VEX393Encoder {
 
     public VEX393Encoder(HardwareMap hardwareMap, String name) {
         device = hardwareMap.i2cDevice.get(name);
-        //The docs specify that the address must be even, implying that the default address 0x60 is 8-bit.
-        //See http://www.robot-electronics.co.uk/i2c-tutorial for more information.
+        // The docs specify that the address must be even, implying that the default address 0x60 is 8-bit.
+        // See http://www.robot-electronics.co.uk/i2c-tutorial for more information.
+        // TODO: 1/23/17 look at website
         address = I2cAddr.create8bit(VEX393EncoderAddresses.I2CADDR_DEFAULT);
         synchDevice = new I2cDeviceSynchImpl(device, address, false);
         synchDevice.engage();

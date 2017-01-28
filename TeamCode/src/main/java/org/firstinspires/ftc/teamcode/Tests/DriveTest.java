@@ -143,9 +143,9 @@ public class DriveTest extends LinearOpMode {
     public void testDrive() {
         switch (dir) {
             case FORWARD:
-                driveTrain.moveForwardNInch(power, distance, 10, false, true);
+                driveTrain.moveForwardNInch(power, distance, 10, false, true, false);
                 sleep(1000);
-                driveTrain.moveBackwardNInch(power, distance, 10, false, true);
+                driveTrain.moveBackwardNInch(power, distance, 10, false, true, false);
                 break;
             case RIGHT:
                 driveTrain.moveRightNInch(power, distance, 10, false, true);
@@ -160,10 +160,10 @@ public class DriveTest extends LinearOpMode {
 
                 break;
             case BACKWARD:
-                driveTrain.moveBackwardNInch(power, distance, 10, false, true);
+                driveTrain.moveBackwardNInch(power, distance, 10, false, true, false);
                 sleep(1000);
 
-                driveTrain.moveForwardNInch(power, distance, 10, false, true);
+                driveTrain.moveForwardNInch(power, distance, 10, false, true, false);
 
                 break;
 
@@ -171,6 +171,10 @@ public class DriveTest extends LinearOpMode {
         printTicks();
         sleep(500);
         printTicks();
+    }
+
+    public void chooseSpeed() {
+
     }
 
 }
