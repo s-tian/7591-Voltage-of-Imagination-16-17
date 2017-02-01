@@ -13,10 +13,14 @@ import org.firstinspires.ftc.teamcode.robotutil.VEX393Encoder;
 
 public class VEXMotorEncoderTest extends LinearOpMode {
     CRServo vexMotor;
+    CRServo vexM1;
+    CRServo vexM2;
+    CRServo vexM3;
+
 
     @Override
     public void runOpMode() {
-        vexMotor = hardwareMap.crservo.get("sweeper1");
+        vexMotor = hardwareMap.crservo.get("button");
         VEX393Encoder encoder = new VEX393Encoder(hardwareMap, "vexencoder");
         waitForStart();
         while(opModeIsActive()) {
@@ -26,6 +30,5 @@ public class VEXMotorEncoderTest extends LinearOpMode {
             telemetry.addData("Unsigned velocity", encoder.getUnsignedVelocity());
             telemetry.update();
         }
-
     }
 }
