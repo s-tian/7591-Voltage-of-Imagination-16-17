@@ -199,7 +199,7 @@ public class VisionOpModeTest extends LinearOpModeVision {
         if(bottomY == 0 && topY == IMAGE_HEIGHT) {
             center.setY(-1);
         } else {
-            center.setY(1.0*(bottomY+topY));
+            center.setY(1.0*(bottomY+topY)/2);
         }
         Point vortexCenter = new Point((rightX + leftX)/2, (topY+bottomY)/2);
         Drawing.drawContours(rgba, resultContours, new ColorRGBA(255, 0, 0), 2);
