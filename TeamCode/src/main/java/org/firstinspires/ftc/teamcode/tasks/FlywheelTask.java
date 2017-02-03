@@ -5,6 +5,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import java.text.DecimalFormat;
+
 /**
  * Created by Howard on 10/15/16.
  */
@@ -12,26 +14,28 @@ public class FlywheelTask extends TaskThread {
 
     private DcMotor flywheelRight;
     private DcMotor flywheelLeft;
-    private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     public volatile FlywheelState state;
     private final int THEORETICAL_MAX_RPM = 1800;
     private final int FULL_SPEED_RPM = 1300;
+    private final double MAXPOWER = 0.5;
     private final int TICKS_PER_REV = 112;
-    private final int MAX_ENCODER_TICKS_PER_SEC = (int) (1.0*FULL_SPEED_RPM/60*TICKS_PER_REV);
+    private final int MAX_ENCODER_TICKS_PER_SEC = 2500;
     private final double MAX_ALLOWED_ERROR = 0.15;      //When the difference between the actual speed and targeted speed is smaller than this percentage, the state will display as RUNNNING_NEAR_TARGET.
     private final double CLOSE_ERROR = 0.05;
     public double currentErrorLeft, currentErrorRight;
-    private final double KP = 1.0/15/MAX_ENCODER_TICKS_PER_SEC;     //Proportional error constant to tune
-
+    public static double KP = 0.00011;     //Proportional error constant to tune
+    public static double KI = 0;
+    public static double KD = 0;
+    
     public static double lowPow = 0.75;
     public static double highPow = 0.85;
     private int targetEncoderRate = 0;
     private int lastEncoderReadingLeft = 0;
     private int lastEncoderReadingRight = 0;
-    private long lastTime = 0;
-    private long currentTime = 0;
     private double leftPower = 0;
     private double rightPower = 0;
+    
+    ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
 
     public enum FlywheelState {
@@ -59,6 +63,13 @@ public class FlywheelTask extends TaskThread {
 
     @Override
     public void run() {
+        double totalErrorRight = 0;
+        double totalErrorLeft = 0;
+        double prevErrorR = 0;
+        double prevErrorL = 0;
+        timer.reset();
+        DecimalFormat df = new DecimalFormat();
+        df.setMaximumFractionDigits(4);
         while(opMode.opModeIsActive() && running) {
             if (teleOp) {
                 if (opMode.gamepad2.a) {
@@ -72,8 +83,6 @@ public class FlywheelTask extends TaskThread {
                 }
             }
 
-            currentTime = System.nanoTime();
-            long deltaTime = currentTime - lastTime;
             int encoderReadingLeft = getEncoderLeft();
             int encoderReadingRight = getEncoderRight();
 
@@ -86,31 +95,46 @@ public class FlywheelTask extends TaskThread {
                     //We just entered this state from the adjusting state, update encoder and time values.
                     lastEncoderReadingLeft = encoderReadingLeft;
                     lastEncoderReadingRight = encoderReadingRight;
-                    lastTime = currentTime;
-                } else if (deltaTime > 200000000L) {
-                    int approxRateLeft = (int) ((encoderReadingLeft - lastEncoderReadingLeft)*1.0/deltaTime*1000000000L);
-                    int approxRateRight = (int) ((encoderReadingRight - lastEncoderReadingRight)*1.0/deltaTime*1000000000L);
-                    currentErrorLeft = (double)(approxRateLeft - targetEncoderRate)/targetEncoderRate;
-                    currentErrorRight = (double)(approxRateRight - targetEncoderRate)/targetEncoderRate;
+                } else if (timer.time() > 500) {
+                    double approxRateLeft =  (encoderReadingLeft - lastEncoderReadingLeft)*1.0/timer.time()*1000;
+                    double approxRateRight =  (encoderReadingRight - lastEncoderReadingRight)*1.0/timer.time()*1000;
+                    currentErrorLeft = (approxRateLeft - targetEncoderRate)/targetEncoderRate;
+                    currentErrorRight = (approxRateRight - targetEncoderRate)/targetEncoderRate;
                     if(Math.abs(currentErrorLeft) < MAX_ALLOWED_ERROR && Math.abs(currentErrorRight) < MAX_ALLOWED_ERROR) {
                         state = FlywheelState.STATE_RUNNING_NEAR_TARGET;
                     } else {
                         state = FlywheelState.STATE_ADJUSTING;
                     }
-
-                    leftPower += 1.0*(targetEncoderRate - approxRateLeft)*KP;
-                    rightPower += 1.0*(targetEncoderRate - approxRateRight)*KP;
+                    double errorRight = targetEncoderRate - approxRateRight;
+                    double errorLeft = targetEncoderRate - approxRateLeft;
+                    totalErrorRight += errorRight;
+                    totalErrorLeft += errorLeft;
+                    double PR = errorRight * KP;
+                    double IR = totalErrorRight * KI;
+                    double DR = (errorRight - prevErrorR) * KD; 
+                    double PL = errorLeft * KP;
+                    double IL = totalErrorLeft * KI;
+                    double DL = (errorLeft - prevErrorL) * KD;
+                    rightPower += PR + IR + DR;
+                    leftPower += PL + IL + DL;
                     leftPower = range(leftPower);
                     rightPower = range(rightPower);
-
-                    //System.out.println("Target rate: " + targetEncoderRate + " Left rate: " + approxRateLeft + " Right rate: " + approxRateRight);
-                    //System.out.println("LPower " + leftPower + " RPower " + rightPower);
-
+                    System.out.println();
+                    System.out.println("Target: " + targetEncoderRate + " Left rate: " + (int)approxRateLeft + " Right rate: " + (int)approxRateRight);
+                    System.out.println("Left Error: " + df.format(errorLeft) + " Right Error: " + df.format(errorRight));
+                    System.out.println("LPower " + df.format(leftPower) + " RPower " + df.format(rightPower));
+                    opMode.telemetry.addData("Left Error(%)", df.format(currentErrorLeft*100));
+                    opMode.telemetry.addData("Right Error(%)", df.format(currentErrorRight*100));
+                    opMode.telemetry.addData("Left Power", flywheelLeft.getPower());
+                    opMode.telemetry.addData("Right Power", flywheelRight.getPower());
+                    opMode.telemetry.update();
                     updatePowers();
 
-                    lastTime = currentTime;
+                    timer.reset();
                     lastEncoderReadingLeft = encoderReadingLeft;
                     lastEncoderReadingRight = encoderReadingRight;
+                    prevErrorR = errorRight;
+                    prevErrorL = errorLeft;
                 }
 
             }
@@ -141,7 +165,7 @@ public class FlywheelTask extends TaskThread {
         double ratio = Math.min(EXPECTED_VOLTAGE /voltage, 1);
         timer.reset();
         targetEncoderRate = (int) (MAX_ENCODER_TICKS_PER_SEC * power);
-        leftPower = rightPower = power*FULL_SPEED_RPM/THEORETICAL_MAX_RPM * EXPECTED_VOLTAGE / voltage;
+        leftPower = rightPower = power*MAXPOWER* EXPECTED_VOLTAGE / voltage;
         updatePowers();
         //We intentionally set the power so that it is highly likely to be lower than the
         //"correct" value so that it continues to adjust upwards.

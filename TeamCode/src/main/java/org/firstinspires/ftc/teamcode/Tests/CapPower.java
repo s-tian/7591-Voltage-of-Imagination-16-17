@@ -68,21 +68,15 @@ public class CapPower extends LinearOpMode {
             if (!gamepad2.y) {
                 yPressed = false;
             }
-            if (gamepad2.left_stick_button && gamepad2.right_stick_button) {
-                confirmed = true;
-            }
-            if (gamepad2.left_stick_button && gamepad2.right_stick_button) {
-                confirmed = true;
-            }
+
             telemetry.addData("holdPower", df.format(CapBallTask.holdPower));
             telemetry.addData("editPower", df.format(CapBallTask.editPower));
+            if (gamepad2.left_stick_button && gamepad2.right_stick_button) {
+                confirmed = true;
+                telemetry.addData("Confirmed!", "");
+            }
             telemetry.update();
         }
-        telemetry.addData("holdPower", df.format(CapBallTask.holdPower));
-        telemetry.addData("editPower", df.format(CapBallTask.editPower));
-        telemetry.addData("Confirmed!", "");
-        telemetry.update();
-
     }
 
 }
