@@ -25,6 +25,7 @@ public class VOIColorSensor {
     private ElapsedTime logMessageTimer;
     LinearOpMode opMode;
     public Team team = Team.BLUE;
+    public boolean weak = false;
 
     public VOIColorSensor(ColorSensor sensor, LinearOpMode opMode) {
         this.opMode = opMode;
@@ -86,12 +87,16 @@ public class VOIColorSensor {
     public boolean isBlue() {
         int i = 0;
         int score = 0;
+        int margin = 3;
+        if (weak) {
+            margin = 1;
+        }
         logMessageTimer.reset();
         while (i < 10 && opMode.opModeIsActive()) {
             if (logMessageTimer.time() > 3){
                 i++;
                 logMessageTimer.reset();
-                if (sensor.blue() - sensor.red() > 2) {
+                if (sensor.blue() - sensor.red() >= margin) {
                     score++;
                 }
             }
@@ -103,11 +108,15 @@ public class VOIColorSensor {
         int i = 0;
         int score = 0;
         logMessageTimer.reset();
+        int min = 2;
+        if (weak) {
+            min = 1;
+        }
         while (i < 10 && opMode.opModeIsActive()) {
             if (logMessageTimer.time() > 3){
                 i++;
                 logMessageTimer.reset();
-                if (sensor.red() >= 2 && sensor.blue() < sensor.red()) {
+                if (sensor.red() >= min && sensor.blue() < sensor.red()) {
                     score++;
                 }
             }

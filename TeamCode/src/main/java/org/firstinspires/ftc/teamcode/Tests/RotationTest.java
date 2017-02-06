@@ -34,13 +34,7 @@ public class RotationTest extends LinearOpMode {
         waitForStart();
         timer.reset();
         boolean confirmed = false;
-        while (!confirmed) {
-
-        }
-        driveTrain.startRotation(1);
-        driveTrain.startRotation(MecanumDriveTrain.minRotPow);
-        sleep(1000);
-        driveTrain.stopAll();
+        driveTrain.rotateToAngle(180);
 //        System.out.println("Before: " + imu.getAngle());
 //        driveTrain.rotateDegrees(angle, initPow, true);
 //        driveTrain.rotateToAngle(0);

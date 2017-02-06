@@ -28,6 +28,7 @@ public class ShooterTest extends LinearOpMode {
     FlywheelTask flywheelTask;
     DcMotor flywheelRight, flywheelLeft;
     IntakeTask intakeTask;
+    static double changeValue = 0.001;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     public enum KMode {
         KP, KI, KD
@@ -41,7 +42,7 @@ public class ShooterTest extends LinearOpMode {
         TaskThread.calculateVoltage(this);
         flywheelTask.teleOp = intakeTask.teleOp = true;
         initialize();
-        //setPID();
+        setPID();
         setPowers();
         waitForStart();
         flywheelTask.start();
@@ -52,8 +53,8 @@ public class ShooterTest extends LinearOpMode {
         int prevLeft = flywheelLeft.getCurrentPosition();
         while(opModeIsActive()) {
             if (timer.time() > 200) {
-                System.out.println("Right: " + (flywheelRight.getCurrentPosition() - prevRight)/timer.time()*1000);
-                System.out.println("Left: " + (flywheelLeft.getCurrentPosition() - prevLeft)/timer.time()*1000);
+                //System.out.println("Right: " + (flywheelRight.getCurrentPosition() - prevRight)/timer.time()*1000);
+                //System.out.println("Left: " + (flywheelLeft.getCurrentPosition() - prevLeft)/timer.time()*1000);
                 prevLeft = flywheelLeft.getCurrentPosition();
                 prevRight = flywheelRight.getCurrentPosition();
                 telemetry.update();
@@ -109,6 +110,7 @@ public class ShooterTest extends LinearOpMode {
 
 
         }
+        while (gamepad2.left_stick_button && gamepad2.right_stick_button);
     }
 
     public void setPID() {
@@ -116,7 +118,6 @@ public class ShooterTest extends LinearOpMode {
         df.setMaximumFractionDigits(8);
         KMode mode = KMode.KP;
         boolean confirmed = false;
-        double changeValue = 0.001;
         boolean rBumper = false;
         boolean lBumper = false;
         boolean upPressed = false;
@@ -203,12 +204,12 @@ public class ShooterTest extends LinearOpMode {
             telemetry.update();
 
         }
+        while (gamepad2.left_stick_button && gamepad2.right_stick_button);
     }
 
     public void runFullPower() {
-        initialize();
-        flywheelRight.setPower(0.5);
-        flywheelLeft.setPower(0.5);
+        flywheelRight.setPower(1);
+        flywheelLeft.setPower(1);
     }
 
     public void initialize() {

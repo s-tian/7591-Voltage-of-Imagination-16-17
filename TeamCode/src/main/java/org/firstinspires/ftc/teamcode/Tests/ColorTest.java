@@ -14,37 +14,44 @@ import org.firstinspires.ftc.teamcode.robotutil.VOIColorSensor;
 @TeleOp(name = "Color Test", group = "Test")
 
 public class ColorTest extends LinearOpMode {
-    static final int topSensorID = 0x3a;
-    static final int bottomBackID = 0x3c;
-    static final int bottomFrontID = 0x44;
-    VOIColorSensor voiTop, voiBottomBack, voiBottomFront;
-    ColorSensor colorTop, colorBottomBack, colorBottomFront;
+    static final int backID = 0x3a;
+    static final int frontID = 0x3c;
+    VOIColorSensor voiFront, voiBack;
+    ColorSensor colorFront, colorBack;
 
     @Override
     public void runOpMode() throws InterruptedException {
         initialize();
         waitForStart();
 
-
         while(opModeIsActive()) {
-            telemetry.addData("Top:", "Red: " + voiTop.getRed() + " Blue: " + voiTop.getBlue() + " Green " + voiTop.getGreen());
-            telemetry.addData("BottomBack: ", "Red: " + voiBottomBack.getRed() + " Blue: " + voiBottomBack.getBlue() + " Green " + voiBottomBack.getGreen());
-            telemetry.addData("BottomFront: ", "Red: " + voiBottomFront.getRed() + " Blue: " + voiBottomFront.getBlue() + " Green " + voiBottomFront.getGreen());
-            telemetry.addData("Blue: ", voiTop.isBlue());
-            telemetry.addData("Red: ", voiTop.isRed());
+            telemetry.addData("Back:", "Red: " + voiBack.getRed() + " Blue: " + voiBack.getBlue() + " Green " + voiBack.getGreen());
+            telemetry.addData("Front: ", "Red: " + voiFront.getRed() + " Blue: " + voiFront.getBlue() + " Green " + voiFront.getGreen());
+            if (voiBack.isBlue()) {
+                telemetry.addData("Blue", "Back");
+            } else if (voiFront.isBlue()) {
+                telemetry.addData("Blue", "Front");
+            } else {
+                telemetry.addData("Blue", "None");
+            }
+            if (voiBack.isRed()) {
+                telemetry.addData("Red", "Back");
+            } else if (voiFront.isRed()) {
+                telemetry.addData("Red", "Front");
+            } else {
+                telemetry.addData("Red", "None");
+            }
             telemetry.update();
         }
     }
     public void initialize(){
-        colorTop = hardwareMap.colorSensor.get("colorTop");
-        colorBottomBack = hardwareMap.colorSensor.get("colorBottomBack");
-        colorBottomFront = hardwareMap.colorSensor.get("colorBottomFront");
-        colorTop.setI2cAddress(I2cAddr.create8bit(topSensorID));
-        colorBottomBack.setI2cAddress(I2cAddr.create8bit(bottomBackID));
-        colorBottomFront.setI2cAddress(I2cAddr.create8bit(bottomFrontID));
+        colorBack = hardwareMap.colorSensor.get("colorBack");
+        colorFront = hardwareMap.colorSensor.get("colorFront");
+        colorBack.setI2cAddress(I2cAddr.create8bit(backID));
+        colorFront.setI2cAddress(I2cAddr.create8bit(frontID));
 
-        voiTop = new VOIColorSensor(colorTop, this);
-        voiBottomBack = new VOIColorSensor(colorBottomBack, this);
-        voiBottomFront = new VOIColorSensor(colorBottomFront, this);
+        voiBack = new VOIColorSensor(colorBack, this);
+        voiFront = new VOIColorSensor(colorFront, this);
+        voiFront.weak = true;
     }
 }

@@ -382,7 +382,7 @@ public class MecanumDriveTrain {
         int targetPosition = backRight.getCurrentPosition() + ticks;
         powerAllMotors(power);
         if (lean) {
-            double boostPower = power + 0.05;
+            double boostPower = power * 1.3;
             backRight.setPower(boostPower);
             frontLeft.setPower(boostPower);
         }
@@ -417,7 +417,7 @@ public class MecanumDriveTrain {
         int targetPosition = backRight.getCurrentPosition() - ticks;
         powerAllMotors(-power);
         if (lean) {
-            double boostPower = -power - 0.05;
+            double boostPower = -power * 1.3;
             backLeft.setPower(boostPower);
             frontRight.setPower(boostPower);
         }
@@ -508,16 +508,16 @@ public class MecanumDriveTrain {
 
         switch (dir) {
             case FORWARD:
-                expected =  TICKS_PER_MS_FORWARD * 50 * 0.5;
+                expected =  TICKS_PER_MS_FORWARD * 50 * 0.3;
                 break;
             case BACKWARD:
-                expected = TICKS_PER_MS_RIGHT * 50 * 0.5;
+                expected = TICKS_PER_MS_RIGHT * 50 * 0.3;
                 break;
             case LEFT:
-                expected = TICKS_PER_MS_LEFT * 50 * 0.5;
+                expected = TICKS_PER_MS_LEFT * 50 * 0.3;
                 break;
             case RIGHT:
-                expected = TICKS_PER_MS_FORWARD * 50 * 0.5;
+                expected = TICKS_PER_MS_FORWARD * 50 * 0.3;
                 break;
 
         }
