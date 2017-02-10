@@ -17,6 +17,8 @@ import org.firstinspires.ftc.teamcode.tasks.ButtonPusherTask;
 import org.firstinspires.ftc.teamcode.tasks.CapBallTask;
 import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
 
+import java.text.DecimalFormat;
+
 
 /**
  * Created by bunnycide on 11/21/16.
@@ -30,13 +32,19 @@ public class DriveTest extends LinearOpMode {
     BNO055IMU adaImu;
     MecanumDriveTrain driveTrain;
     static double power = 0.5, distance = 60;
+    static double changeValue = 0.01;
     public static MecanumDriveTrain.DIRECTION dir = MecanumDriveTrain.DIRECTION.FORWARD;
     @Override
     public void runOpMode() throws InterruptedException {
         initialize();
-        //chooseDirection();
+        telemetry.addData("Ready", "");
+        telemetry.update();
+        setPID();
         waitForStart();
-        driveTrain.driveToPosition(2000,2000,2000,2000);
+        driveTrain.moveRightNInch(0.5, 30, 10, false, true);
+        sleep(2000);
+        driveTrain.moveLeftNInch(0.5, 30, 10, false, true);
+        driveTrain.rotateToAngle(0);
 
     }
 
@@ -54,8 +62,20 @@ public class DriveTest extends LinearOpMode {
         new ButtonPusherTask(this);
         new IntakeTask(this);
         new CapBallTask(this);
-
     }
+
+    public void driveBitMore(int ticks) {
+        int br = backRight.getCurrentPosition();
+        int bl = backLeft.getCurrentPosition();
+        int fr = frontRight.getCurrentPosition();
+        int fl = frontLeft.getCurrentPosition();
+        br += ticks;
+        bl += ticks;
+        fr += ticks;
+        fl += ticks;
+        driveTrain.driveToPosition(br, bl, fr, fl);
+    }
+
 
     public void printTicks() {
         System.out.println("br " + backRight.getCurrentPosition());
@@ -75,28 +95,28 @@ public class DriveTest extends LinearOpMode {
         while (!confirmed) {
             if (gamepad1.a && !aPressed) {
                 aPressed = true;
-                MecanumDriveTrain.ACF += 0.0001;
+                MecanumDriveTrain.KP += 0.0001;
             }
             if (!gamepad1.a) {
                 aPressed = false;
             }
             if (gamepad1.b && !bPressed) {
                 bPressed = true;
-                MecanumDriveTrain.ACF -= 0.0001;
+                MecanumDriveTrain.KP -= 0.0001;
             }
             if (!gamepad1.b) {
                 bPressed = false;
             }
             if (gamepad1.x && !xPressed) {
                 xPressed = true;
-                MecanumDriveTrain.changeFactor += 0.001;
+                MecanumDriveTrain.KI += 0.001;
             }
             if (!gamepad1.x) {
                 xPressed = false;
             }
             if (gamepad1.y && !yPressed) {
                 yPressed = true;
-                MecanumDriveTrain.changeFactor -= 0.001;
+                MecanumDriveTrain.KI -= 0.001;
             }
             if (!gamepad1.y) {
                 yPressed = false;
@@ -115,8 +135,8 @@ public class DriveTest extends LinearOpMode {
             if (!gamepad1.right_bumper) {
                 rBumper = false;
             }
-            telemetry.addData("ACF", MecanumDriveTrain.ACF);
-            telemetry.addData("changeFactor", MecanumDriveTrain.changeFactor);
+            telemetry.addData("KP", MecanumDriveTrain.KP);
+            telemetry.addData("KI", MecanumDriveTrain.KI);
             telemetry.addData("stallTime", MecanumDriveTrain.stallTime);
             telemetry.addData("Choose Direction", dir);
             telemetry.update();
@@ -174,6 +194,101 @@ public class DriveTest extends LinearOpMode {
     }
 
     public void chooseSpeed() {
+
+    }
+
+    public void setPID () {
+            DecimalFormat df = new DecimalFormat();
+            df.setMaximumFractionDigits(8);
+            ShooterTest.KMode mode = ShooterTest.KMode.KP;
+            boolean confirmed = false;
+            boolean rBumper = false;
+            boolean lBumper = false;
+            boolean upPressed = false;
+            boolean downPressed = false;
+            while (!confirmed) {
+                if (gamepad2.right_bumper && !rBumper) {
+                    rBumper = true;
+                    changeValue *= 10;
+                }
+                if (gamepad2.left_bumper && !lBumper) {
+                    lBumper = true;
+                    changeValue /= 10;
+                }
+                if (!gamepad2.right_bumper) {
+                    rBumper = false;
+                }
+                if (!gamepad2.left_bumper) {
+                    lBumper = false;
+                }
+                if (gamepad2.a) {
+                    mode = ShooterTest.KMode.KP;
+                } else if (gamepad2.b) {
+                    mode = ShooterTest.KMode.KI;
+                } else if (gamepad2.x) {
+                    mode = ShooterTest.KMode.KD;
+                }
+
+                if (gamepad2.dpad_up && !upPressed) {
+                    upPressed = true;
+                    switch (mode) {
+                        case KP:
+                            MecanumDriveTrain.KP += changeValue;
+                            break;
+                        case KI:
+                            MecanumDriveTrain.KI += changeValue;
+                            break;
+                        case KD:
+                            MecanumDriveTrain.KD += changeValue;
+                            break;
+                    }
+                }
+
+                if (gamepad2.dpad_down && !downPressed) {
+                    downPressed = true;
+                    switch (mode) {
+                        case KP:
+                            MecanumDriveTrain.KP -= changeValue;
+                            break;
+                        case KI:
+                            MecanumDriveTrain.KI -= changeValue;
+                            break;
+                        case KD:
+                            MecanumDriveTrain.KD -= changeValue;
+                            break;
+                    }
+                }
+                if (!gamepad2.dpad_up) {
+                    upPressed = false;
+                }
+                if (!gamepad2.dpad_down) {
+                    downPressed = false;
+                }
+                String kMode = "";
+                switch (mode) {
+                    case KP:
+                        kMode = "KP";
+                        break;
+                    case KI:
+                        kMode = "KI";
+                        break;
+                    case KD:
+                        kMode = "KD";
+                        break;
+                }
+                telemetry.addData("Change value", changeValue);
+                telemetry.addData("Current variable", kMode);
+                telemetry.addData("KP", df.format(MecanumDriveTrain.KP));
+                telemetry.addData("KI", df.format(MecanumDriveTrain.KI));
+                telemetry.addData("KD", df.format(MecanumDriveTrain.KD));
+                if (gamepad2.left_stick_button && gamepad2.right_stick_button) {
+                    confirmed = true;
+                    telemetry.addData("Confirmed!", "");
+                }
+                telemetry.update();
+
+            }
+            while (gamepad2.left_stick_button && gamepad2.right_stick_button);
 
     }
 

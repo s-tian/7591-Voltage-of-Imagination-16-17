@@ -41,6 +41,7 @@ public class ButtonTest extends LinearOpMode {
         buttonPusherTask.out();
         sleep(2000);
     }
+
     public void initialize() {
         button = hardwareMap.crservo.get("button");
         button.setPower(ButtonPusherTask.zeroPower);
@@ -49,6 +50,7 @@ public class ButtonTest extends LinearOpMode {
         buttonPusherTask = new ButtonPusherTask(this);
         capBottom = hardwareMap.dcMotor.get("capBottom");
     }
+
     public void choosePower() {
         boolean upPressed = false, downPressed = false;
         boolean confirmed = false;

@@ -52,6 +52,5 @@ public class ColorTest extends LinearOpMode {
 
         voiBack = new VOIColorSensor(colorBack, this);
         voiFront = new VOIColorSensor(colorFront, this);
-        voiFront.weak = true;
     }
 }

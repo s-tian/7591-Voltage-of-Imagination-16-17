@@ -18,6 +18,7 @@ import org.firstinspires.ftc.teamcode.tasks.CapBallTask;
 import org.firstinspires.ftc.teamcode.tasks.DriveTrainTask;
 import org.firstinspires.ftc.teamcode.tasks.FlywheelTask;
 import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
+import org.firstinspires.ftc.teamcode.tasks.TaskThread;
 
 import java.text.DecimalFormat;
 
@@ -88,10 +89,10 @@ public class ThreadedTeleOp extends LinearOpMode {
         voltageLevel = (mc7 + mc6 + mc3 + mc2) / 4;
         driveTrainTask = new DriveTrainTask(this);
         flywheelTask = new FlywheelTask(this);
-        flywheelTask.voltage = voltageLevel;
         intakeTask = new IntakeTask(this);
         capBallTask = new CapBallTask(this);
         buttonPusherTask = new ButtonPusherTask(this);
+        TaskThread.calculateVoltage(this);
         buttonPusherTask.teleOp = intakeTask.teleOp = flywheelTask.teleOp = true;
     }
 }

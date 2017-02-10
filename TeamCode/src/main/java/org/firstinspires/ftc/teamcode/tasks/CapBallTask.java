@@ -18,13 +18,13 @@ public class CapBallTask extends TaskThread {
     boolean aPushed = false;
     boolean forkliftOut = false;
     double targetPower = 0;
-    public static double holdPower = 0.5;
-    public static double editPower = 0.05;
+    public static double holdPower = 0.01;
+    public static double KP = 0.000005;
+    public static double KD = 0.0001;
 
     int targetPosition = 0;
     int bottomPosition = 0;
     int topPosition = 0;
-    double KP = 0.015;
     int delta = 75;
 
     boolean changedMode = false;
@@ -131,20 +131,21 @@ public class CapBallTask extends TaskThread {
         int range = 3;
         setLiftPower(holdPower * EXPECTED_VOLTAGE / voltage);
         timer3.reset();
+        int lastPos = capTop.getCurrentPosition();
         while (opMode.gamepad2.dpad_right && opMode.opModeIsActive()) {
             if (opMode.gamepad1.right_bumper || opMode.gamepad1.left_bumper) {
                 return;
             }
             if (timer3.time() > 50) {
-                if (capTop.getCurrentPosition() < topPosition - range && capBottom.getCurrentPosition() < bottomPosition - range) {
-                    //holdPower += editPower;
-                    setLiftPower(holdPower * EXPECTED_VOLTAGE / voltage);
-                }
-                if (capTop.getCurrentPosition() > topPosition + range && capBottom.getCurrentPosition() > bottomPosition + range) {
-                    //holdPower -= editPower;
-                    setLiftPower(holdPower * EXPECTED_VOLTAGE / voltage);
-                }
+                int diff = lastPos - capTop.getCurrentPosition();
+                int error = topPosition - capTop.getCurrentPosition();
+                holdPower += KP * error + KD * diff;
+                setLiftPower(holdPower * EXPECTED_VOLTAGE / voltage);
                 timer3.reset();
+                lastPos = capTop.getCurrentPosition();
+                opMode.telemetry.addData("hold Position", topPosition);
+                opMode.telemetry.addData("Current Position", capTop.getCurrentPosition());
+                opMode.telemetry.update();
             }
         }
         setLiftPower(0);

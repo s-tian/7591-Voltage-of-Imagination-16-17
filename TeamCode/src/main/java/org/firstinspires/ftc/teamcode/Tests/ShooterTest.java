@@ -57,7 +57,7 @@ public class ShooterTest extends LinearOpMode {
                 //System.out.println("Left: " + (flywheelLeft.getCurrentPosition() - prevLeft)/timer.time()*1000);
                 prevLeft = flywheelLeft.getCurrentPosition();
                 prevRight = flywheelRight.getCurrentPosition();
-                telemetry.update();
+                //telemetry.update();
                 timer.reset();
             }
         }
@@ -213,6 +213,7 @@ public class ShooterTest extends LinearOpMode {
     }
 
     public void initialize() {
+        System.out.println("Shooter test");
         flywheelRight = hardwareMap.dcMotor.get("flywheelRight");
         flywheelLeft = hardwareMap.dcMotor.get("flywheelLeft");
         flywheelRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
