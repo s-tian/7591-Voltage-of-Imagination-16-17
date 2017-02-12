@@ -40,6 +40,7 @@ public class ButtonPusherTask extends TaskThread {
         pushTime *= EXPECTED_VOLTAGE / voltage;
         outTime *= EXPECTED_VOLTAGE / voltage;
         button.setPower(0);
+        guide.setPosition(upPosition);
     }
 
     @Override
@@ -61,7 +62,7 @@ public class ButtonPusherTask extends TaskThread {
             //TeleOp
             if (teleOp) {
                 if (Math.abs(opMode.gamepad2.right_stick_x) > 0.15|| Math.abs(opMode.gamepad2.left_stick_x) > 0.15) {
-                    button.setPower(-opMode.gamepad2.right_stick_x-opMode.gamepad2.left_stick_x);
+                    button.setPower(opMode.gamepad2.right_stick_x+opMode.gamepad2.left_stick_x);
                     guideDown();
                 } else {
                     button.setPower(0);
@@ -97,9 +98,9 @@ public class ButtonPusherTask extends TaskThread {
         button.setPower(outPower);
         sleep(pushTime);
         button.setPower(inPower);
-        sleep(200);
+        sleep(250);
         button.setPower(zeroPower);
-        pushTime = 300;
+        pushTime = 500;
     }
 
     private void outPusher() {

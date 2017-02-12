@@ -14,7 +14,7 @@ public class CapBallTask extends TaskThread {
 
     private DcMotor capBottom, capTop;
     private Servo forkLeft, forkRight;
-    double startLeft = 0.55, startRight = 0.12, downLeft = 0.00, downRight = 0.62; // fork lift positions
+    double startLeft = 0.55, startRight = 0.14, downLeft = 0.00, downRight = 0.62; // fork lift positions
     boolean aPushed = false;
     boolean forkliftOut = false;
     double targetPower = 0;
@@ -49,9 +49,13 @@ public class CapBallTask extends TaskThread {
         timer2.reset();
         while(opMode.opModeIsActive() && running) {
 
-            if (opMode.gamepad1.right_bumper || opMode.gamepad2.right_trigger > 0.15) {
+            if (opMode.gamepad1.right_bumper) {
                 setLiftPower(1);
-            } else if (opMode.gamepad1.left_bumper || opMode.gamepad2.left_trigger > 0.15) {
+            } else if (opMode.gamepad1.left_bumper) {
+                setLiftPower(-0.5);
+            } else if (opMode.gamepad2.right_trigger > 0.15) {
+                setLiftPower(0.5);
+            } else if (opMode.gamepad2.left_trigger > 0.15) {
                 setLiftPower(-0.2);
             } else if (opMode.gamepad2.dpad_right){
                 holdPosition();

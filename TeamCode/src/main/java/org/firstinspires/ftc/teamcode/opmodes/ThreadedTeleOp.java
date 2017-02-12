@@ -69,8 +69,13 @@ public class ThreadedTeleOp extends LinearOpMode {
                 //Get out of the loop
                 break;
             } else {
-
-                telemetry.addData("Time elapsed", (int) (elapsed / 1000000000L));
+                int seconds = 120 - (int) (elapsed/1000000000L);
+                String timeString = (seconds/60) + ":";
+                if (seconds%60 < 10) {
+                    timeString += 0;
+                }
+                timeString += seconds%60;
+                telemetry.addData("Time elapsed", timeString);
                 telemetry.addData("Left error", df.format(flywheelTask.currentErrorLeft*100));
                 telemetry.addData("Right error", df.format(flywheelTask.currentErrorRight*100));
                 telemetry.addData("Flywheel state", flywheelTask.getFlywheelState());

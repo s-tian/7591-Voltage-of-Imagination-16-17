@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.Tests;
 
 import com.qualcomm.hardware.adafruit.AdafruitBNO055IMU;
 import com.qualcomm.hardware.adafruit.BNO055IMU;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -18,6 +19,7 @@ import org.firstinspires.ftc.teamcode.robotutil.VOIImu;
  * Created by bunnycide on 11/17/16.
  */
 @TeleOp(name = "Lift Test", group = "Test")
+@Disabled
 
 public class LiftTest extends LinearOpMode {
     DcMotor capTop, capBottom, frontLeft, frontRight, backLeft, backRight;
@@ -36,6 +38,7 @@ public class LiftTest extends LinearOpMode {
         capTop.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         capBottom.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         capTop.setDirection(DcMotorSimple.Direction.REVERSE);
+        capBottom.setDirection(DcMotorSimple.Direction.REVERSE);
         frontLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         frontRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backLeft.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);

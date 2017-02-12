@@ -18,6 +18,7 @@ public class IntakeTask extends TaskThread {
     public volatile double power = 0;
     public volatile int sweepTime = 0;
     private VOISweeper sweeper;
+    public volatile boolean oscillate = false;
     CRServo sweeper1, sweeper2, sweeper3;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
@@ -56,10 +57,23 @@ public class IntakeTask extends TaskThread {
             // Autonomous commands
             if (power != 0) {
                 sweeper.setPower(power);
-                sleep(sweepTime);
-                sweeper.setPower(0);
-                sweepTime = 0;
                 power = 0;
+                int temp = sweepTime;
+                sweepTime = 0;
+                sleep(temp);
+                sweeper.setPower(0);
+            }
+            if (oscillate) {
+                power = -1;
+                sweeper.setPower(-1);
+                timer.reset();
+                while (oscillate) {
+                    if (timer.time() > 50) {
+                        power = -power;
+                        sweeper.setPower(power);
+                        timer.reset();
+                    }
+                }
             }
 
 
