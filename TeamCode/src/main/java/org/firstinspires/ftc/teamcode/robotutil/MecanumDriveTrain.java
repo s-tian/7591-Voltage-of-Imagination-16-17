@@ -8,6 +8,8 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
+import java.text.DecimalFormat;
+
 /**
  * Created by Stephen on 9/17/2016.
  */
@@ -15,7 +17,7 @@ public class MecanumDriveTrain {
     //export PATH="$PATH:/Users/Howard/Library/Android/sdk/platform-tools"
     public static final double TICKS_PER_INCH_FORWARD= 42.437;
     public static final double TICKS_PER_INCH_RIGHT = 46.731;
-    public static final double TICKS_PER_INCH_LEFT = 52.5;
+    public static final double TICKS_PER_INCH_LEFT = 46.35;
     public static final double TICKS_PER_MS_FORWARD = 1.4; // power 1
     public static final double TICKS_PER_MS_RIGHT = 1.1649; //  power 1
     public static final double TICKS_PER_MS_LEFT = 0.979;
@@ -30,8 +32,8 @@ public class MecanumDriveTrain {
 
     public static final int angleBuffer = 30;
     public static double stallTime = 20;
-    public static double KP = 0.00; // Angle Correction Factor
-    public static double KD = 0.00;
+    public static double KP = 0.07; // Angle Correction Factor
+    public static double KD = 0.01;
     public static double KI = 0;
     public double bpPower = 0.11;
 
@@ -43,6 +45,8 @@ public class MecanumDriveTrain {
     public DcMotor backLeft, backRight, frontLeft, frontRight;
     VOIImu imu;
     LinearOpMode opMode;
+
+    DecimalFormat df = new DecimalFormat();
 
     public enum DIRECTION {
         FORWARD, RIGHT, LEFT, BACKWARD;
@@ -65,6 +69,7 @@ public class MecanumDriveTrain {
     }
 
     public MecanumDriveTrain(LinearOpMode opMode) {
+        df.setMaximumFractionDigits(3);
         this.opMode = opMode;
         frontLeft = opMode.hardwareMap.dcMotor.get("frontLeft");
         frontRight = opMode.hardwareMap.dcMotor.get("frontRight");
@@ -272,13 +277,14 @@ public class MecanumDriveTrain {
     }
 
     private boolean moveLeftTicksWithEncoders(double power, double ticks, double timeout, boolean detectStall, boolean stop) {
+        setEncoderMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         double timeOutMS = timeout*1000;
         double targetPosition = frontRight.getCurrentPosition() + ticks;
         timer.reset();
         timer2.reset();
-        backRight.setPower(-1);
-        backLeft.setPower(1);
-        while (opMode.opModeIsActive() && timer.time() < stallTime);
+        //backRight.setPower(-1);
+        //backLeft.setPower(1);
+        //while (opMode.opModeIsActive() && timer.time() < stallTime);
         strafeLeft(power);
 
         timer.reset();
@@ -289,6 +295,9 @@ public class MecanumDriveTrain {
         long currentTime = System.currentTimeMillis();
         double current;
         double prev = initAngle;
+        double brPower, blPower, frPower, flPower;
+        blPower = frPower = power;
+        brPower = flPower = -power;
         while(frontRight.getCurrentPosition() < targetPosition && opMode.opModeIsActive() && timer.time() < timeOutMS) {
             if (detectStall) {
                 if (System.currentTimeMillis() - currentTime > 1000) {
@@ -306,21 +315,26 @@ public class MecanumDriveTrain {
             }
             if (timer2.time() > 25) {
                 current = imu.getAngle();
-                double diff = VOIImu.subtractAngles(current, prev);
+                double diff = VOIImu.subtractAngles(current, initAngle);
                 maxDiff = Math.max(Math.abs(diff), maxDiff);
                 double change = VOIImu.subtractAngles(current, prev);
                 double delta = diff * KP + change * KD;
-                double newBR = backRight.getPower() + delta;
-                double newFL = frontLeft.getPower() - delta;
-                double newBL = backLeft.getPower() - delta;
-                double newFR = frontRight.getPower() + delta;
-
-                backRight.setPower(newBR);
-                frontLeft.setPower(newFL);
-                backLeft.setPower(newBL);
-                frontRight.setPower(newFR);
+                brPower += delta;
+                flPower -= delta;
+                blPower -= delta;
+                frPower += delta;
+                frPower = power + delta;
+                blPower = power - delta;
+                flPower = -power -delta;
+                brPower = -power + delta;
+                setMotorPower(backRight, brPower);
+                setMotorPower(frontLeft, flPower);
+                setMotorPower(backLeft, blPower);
+                setMotorPower(frontRight, frPower);
                 prev = current;
                 timer2.reset();
+
+
                 opMode.telemetry.addData("change", change);
                 opMode.telemetry.update();
             }
@@ -328,6 +342,7 @@ public class MecanumDriveTrain {
         if (stop) {
             stopAll();
         }
+        setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
         if (timer.time() >= timeOutMS) {
             return false;
         }
@@ -335,17 +350,22 @@ public class MecanumDriveTrain {
     }
 
     private boolean moveRightTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
+        setEncoderMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         double timeOutMS = timeout * 1000;
         int targetPosition = backRight.getCurrentPosition() + ticks;
         timer.reset();
         timer2.reset();
         double initAngle = imu.getAngle();
-        backRight.setPower(1);
-        backLeft.setPower(-1);
-        while (opMode.opModeIsActive() && timer.time() < stallTime);
+        //backRight.setPower(1);
+        //backLeft.setPower(-1);
+        //while (opMode.opModeIsActive() && timer.time() < stallTime);
         timer.reset();
         timer2.reset();
         strafeRight(power);
+        double brPower, blPower, frPower, flPower;
+        blPower = frPower = -power;
+        brPower = flPower = power;
+        double current, maxDiff = 0, prev = initAngle;
         long currentTime = System.currentTimeMillis();
         boolean startDetectingStall = false;
         while (backRight.getCurrentPosition() < targetPosition && opMode.opModeIsActive() && timer.time() < timeOutMS) {
@@ -364,23 +384,34 @@ public class MecanumDriveTrain {
                 }
             }
             if (timer2.time() > 25) {
-                double diff = imu.getAngle() - initAngle;
-                double newBR = backRight.getPower() + diff * KP;
-                double newFL = frontLeft.getPower() + diff * KP;
-                double newBL = backLeft.getPower() - diff * KP;
-                double newFR = frontRight.getPower() - diff * KP;
-
-                backRight.setPower(newBR);
-                frontLeft.setPower(newFL);
-                backLeft.setPower(newBL);
-                frontRight.setPower(newFR);
+                current = imu.getAngle();
+                double diff = VOIImu.subtractAngles(current, initAngle);
+                maxDiff = Math.max(Math.abs(diff), maxDiff);
+                double change = VOIImu.subtractAngles(current, prev);
+                double delta = diff * KP + change * KD;
+                brPower += delta;
+                flPower -= delta;
+                blPower -= delta;
+                frPower += delta;
+                frPower = -power + delta;
+                blPower = -power - delta;
+                flPower = power - delta;
+                brPower = power + delta;
+                setMotorPower(backRight, brPower);
+                setMotorPower(frontLeft, flPower);
+                setMotorPower(backLeft, blPower);
+                setMotorPower(frontRight, frPower);
+                prev = current;
                 timer2.reset();
-            }
 
+                opMode.telemetry.addData("change", change);
+                opMode.telemetry.update();
+            }
         }
         if (stop) {
             stopAll();
         }
+        setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
         if (timer.time() >= timeOutMS) {
             return false;
         }

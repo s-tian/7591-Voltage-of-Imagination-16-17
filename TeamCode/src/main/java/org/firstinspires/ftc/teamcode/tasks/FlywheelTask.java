@@ -17,15 +17,16 @@ public class FlywheelTask extends TaskThread {
     public volatile FlywheelState state;
     private final int THEORETICAL_MAX_RPM = 1800;
     private final int FULL_SPEED_RPM = 1300;
-    private final double MAXPOWER = 0.32;
+    private final double MAXPOWER = 0.42;
     private final int TICKS_PER_REV = 112;
     private final double MAX_ENCODER_TICKS_PER_MS = 2.9;
     private final double MAX_ALLOWED_ERROR = 0.05;      //When the difference between the actual speed and targeted speed is smaller than this percentage, the state will display as RUNNNING_NEAR_TARGET.
     private final double CLOSE_ERROR = 0.06;
     public double currentErrorLeft, currentErrorRight;
-    public static double KP = 0.10;     //Proportional error constant to tune
+    public static double KP = 0.11;     //Proportional error constant to tune
     public static double KI = 0;
     public static double KD = 0.001;
+    public volatile boolean PID_Modify = false;
 
     double voltageRatio;
     public static double lowPow = 0.68;
@@ -35,7 +36,7 @@ public class FlywheelTask extends TaskThread {
     private int lastEncoderReadingRight = 0;
     private double leftPower = 0;
     private double rightPower = 0;
-    public int count = 1;
+    public volatile int count = 1;
 
 
     public static int interval = 500;
@@ -90,18 +91,20 @@ public class FlywheelTask extends TaskThread {
             }
             df.setMaximumFractionDigits(3);
 
-            int encoderReadingLeft = getEncoderLeft();
-            int encoderReadingRight = getEncoderRight();
+
 
             if(state == FlywheelState.STATE_ACCELERATING) {
-                if(timer.time() > 500) {//Give the flywheel half a second to power up before adjusting speed
+                if(timer.time() > 1000) {//Give the flywheel 1.2 seconds to power up before adjusting speed
                     state = FlywheelState.STATE_ADJUSTING;
                 }
             } else if (state == FlywheelState.STATE_ADJUSTING || state == FlywheelState.STATE_RUNNING_NEAR_TARGET) {
+                int encoderReadingLeft = getEncoderLeft();
+                int encoderReadingRight = getEncoderRight();
                 if(lastEncoderReadingLeft == 0 && lastEncoderReadingRight == 0) {
                     //We just entered this state from the adjusting state, update encoder and time values.
                     lastEncoderReadingLeft = encoderReadingLeft;
                     lastEncoderReadingRight = encoderReadingRight;
+                    timer.reset();
                 } else if (timer.time() > interval) {
                     double approxRateLeft =  (encoderReadingLeft - lastEncoderReadingLeft)*1.0/timer.time();
                     double approxRateRight =  (encoderReadingRight - lastEncoderReadingRight)*1.0/timer.time();
@@ -137,8 +140,9 @@ public class FlywheelTask extends TaskThread {
                     opMode.telemetry.addData("Right Power", flywheelRight.getPower());
                     opMode.telemetry.addData("State", getFlywheelState());
                     opMode.telemetry.update();
-                    updatePowers();
-
+                    //if (PID_Modify) {
+                        updatePowers();
+                    //}
                     timer.reset();
                     lastEncoderReadingLeft = encoderReadingLeft;
                     lastEncoderReadingRight = encoderReadingRight;
@@ -170,8 +174,9 @@ public class FlywheelTask extends TaskThread {
     }
 
     public void setFlywheelPow(double power, boolean setPow) {
+        PID_Modify = true;
         if (timer2.time() > 200) {
-            System.out.println("Changed Pow");
+            System.out.println("Changed Power " + power);
             if (power == 0) {
                 state = state.STATE_STOPPED;
             } else {
@@ -186,8 +191,8 @@ public class FlywheelTask extends TaskThread {
             }
             //We intentionally set the power so that it is highly likely to be lower than the
             //"correct" value so that it continues to adjust upwards.
-            lastEncoderReadingRight = flywheelRight.getCurrentPosition();
-            lastEncoderReadingLeft = flywheelLeft.getCurrentPosition();
+            lastEncoderReadingRight = 0;
+            lastEncoderReadingLeft = 0;
             timer2.reset();
         }
     }
@@ -208,7 +213,6 @@ public class FlywheelTask extends TaskThread {
     public FlywheelState getFlywheelState() { return state; }
 
     public String getFlywheelStateString() {
-        sleep(30);
         return state.toString();
     }
 

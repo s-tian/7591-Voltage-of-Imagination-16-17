@@ -33,6 +33,7 @@ public class DriveTest extends LinearOpMode {
     MecanumDriveTrain driveTrain;
     static double power = 0.5, distance = 60;
     static double changeValue = 0.01;
+    double initialAngle;
     public static MecanumDriveTrain.DIRECTION dir = MecanumDriveTrain.DIRECTION.FORWARD;
     @Override
     public void runOpMode() throws InterruptedException {
@@ -41,10 +42,14 @@ public class DriveTest extends LinearOpMode {
         telemetry.update();
         setPID();
         waitForStart();
-        driveTrain.moveRightNInch(0.5, 30, 10, false, true);
-        sleep(2000);
-        driveTrain.moveLeftNInch(0.5, 30, 10, false, true);
+        driveTrain.moveRightNInch(1, 18, 10, false, true);
+        sleep(1000);
+        driveTrain.rotateToAngle(initialAngle);
+        sleep(1000);
+        //driveTrain.moveLeftNInch(1, 30, 10, false, true);
+        sleep(1000);
         driveTrain.rotateToAngle(0);
+
 
     }
 
@@ -62,6 +67,7 @@ public class DriveTest extends LinearOpMode {
         new ButtonPusherTask(this);
         new IntakeTask(this);
         new CapBallTask(this);
+        initialAngle = imu.getAngle();
     }
 
     public void driveBitMore(int ticks) {

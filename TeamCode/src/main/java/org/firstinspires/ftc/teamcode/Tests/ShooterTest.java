@@ -47,6 +47,7 @@ public class ShooterTest extends LinearOpMode {
         waitForStart();
         flywheelTask.start();
         intakeTask.start();
+        intakeTask.oscillate = true;
         //runFullPower();
         timer.reset();
         int prevRight = flywheelRight.getCurrentPosition();

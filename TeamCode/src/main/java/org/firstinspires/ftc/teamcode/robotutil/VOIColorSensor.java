@@ -131,4 +131,8 @@ public class VOIColorSensor {
         }
         return isBlue();
     }
+
+    public String getColor() {
+        return "R: " + getRed() + " G: " + getGreen() + " B: " + getBlue();
+    }
 }

@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.Tests;
 
 import android.util.Log;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
@@ -39,7 +40,7 @@ import java.util.List;
  */
 
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "VisionOpModeTest", group = "Tests")
-
+@Disabled
 
 
 

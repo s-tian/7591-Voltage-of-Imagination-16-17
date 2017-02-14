@@ -67,7 +67,7 @@ public class IntakeTask extends TaskThread {
                 power = -1;
                 sweeper.setPower(-1);
                 timer.reset();
-                while (oscillate) {
+                while (oscillate && opMode.opModeIsActive()) {
                     if (timer.time() > 50) {
                         power = -power;
                         sweeper.setPower(power);
