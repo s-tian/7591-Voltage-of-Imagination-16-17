@@ -53,7 +53,7 @@ public class Autonomous extends LinearOpMode {
     final int frontID = 0x3c;
     final int backID = 0x3a;
 
-    int shootTime = 2500;
+    int shootTime = 3000;
 
     int betweenBeacon = 32; // far beacon distance
 
@@ -65,12 +65,12 @@ public class Autonomous extends LinearOpMode {
 
     double sFarRotB = 42; // shoot far rotation Blue near
     double sFarRotB2 = 42; // shoot far rotation Blue far
-    double sFarRotR = 135; // shoot far rotation Red
+    double sFarRotR = 138; // shoot far rotation Red
     double sCloRotB = 108; // shoot close rotation Blue
     double sCloRotR = 80; // shoot close rotation Red
 
     // Powers
-    double shootPower = 0.68; // shoot first power
+    double shootPower = 0.7; // shoot first power
     double spalt = 0.6; // shot shoot power (from first beacon)
     double bpPower = 0.12; // beacon pressing driveTrain power
 
@@ -119,10 +119,13 @@ public class Autonomous extends LinearOpMode {
         flywheelTask.start();
         buttonPusherTask.start();
         intakeTask.start();
+        pickUp();
+        shoot();
+        driveTrain.rotateToAngle(VOIImu.subtractAngles(wallAngle, 90));
         if (autoMode == AutoMode.TwoBall || autoMode == AutoMode.ThreeBall) {
-            runBalls();
+            //runBalls();
         } else if (autoMode == AutoMode.JustShoot) {
-            runJustShoot();
+            //runJustShoot();
         }
     }
     
@@ -242,15 +245,13 @@ public class Autonomous extends LinearOpMode {
         while (opModeIsActive()) {
 
             if (flywheelTask.getFlywheelState() == FlywheelTask.FlywheelState.STATE_RUNNING_NEAR_TARGET) {
-                if (flywheelTask.count == count + 1) {
-                    count = flywheelTask.count;
-                    System.out.println(count + 1 + " Good");
-                    flywheelTask.PID_Modify = false;
+                if (flywheelTask.count == count + 2) {
+                    System.out.println(flywheelTask.count + " Good");
                     break;
                 } else {
                     if (count == -100) {
                         count = flywheelTask.count;
-                        System.out.println(count + 1 + " Good");
+                        System.out.println(count + " Good");
                     }
                 }
             } else {
@@ -262,11 +263,13 @@ public class Autonomous extends LinearOpMode {
             }
         }
         intakeTask.oscillate = false;
-        sleep(50);
         intakeTask.power = 0;
         System.out.println("Start shooting");
         intakeTask.setPower(1);
-        sleep(shootTime);
+        sleep(800);
+        flywheelTask.setFlywheelPow(shootPower, false);
+        sleep(shootTime - 800);
+
         coolDown();
     }
 
@@ -288,9 +291,11 @@ public class Autonomous extends LinearOpMode {
         // 1.
         flywheelTask.setFlywheelPow(-0.4);
         int sweepTime = 1500;
-        powerSweeper(1, sweepTime + 1000);
-        sleep(sweepTime);
-        powerSweeper(-1, 1000);
+        powerSweeper(1, sweepTime);
+        sleep(sweepTime/2);
+        powerSweeper(0, 200);
+        sleep(sweepTime/2);
+        powerSweeper(-1, 650);
         //powerSweeper(-1, 250);
         // increase shootTime to account for third ball
         shootTime += 1000;
@@ -298,7 +303,7 @@ public class Autonomous extends LinearOpMode {
         // 2.
         if (shootFirst) {
             driveTrain.teamStrafeRightNInch(1, 18, 10, false, true);
-            flywheelTask.setFlywheelPow(shootPower + 0.015);
+            flywheelTask.setFlywheelPow(shootPower + 0.020);
             // 3.
             if (team == Team.BLUE) {
                 driveTrain.rotateToAngle(wallAngle + 180);
@@ -311,6 +316,7 @@ public class Autonomous extends LinearOpMode {
             driveTrain.moveRightNInch(1, 5, 5, false, true);
             driveTrain.rotateToAngle(wallAngle);
         }
+
 
     }
 

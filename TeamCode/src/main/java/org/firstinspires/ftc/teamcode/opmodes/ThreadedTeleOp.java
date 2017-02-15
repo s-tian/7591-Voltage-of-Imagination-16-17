@@ -78,7 +78,7 @@ public class ThreadedTeleOp extends LinearOpMode {
                 telemetry.addData("Time elapsed", timeString);
                 telemetry.addData("Left error", df.format(flywheelTask.currentErrorLeft*100));
                 telemetry.addData("Right error", df.format(flywheelTask.currentErrorRight*100));
-                telemetry.addData("Flywheel state", flywheelTask.getFlywheelState());
+                telemetry.addData("Flywheel state", flywheelTask.state);
             }
             telemetry.update();
         }

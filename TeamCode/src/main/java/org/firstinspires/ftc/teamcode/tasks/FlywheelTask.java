@@ -26,7 +26,6 @@ public class FlywheelTask extends TaskThread {
     public static double KP = 0.11;     //Proportional error constant to tune
     public static double KI = 0;
     public static double KD = 0.001;
-    public volatile boolean PID_Modify = false;
 
     double voltageRatio;
     public static double lowPow = 0.68;
@@ -37,7 +36,6 @@ public class FlywheelTask extends TaskThread {
     private double leftPower = 0;
     private double rightPower = 0;
     public volatile int count = 1;
-
 
     public static int interval = 500;
 
@@ -174,7 +172,6 @@ public class FlywheelTask extends TaskThread {
     }
 
     public void setFlywheelPow(double power, boolean setPow) {
-        PID_Modify = true;
         if (timer2.time() > 200) {
             System.out.println("Changed Power " + power);
             if (power == 0) {
@@ -210,7 +207,9 @@ public class FlywheelTask extends TaskThread {
         return flywheelRight.getCurrentPosition();
     }
 
-    public FlywheelState getFlywheelState() { return state; }
+    public FlywheelState getFlywheelState() {
+        sleep(50);
+        return state; }
 
     public String getFlywheelStateString() {
         return state.toString();

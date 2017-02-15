@@ -98,7 +98,7 @@ public class ButtonPusherTask extends TaskThread {
         button.setPower(outPower);
         sleep(pushTime);
         button.setPower(inPower);
-        sleep(350);
+        sleep(300);
         button.setPower(zeroPower);
     }
 

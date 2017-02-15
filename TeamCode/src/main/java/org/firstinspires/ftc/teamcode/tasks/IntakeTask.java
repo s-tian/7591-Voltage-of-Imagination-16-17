@@ -38,20 +38,43 @@ public class IntakeTask extends TaskThread {
 
     @Override
     public void run() {
+        boolean printed = false;
+        boolean print2 = false;
         while(opMode.opModeIsActive() && running) {
 
             // TeleOp commands
             if (teleOp) {
                 if (opMode.gamepad2.dpad_up) {
+                    if (!printed) {
+                        System.out.println("Up");
+                        printed = true;
+                        print2 = false;
+                    }
                     sweeper.setPower(1);
                 } else if (opMode.gamepad2.dpad_down) {
+                    if (!printed) {
+                        System.out.println("Down");
+                        printed = true;
+                        print2 = false;
+                    }
                     sweeper.setPower(-1);
+                } else if (opMode.gamepad2.right_stick_button) {
+                    System.out.println("Oscillate");
+                    printed = false;
+                    print2 = false;
+                    oscillate = true;
                 } else if (opMode.gamepad1.right_trigger > 0) {
                     sweeper.setPower(1);
                 } else if (opMode.gamepad1.left_trigger > 0) {
                     sweeper.setPower(-1);
                 } else {
                     sweeper.setPower(0);
+                    if (!print2) {
+                        System.out.println("None");
+                        print2 = true;
+                        printed = false;
+                    }
+
                 }
             }
             // Autonomous commands
@@ -64,13 +87,17 @@ public class IntakeTask extends TaskThread {
                 sweeper.setPower(0);
             }
             if (oscillate) {
-                power = -1;
+                int pow = -1;
                 sweeper.setPower(-1);
                 timer.reset();
                 while (oscillate && opMode.opModeIsActive()) {
+                    if (teleOp && !opMode.gamepad2.right_stick_button) {
+                        oscillate = false;
+                        break;
+                    }
                     if (timer.time() > 50) {
-                        power = -power;
-                        sweeper.setPower(power);
+                        pow = -pow;
+                        sweeper.setPower(pow);
                         timer.reset();
                     }
                 }
