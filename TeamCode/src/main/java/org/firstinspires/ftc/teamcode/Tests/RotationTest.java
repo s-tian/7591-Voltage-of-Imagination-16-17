@@ -114,7 +114,7 @@ public class RotationTest extends LinearOpMode {
 
             System.out.println("Before: " + before);
             timer.reset();
-            driveTrain.rotateDegreesPrecision(angle, initPow);
+            //driveTrain.rotateDegreesPrecision(angle, initPow, 3);
             System.out.println("Time: " + timer.time());
             System.out.println("Immediately after: " + imu.getAngle());
             sleep(500);

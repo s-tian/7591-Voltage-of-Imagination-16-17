@@ -38,8 +38,18 @@ public class VOIImu{
         }
         return angle;
     }
+
     public double getRadians(){
         return getAngle()*Math.PI/180;
+    }
+
+    public double getRoll() {
+
+            angles = adafruit.getAngularOrientation().toAxesReference(AxesReference.INTRINSIC).toAxesOrder(AxesOrder.ZYX);
+            double roll = (AngleUnit.DEGREES.normalize(AngleUnit.DEGREES.fromUnit(angles.angleUnit, angles.secondAngle)));
+
+            return roll;
+
     }
 
     public static double addAngles(double angle1, double angle2){
@@ -62,5 +72,6 @@ public class VOIImu{
         }
         return diff1 * posNeg;
     }
+
 
 }

@@ -64,6 +64,8 @@ public class FlywheelTask extends TaskThread {
         flywheelRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         flywheelLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         flywheelLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        Thread.currentThread().setPriority(MAX_PRIORITY);
     }
 
     @Override
@@ -106,6 +108,7 @@ public class FlywheelTask extends TaskThread {
                 } else if (timer.time() > interval) {
                     double approxRateLeft =  (encoderReadingLeft - lastEncoderReadingLeft)*1.0/timer.time();
                     double approxRateRight =  (encoderReadingRight - lastEncoderReadingRight)*1.0/timer.time();
+                    timer.reset();
                     currentErrorLeft = (approxRateLeft - targetEncoderRate)/targetEncoderRate;
                     currentErrorRight = (approxRateRight - targetEncoderRate)/targetEncoderRate;
                     if(Math.abs(currentErrorLeft) < MAX_ALLOWED_ERROR && Math.abs(currentErrorRight) < MAX_ALLOWED_ERROR) {
@@ -136,12 +139,11 @@ public class FlywheelTask extends TaskThread {
                     opMode.telemetry.addData("Right Error(%)", df.format(currentErrorRight*100));
                     opMode.telemetry.addData("Left Power", flywheelLeft.getPower());
                     opMode.telemetry.addData("Right Power", flywheelRight.getPower());
-                    opMode.telemetry.addData("State", getFlywheelState());
+                    opMode.telemetry.addData("State", state);
                     opMode.telemetry.update();
                     //if (PID_Modify) {
                         updatePowers();
                     //}
-                    timer.reset();
                     lastEncoderReadingLeft = encoderReadingLeft;
                     lastEncoderReadingRight = encoderReadingRight;
                     prevErrorR = errorRight;
@@ -174,15 +176,16 @@ public class FlywheelTask extends TaskThread {
     public void setFlywheelPow(double power, boolean setPow) {
         if (timer2.time() > 200) {
             System.out.println("Changed Power " + power);
-            if (power == 0) {
-                state = state.STATE_STOPPED;
-            } else {
-                state = state.STATE_ACCELERATING;
-            }
+
             timer.reset();
             voltageRatio = EXPECTED_VOLTAGE / voltage;
             targetEncoderRate = (MAX_ENCODER_TICKS_PER_MS * power);
             if (setPow) {
+                if (power == 0) {
+                    state = state.STATE_STOPPED;
+                } else {
+                    state = state.STATE_ACCELERATING;
+                }
                 leftPower = rightPower = power * MAXPOWER * voltageRatio;
                 updatePowers();
             }

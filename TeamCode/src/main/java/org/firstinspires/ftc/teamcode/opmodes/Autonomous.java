@@ -44,8 +44,8 @@ import static org.firstinspires.ftc.teamcode.tasks.ButtonPusherTask.upPosition;
  * and "back" will always be directed back towards the start wall.
  * "correct" color references the color of the team, while "wrong" references the opposing
  * alliance's color
- */
-public class Autonomous extends LinearOpMode {
+            */
+    public class Autonomous extends LinearOpMode {
 
     int delay = 200;
     // Options
@@ -65,14 +65,14 @@ public class Autonomous extends LinearOpMode {
 
     double sFarRotB = 42; // shoot far rotation Blue near
     double sFarRotB2 = 42; // shoot far rotation Blue far
-    double sFarRotR = 138; // shoot far rotation Red
+    double sFarRotR = 133; // shoot far rotation Red
     double sCloRotB = 108; // shoot close rotation Blue
     double sCloRotR = 80; // shoot close rotation Red
 
     // Powers
     double shootPower = 0.7; // shoot first power
     double spalt = 0.6; // shot shoot power (from first beacon)
-    double bpPower = 0.12; // beacon pressing driveTrain power
+    double bpPower = 0.1; // beacon pressing driveTrain power
 
     // Hardware
     ColorSensor colorBack, colorFront;
@@ -119,13 +119,10 @@ public class Autonomous extends LinearOpMode {
         flywheelTask.start();
         buttonPusherTask.start();
         intakeTask.start();
-        pickUp();
-        shoot();
-        driveTrain.rotateToAngle(VOIImu.subtractAngles(wallAngle, 90));
         if (autoMode == AutoMode.TwoBall || autoMode == AutoMode.ThreeBall) {
-            //runBalls();
+            runBalls();
         } else if (autoMode == AutoMode.JustShoot) {
-            //runJustShoot();
+            runJustShoot();
         }
     }
     
@@ -238,6 +235,7 @@ public class Autonomous extends LinearOpMode {
     }
 
     public void shoot() {
+        System.out.println("Shoot");
         timer.reset();
         timer2.reset();
         intakeTask.oscillate = true;
@@ -257,7 +255,7 @@ public class Autonomous extends LinearOpMode {
             } else {
                 count = -100;
             }
-            if (timer.time() > 10000) {
+            if (timer.time() > 5000) {
                 System.out.println("Flywheel time out");
                 break;
             }
@@ -306,9 +304,9 @@ public class Autonomous extends LinearOpMode {
             flywheelTask.setFlywheelPow(shootPower + 0.020);
             // 3.
             if (team == Team.BLUE) {
-                driveTrain.rotateToAngle(wallAngle + 180);
+                driveTrain.rotateToAngle(wallAngle + 180, 0.25, 1.5, 6);
             } else if (team == Team.RED) {
-                driveTrain.rotateToAngle(wallAngle);
+                driveTrain.rotateToAngle(wallAngle, 0.25, 1.5, 6);
             }
 
             // 4.
@@ -342,8 +340,9 @@ public class Autonomous extends LinearOpMode {
         double fastPower = 0.8;
         driveTrain.moveUpNInch(0.35, 0.5, 10, false, false, false);
         driveTrain.moveUpNInch(fastPower, fastDistance, 10, false, true, false);
-        sleep(100);
+        sleep(50);
         driveTrain.rotateToAngle(wallAngle);
+        sleep(50);
         driveTrain.moveRightNInch(1, 60, 10, true, true);
         correctionStrafe();
     }
@@ -369,11 +368,10 @@ public class Autonomous extends LinearOpMode {
         telemetry.addData("drivePushButton", "");
         telemetry.update();
 
-        int timeOut = 1000;
+        int timeOut = 2000;
         timer.reset();
         if (voiBack.correctColor() &&  !voiFront.correctColor()) {
-            System.out.println("VOI BACK " + voiBack.getColor());
-            System.out.println("VOI FRONT " + voiFront.getColor());
+            System.out.println("Back detect, front not");
             driveTrain.moveBackNInch(0.15, 1, 2, false, true, true);
             pushButton();
         } else if (voiFront.correctColor() && !voiBack.correctColor()) {
@@ -392,6 +390,12 @@ public class Autonomous extends LinearOpMode {
             boolean timeAdded = false;
 
             while (timer.time() < timeOut & opModeIsActive()) {
+                if (voiBack.correctColor() && !voiFront.correctColor()) {
+                    System.out.println("Back detect, front not, while drive");
+                    driveTrain.moveBackNInch(0.15, 1, 2, false, true, true);
+                    pushButton();
+                    return;
+                }
                 if (voiFront.wrongColor() && !timeAdded) {
                     // If the opposite color is detected, add 1 second to the timeout in case the
                     // robot starts further back than expected.
@@ -400,9 +404,6 @@ public class Autonomous extends LinearOpMode {
                 }
                 // Turning because of known rotation after stopping. Temporary fix.
                 if (voiFront.correctColor()) {
-                    if (team == Team.BLUE) {
-                        //driveBitMore(100);
-                    }
                     pushButton();
 
                     return;
@@ -534,7 +535,24 @@ public class Autonomous extends LinearOpMode {
 
         // 3.
         driveTrain.moveBackNInch(0.5, 30, 10, false, false, false);
-        driveTrain.moveBackNInch(0.5, 30, 10, false, true, false);
+        driveTrain.powerUp(-0.5);
+        if (team == Team.RED) {
+            double target = backRight.getCurrentPosition() + 30 * MecanumDriveTrain.TICKS_PER_INCH_FORWARD;
+            while (imu.getRoll() < 0.9) {
+                if (backRight.getCurrentPosition() > target) {
+                    break;
+                }
+            }
+        } else if (team == Team.BLUE) {
+            double target = backRight.getCurrentPosition() - 30 * MecanumDriveTrain.TICKS_PER_INCH_FORWARD;
+            while (imu.getRoll() < 0.9) {
+                if (backRight.getCurrentPosition() < target) {
+                    break;
+                }
+            }
+        }
+        System.out.println(imu.getRoll());
+        driveTrain.stopAll();
 
     }
     
@@ -621,7 +639,7 @@ public class Autonomous extends LinearOpMode {
         // Strafing against wall to ensure alignment. Same direction regardless of color because
         // button pusher is always on the right side.
         driveTrain.stopAll();
-        driveTrain.rotateToAngle(wallAngle);
+        driveTrain.rotateToAngle(wallAngle, 0.25, 2, 1.5);
         driveTrain.moveRightNInch(0.2, 5, seconds, false, true);
     }
 

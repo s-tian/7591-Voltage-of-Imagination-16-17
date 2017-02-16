@@ -14,7 +14,7 @@ public class ButtonPusherTask extends TaskThread {
     Servo guide;
     double power = 0;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-    public int pushTime = 450;
+    public int pushTime = 550;
     public int outTime = 650;
     public static final double zeroPower = 0;
     public static final double outPower = 1;
@@ -95,24 +95,30 @@ public class ButtonPusherTask extends TaskThread {
     }
 
     private void buttonPush() {
-        button.setPower(outPower);
-        sleep(pushTime);
-        button.setPower(inPower);
-        sleep(300);
+        timer.reset();
+        while (timer.time() < pushTime && opMode.opModeIsActive()) {
+            button.setPower(outPower);
+        }
+        timer.reset();
+        while (timer.time() < 250 && opMode.opModeIsActive()) {
+            button.setPower(inPower);
+        }
         button.setPower(zeroPower);
     }
 
     private void outPusher() {
         timer.reset();
-        button.setPower(outPower);
-        sleep(outTime);
+        while (timer.time() < outTime && opMode.opModeIsActive()) {
+            button.setPower(outPower);
+        }
         button.setPower(zeroPower);
     }
 
     private void inPusher() {
         timer.reset();
-        button.setPower(inPower);
-        sleep(outTime +50);
+        while (timer.time() < outTime + 100 && opMode.opModeIsActive()) {
+            button.setPower(inPower);
+        }
         button.setPower(zeroPower);
 
     }

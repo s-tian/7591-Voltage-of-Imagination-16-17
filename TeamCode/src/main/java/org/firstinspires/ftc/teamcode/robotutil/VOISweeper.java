@@ -19,9 +19,9 @@ public class VOISweeper {
         setPower(0);
     }
     public void setPower(double power) {
-        sweeper1.setPower(power);
-        sweeper2.setPower(power);
-        sweeper3.setPower(power);
+        sweeper1.setPower(0);
+        sweeper2.setPower(0);
+        sweeper3.setPower(0);
     }
 
 }

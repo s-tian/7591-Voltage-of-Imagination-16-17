@@ -161,16 +161,16 @@ public class MecanumDriveTrain {
     }
 
     public void rotateToAngle(double target) {
-        rotateToAngle(target, 0.25);
+        rotateToAngle(target, 0.25, 3, 6);
     }
 
-    public void rotateToAngle(double target, double power) {
+    public void rotateToAngle(double target, double power, double error, double timeOut) {
         double current = imu.getAngle();
         double difference = VOIImu.subtractAngles(target, current);
-        rotateDegreesPrecision(difference, power);
+        rotateDegreesPrecision(difference, power, error, timeOut);
     }
 
-    public void rotateDegreesPrecision(double degrees, double power) {
+    public void rotateDegreesPrecision(double degrees, double power, double error, double timeOut) {
         // Clockwise: degrees > 0
         // CounterClockwise: degrees < 0;
 
@@ -185,8 +185,10 @@ public class MecanumDriveTrain {
             //degrees -= 2;
             rotateDegrees(VOIImu.addAngles(degrees, - angleBuffer), power, false);
         }
+        timer.reset();
+        timeOut *= 1000;
         //while (VOIImu.subtractAngles(imu.getAngle(), target) > 1);
-        while (Math.abs(VOIImu.subtractAngles(imu.getAngle(), target)) > 3 && opMode.opModeIsActive()){
+        while (Math.abs(VOIImu.subtractAngles(imu.getAngle(), target)) > error && opMode.opModeIsActive() && timer.time() < timeOut){
             double gyroValue = imu.getAngle();
             if (VOIImu.subtractAngles(target, gyroValue) > 0) {
                 if (adjust && degrees > 0) {
