@@ -1,13 +1,11 @@
 package org.firstinspires.ftc.teamcode.Tests;
 
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.tasks.CapBallTask;
 import org.firstinspires.ftc.teamcode.tasks.FlywheelTask;
 import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
@@ -15,10 +13,9 @@ import org.firstinspires.ftc.teamcode.tasks.TaskThread;
 
 import java.text.DecimalFormat;
 
-import static org.firstinspires.ftc.teamcode.Tests.ShooterTest.KMode.KP;
-
 /**
  * Created by Stephen on 9/11/2016.
+ * Shooter Test with power and PID control
  */
 
 @TeleOp(name = "Shooter Test", group = "Test")
@@ -51,16 +48,8 @@ public class ShooterTest extends LinearOpMode {
         timer.reset();
         int prevRight = flywheelRight.getCurrentPosition();
         int prevLeft = flywheelLeft.getCurrentPosition();
-        while(opModeIsActive()) {
-            if (timer.time() > 200) {
-                //System.out.println("Right: " + (flywheelRight.getCurrentPosition() - prevRight)/timer.time()*1000);
-                //System.out.println("Left: " + (flywheelLeft.getCurrentPosition() - prevLeft)/timer.time()*1000);
-                prevLeft = flywheelLeft.getCurrentPosition();
-                prevRight = flywheelRight.getCurrentPosition();
-                //telemetry.update();
-                timer.reset();
-            }
-        }
+        // only stop when stop button is pressed
+        while(opModeIsActive());
     }
 
     public void setPowers() {

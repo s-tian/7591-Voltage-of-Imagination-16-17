@@ -1,24 +1,17 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import android.widget.Button;
-
 import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
-import com.vuforia.ViewerParameters;
 
-import org.firstinspires.ftc.teamcode.Tests.ButtonTest;
 import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
 import org.firstinspires.ftc.teamcode.robotutil.Team;
 import org.firstinspires.ftc.teamcode.robotutil.VOIColorSensor;
 import org.firstinspires.ftc.teamcode.robotutil.VOIImu;
-import org.firstinspires.ftc.teamcode.robotutil.VOISweeper;
 import org.firstinspires.ftc.teamcode.tasks.ButtonPusherTask;
 import org.firstinspires.ftc.teamcode.tasks.CapBallTask;
 import org.firstinspires.ftc.teamcode.tasks.FlywheelTask;
@@ -27,13 +20,12 @@ import org.firstinspires.ftc.teamcode.tasks.TaskThread;
 
 import java.text.DecimalFormat;
 
-import static org.firstinspires.ftc.teamcode.tasks.ButtonPusherTask.downPosition;
-import static org.firstinspires.ftc.teamcode.tasks.ButtonPusherTask.upPosition;
-
 /**
  * Created by Howard on 12/13/16.
+ * Autonomous
  */
 
+@SuppressWarnings("ALL")
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "Autonomous", group = "Tests")
 
 /**
@@ -47,65 +39,63 @@ import static org.firstinspires.ftc.teamcode.tasks.ButtonPusherTask.upPosition;
             */
     public class Autonomous extends LinearOpMode {
 
-    int delay = 200;
     // Options
-    boolean missed = false;
-    final int frontID = 0x3c;
-    final int backID = 0x3a;
+    private boolean missed = false;
+    private final int frontID = 0x3c;
+    private final int backID = 0x3a;
 
-    int shootTime = 3000;
+    private int shootTime = 3000;
 
-    int betweenBeacon = 32; // far beacon distance
+    private int betweenBeacon = 32; // far beacon distance
 
     // Angles
-    double shootRotation = 108; // first beacon shoot rotation near
-    double sralt3 = 90; // first beacons shoot rotation far
-    double wallAngle; // angle parallel to beacon wall
+    private double shootRotation = 108; // first beacon shoot rotation near
+    private double sralt3 = 90; // first beacons shoot rotation far
+    private double wallAngle; // angle parallel to beacon wall
     int beaconRotation = 52;
 
-    double sFarRotB = 42; // shoot far rotation Blue near
-    double sFarRotB2 = 42; // shoot far rotation Blue far
-    double sFarRotR = 133; // shoot far rotation Red
-    double sCloRotB = 108; // shoot close rotation Blue
-    double sCloRotR = 80; // shoot close rotation Red
+    private double sFarRotB = 42; // shoot far rotation Blue near
+    private double sFarRotB2 = 42; // shoot far rotation Blue far
+    private double sFarRotR = 133; // shoot far rotation Red
+    private double sCloRotB = 108; // shoot close rotation Blue
+    private double sCloRotR = 80; // shoot close rotation Red
 
     // Powers
-    double shootPower = 0.7; // shoot first power
-    double spalt = 0.6; // shot shoot power (from first beacon)
-    double bpPower = 0.1; // beacon pressing driveTrain power
+    private double shootPower = 0.7; // shoot first power
+    private double spalt = 0.6; // shot shoot power (from first beacon)
+    private double bpPower = 0.1; // beacon pressing driveTrain power
 
     // Hardware
-    ColorSensor colorBack, colorFront;
-    VOIColorSensor voiColorBack, voiColorFront, voiFront, voiBack;
+    private ColorSensor colorBack, colorFront;
+    private VOIColorSensor voiColorBack, voiColorFront, voiFront, voiBack;
     // voiColor is the color sensor we use
-    Servo guide;
-    BNO055IMU adaImu;
-    VOIImu imu;
+    private Servo guide;
+    private BNO055IMU adaImu;
+    private VOIImu imu;
 
-    DcMotor frontLeft, frontRight, backLeft, backRight;
+    private DcMotor frontLeft, frontRight, backLeft, backRight;
 
     //Misc
-    public static Team team = Team.BLUE;
+    private static Team team = Team.BLUE;
+    private static AutoMode autoMode = AutoMode.TwoBall;
+    private static ParkMode parkMode = ParkMode.Corner;
+    private static boolean shootFirst = true;
+    private FlywheelTask flywheelTask;
+    private IntakeTask intakeTask;
+    private ButtonPusherTask buttonPusherTask;
 
-    public static AutoMode autoMode = AutoMode.TwoBall;
-    public static ParkMode parkMode = ParkMode.Corner;
-    public static boolean shootFirst = true;
-    FlywheelTask flywheelTask;
-    IntakeTask intakeTask;
-    ButtonPusherTask buttonPusherTask;
+    private DecimalFormat df = new DecimalFormat();
 
-    DecimalFormat df = new DecimalFormat();
-    
-    MecanumDriveTrain driveTrain;
-    ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-    ElapsedTime gameTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-    ElapsedTime timer2 = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    private MecanumDriveTrain driveTrain;
+    private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    private ElapsedTime gameTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    private ElapsedTime timer2 = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
-    public enum AutoMode {
-        TwoBall, ThreeBall, JustShoot;
+    private enum AutoMode {
+        TwoBall, ThreeBall, JustShoot
     }
 
-    public enum ParkMode {
+    private enum ParkMode {
         Corner, Center
     }
 

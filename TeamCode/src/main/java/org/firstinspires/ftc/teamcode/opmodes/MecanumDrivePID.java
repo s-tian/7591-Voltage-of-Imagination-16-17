@@ -1,10 +1,6 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import android.graphics.Paint;
-
 import com.qualcomm.hardware.adafruit.BNO055IMU;
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -14,11 +10,11 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.robotutil.VOIImu;
 import org.firstinspires.ftc.teamcode.tasks.CapBallTask;
-import org.firstinspires.ftc.teamcode.tasks.DriveTrainTask;
 import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
 
 /**
  * Created by Stephen on 9/11/2016.
+ * Mecanum Drive PID
  */
 
 @TeleOp(name = "Mecanum Drive PID", group = "Tests")
@@ -29,7 +25,7 @@ public class MecanumDrivePID extends LinearOpMode {
     VOIImu imu;
     BNO055IMU adaImu;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-    double output;
+    private double output;
 
     static double KP = 0.001;
     static double KD = 0.001;
@@ -47,9 +43,7 @@ public class MecanumDrivePID extends LinearOpMode {
         waitForStart();
         timer.reset();
 
-        double joy1Y = -gamepad1.left_stick_y*0.75;
-        double joy1X = gamepad1.left_stick_x*0.75;
-        double joy2X = gamepad1.right_stick_x*0.75;
+        double joy1Y, joy1X, joy2X;
         double base = imu.getAngle();
         boolean aPressed = false;
         boolean bPressed = false;

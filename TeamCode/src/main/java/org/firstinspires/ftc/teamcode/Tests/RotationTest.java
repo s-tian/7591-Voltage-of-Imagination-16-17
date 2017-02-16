@@ -13,6 +13,7 @@ import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
 
 /**
  * Created by Howard on 1/24/17.
+ * Rotation Test
  */
 
 @TeleOp(name = "RotationTest")
@@ -108,8 +109,7 @@ public class RotationTest extends LinearOpMode {
     }
 
     public void runRotations() {
-        boolean cont = true;
-        while (cont && opModeIsActive()) {
+        while (opModeIsActive()) {
             double before = imu.getAngle();
 
             System.out.println("Before: " + before);

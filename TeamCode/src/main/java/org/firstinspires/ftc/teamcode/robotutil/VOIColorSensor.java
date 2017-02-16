@@ -2,9 +2,8 @@ package org.firstinspires.ftc.teamcode.robotutil;
 
 /**
  * Created by Stephen on 10/4/2016.
+ * Color sensor with added functionality
  */
-import android.graphics.Color;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;

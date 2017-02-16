@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.robotutil;
 
 import com.qualcomm.hardware.adafruit.BNO055IMU;
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -12,6 +11,7 @@ import java.text.DecimalFormat;
 
 /**
  * Created by Stephen on 9/17/2016.
+ * Mecanum Drive Train for most robot movement in autonomous
  */
 public class MecanumDriveTrain {
     //export PATH="$PATH:/Users/Howard/Library/Android/sdk/platform-tools"
@@ -278,6 +278,7 @@ public class MecanumDriveTrain {
         return moveRightTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_RIGHT), timeout, detectStall, stop);
     }
 
+    @SuppressWarnings("UnusedAssignment")
     private boolean moveLeftTicksWithEncoders(double power, double ticks, double timeout, boolean detectStall, boolean stop) {
         setEncoderMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         double timeOutMS = timeout*1000;
@@ -345,12 +346,10 @@ public class MecanumDriveTrain {
             stopAll();
         }
         setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        if (timer.time() >= timeOutMS) {
-            return false;
-        }
-        return true;
+        return timer.time() < timeOutMS;
     }
 
+    @SuppressWarnings("UnusedAssignment")
     private boolean moveRightTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
         setEncoderMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         double timeOutMS = timeout * 1000;
@@ -414,10 +413,8 @@ public class MecanumDriveTrain {
             stopAll();
         }
         setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        if (timer.time() >= timeOutMS) {
-            return false;
-        }
-        return true;
+
+        return timer.time() < timeOutMS;
     }
 
     private boolean moveForwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop, boolean lean) {
@@ -449,10 +446,7 @@ public class MecanumDriveTrain {
         if (stop) {
             stopAll();
         }
-        if (timer.time() >= timeOutMS) {
-            return false;
-        }
-        return true;
+        return timer.time() < timeOutMS;
     }
 
     private boolean moveBackwardTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop, boolean lean) {
@@ -485,10 +479,7 @@ public class MecanumDriveTrain {
         if (stop) {
             stopAll();
         }
-        if (timer.time() > timeOutMS) {
-            return false;
-        }
-        return true;
+        return timer.time() < timeOutMS;
     }
 
     public boolean moveUpNInch(double power, double inches, double timeout, boolean detectStall, boolean stop, boolean lean)  {
@@ -595,10 +586,7 @@ public class MecanumDriveTrain {
     public void driveToPosition(int br, int bl, int fr, int fl) {
         //setEncoderMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         setEncoderMode(DcMotor.RunMode.RUN_TO_POSITION);
-        boolean brGood = false;
-        boolean blGood = false;
-        boolean frGood = false;
-        boolean flGood = false;
+        boolean brGood, blGood, frGood, flGood;
         int error = 100;
         backRight.setTargetPosition(br);
         backLeft.setTargetPosition(bl);

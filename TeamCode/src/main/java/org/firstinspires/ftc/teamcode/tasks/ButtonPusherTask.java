@@ -7,23 +7,23 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**
  * Created by Howard on 10/15/16.
+ * Button Pusher Task
  */
 public class ButtonPusherTask extends TaskThread {
 
-    CRServo button;
-    Servo guide;
-    double power = 0;
-    ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    private CRServo button;
+    private Servo guide;
+    private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     public int pushTime = 550;
-    public int outTime = 650;
+    private int outTime = 650;
     public static final double zeroPower = 0;
-    public static final double outPower = 1;
-    public static final double inPower = -1;
+    private static final double outPower = 1;
+    private static final double inPower = -1;
     public static final double upPosition = 0.1;
     public static final double downPosition = 0.78;
     public volatile boolean teleOp = false;
-    public boolean guideDown = false;
-    public boolean guidePushed = false;
+    private boolean guideDown = false;
+    private boolean guidePushed = false;
     private boolean pushButton = false;
     private boolean extendButton = false;
     private boolean withdrawButton = false;
@@ -84,12 +84,12 @@ public class ButtonPusherTask extends TaskThread {
 
     }
 
-    public void guideDown() {
+    private void guideDown() {
         guide.setPosition(downPosition);
         guideDown = true;
     }
 
-    public void guideUp() {
+    private void guideUp() {
         guide.setPosition(upPosition);
         guideDown = false;
     }

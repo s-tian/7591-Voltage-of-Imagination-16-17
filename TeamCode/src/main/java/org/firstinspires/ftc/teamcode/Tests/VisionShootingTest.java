@@ -1,8 +1,5 @@
 package org.firstinspires.ftc.teamcode.Tests;
 
-/**
- * Created by Stephen on 1/31/2017.
- */
 
 import android.util.Log;
 
@@ -34,6 +31,7 @@ import java.util.List;
 
 /**
  * Created by Stephen on 12/23/2016.
+ * Vision Shooting Test
  */
 
 /*

@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.Tests;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
-import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
 import org.firstinspires.ftc.teamcode.tasks.ButtonPusherTask;
 import org.firstinspires.ftc.teamcode.tasks.CapBallTask;
 import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
@@ -12,6 +11,7 @@ import java.text.DecimalFormat;
 
 /**
  * Created by Howard on 1/17/17.
+ * Cap Power PID calibration
  */
 @TeleOp(name = "Cap power", group = "Test")
 
