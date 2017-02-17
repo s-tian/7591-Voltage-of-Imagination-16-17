@@ -22,8 +22,8 @@ public class MecanumDriveTrain {
     public static final double TICKS_PER_MS_RIGHT = 1.1649; //  power 1
     public static final double TICKS_PER_MS_LEFT = 0.979;
     public static final double factorFL = 1;
-    public static final double factorFR = 1;
-    public static final double factorBL = 1;
+    public static final double factorFR = 0.6;
+    public static final double factorBL = 0.6;
     public static final double factorBR = 1;
     public static final double factorBRL = 1; // 0.42
     public static final double factorBLL = 1; //0.93;
@@ -299,8 +299,8 @@ public class MecanumDriveTrain {
         double current;
         double prev = initAngle;
         double brPower, blPower, frPower, flPower;
-        blPower = frPower = power;
-        brPower = flPower = -power;
+        blPower = frPower = power * factorBLL;
+        brPower = flPower = -power * factorBRL;
         while(frontRight.getCurrentPosition() < targetPosition && opMode.opModeIsActive() && timer.time() < timeOutMS) {
             if (detectStall) {
                 if (System.currentTimeMillis() - currentTime > 1000) {
@@ -322,10 +322,6 @@ public class MecanumDriveTrain {
                 maxDiff = Math.max(Math.abs(diff), maxDiff);
                 double change = VOIImu.subtractAngles(current, prev);
                 double delta = diff * KP + change * KD;
-                brPower += delta;
-                flPower -= delta;
-                blPower -= delta;
-                frPower += delta;
                 frPower = power + delta;
                 blPower = power - delta;
                 flPower = -power -delta;
@@ -345,6 +341,7 @@ public class MecanumDriveTrain {
         if (stop) {
             stopAll();
         }
+        System.out.println("FR " + frPower + " BL " + blPower + " FL " + flPower + " BR " + brPower);
         setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
         return timer.time() < timeOutMS;
     }
@@ -364,8 +361,8 @@ public class MecanumDriveTrain {
         timer2.reset();
         strafeRight(power);
         double brPower, blPower, frPower, flPower;
-        blPower = frPower = -power;
-        brPower = flPower = power;
+        blPower = frPower = -power * factorBL;
+        brPower = flPower = power * factorBR;
         double current, maxDiff = 0, prev = initAngle;
         long currentTime = System.currentTimeMillis();
         boolean startDetectingStall = false;
@@ -390,10 +387,6 @@ public class MecanumDriveTrain {
                 maxDiff = Math.max(Math.abs(diff), maxDiff);
                 double change = VOIImu.subtractAngles(current, prev);
                 double delta = diff * KP + change * KD;
-                brPower += delta;
-                flPower -= delta;
-                blPower -= delta;
-                frPower += delta;
                 frPower = -power + delta;
                 blPower = -power - delta;
                 flPower = power - delta;
@@ -412,6 +405,7 @@ public class MecanumDriveTrain {
         if (stop) {
             stopAll();
         }
+        System.out.println("FR " + frPower + " BL " + blPower + " FL " + flPower + " BR " + brPower);
         setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         return timer.time() < timeOutMS;

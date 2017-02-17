@@ -2,16 +2,13 @@ package org.firstinspires.ftc.teamcode.tasks;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.opmodes.ThreadedTeleOp;
-import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
 import org.firstinspires.ftc.teamcode.robotutil.VOISweeper;
 
 /**
  * Created by Howard on 10/15/16.
+ * Intake Task
  */
 public class IntakeTask extends TaskThread {
 
@@ -58,7 +55,7 @@ public class IntakeTask extends TaskThread {
                         print2 = false;
                     }
                     sweeper.setPower(-1);
-                } else if (opMode.gamepad2.right_stick_button) {
+                } else if (opMode.gamepad2.dpad_left) {
                     System.out.println("Oscillate");
                     printed = false;
                     print2 = false;
@@ -87,15 +84,28 @@ public class IntakeTask extends TaskThread {
                 sweeper.setPower(0);
             }
             if (oscillate) {
-                int pow = -1;
-                sweeper.setPower(-1);
+                boolean stoppedPressing = false;
+                double pow = 1;
+                sweeper.setPower(pow);
                 timer.reset();
                 while (oscillate && opMode.opModeIsActive()) {
-                    if (teleOp && !opMode.gamepad2.right_stick_button) {
-                        oscillate = false;
-                        break;
-                    }
-                    if (timer.time() > 50) {
+//                    if (teleOp) {
+//                        if (!opMode.gamepad2.dpad_left) {
+//                            System.out.println(1);
+//                            stoppedPressing = true;
+//                        }
+//                        if (opMode.gamepad2.dpad_left && stoppedPressing) {
+//                            System.out.println(2);
+//                            while (opMode.gamepad2.dpad_left);
+//                            oscillate = false;
+//                            break;
+//                        }
+//                        if (opMode.gamepad2.dpad_up || opMode.gamepad2.dpad_down) {
+//                            System.out.println(3);
+//                            oscillate = false;
+//                        }
+//                    }
+                    if (timer.time() > 25) {
                         pow = -pow;
                         sweeper.setPower(pow);
                         timer.reset();

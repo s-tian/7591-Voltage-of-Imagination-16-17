@@ -10,7 +10,6 @@ import java.util.List;
  */
 
 public class ContourAnalyze {
-
     public static void analyzeVortex(List<Contour> contourList) {
 
     }

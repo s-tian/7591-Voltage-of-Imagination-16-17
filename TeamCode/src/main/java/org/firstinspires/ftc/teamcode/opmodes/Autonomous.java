@@ -56,12 +56,12 @@ import java.text.DecimalFormat;
 
     private double sFarRotB = 42; // shoot far rotation Blue near
     private double sFarRotB2 = 42; // shoot far rotation Blue far
-    private double sFarRotR = 133; // shoot far rotation Red
+    private double sFarRotR = 131; // shoot far rotation Red
     private double sCloRotB = 108; // shoot close rotation Blue
     private double sCloRotR = 80; // shoot close rotation Red
 
     // Powers
-    private double shootPower = 0.7; // shoot first power
+    private double shootPower = 0.655; // shoot first power
     private double spalt = 0.6; // shot shoot power (from first beacon)
     private double bpPower = 0.1; // beacon pressing driveTrain power
 
@@ -77,9 +77,9 @@ import java.text.DecimalFormat;
 
     //Misc
     private static Team team = Team.BLUE;
-    private static AutoMode autoMode = AutoMode.TwoBall;
-    private static ParkMode parkMode = ParkMode.Corner;
-    private static boolean shootFirst = true;
+    private static AutoMode autoMode = AutoMode.ThreeBall;
+    private static ParkMode parkMode = ParkMode.Center;
+    private static final boolean shootFirst = true;
     private FlywheelTask flywheelTask;
     private IntakeTask intakeTask;
     private ButtonPusherTask buttonPusherTask;
@@ -92,7 +92,7 @@ import java.text.DecimalFormat;
     private ElapsedTime timer2 = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
     private enum AutoMode {
-        TwoBall, ThreeBall, JustShoot
+        TwoBall, ThreeBall, Defensive, JustShoot
     }
 
     private enum ParkMode {
@@ -113,6 +113,8 @@ import java.text.DecimalFormat;
             runBalls();
         } else if (autoMode == AutoMode.JustShoot) {
             runJustShoot();
+        } else if (autoMode == AutoMode.Defensive) {
+            runDefensive();
         }
     }
     
@@ -180,7 +182,7 @@ import java.text.DecimalFormat;
             } else if (team == Team.RED) {
                 driveTrain.rotateToAngle(VOIImu.subtractAngles(wallAngle, beaconRotation));
             }
-            lineUpToWall(38);
+            lineUpToWall(40);
         } else {
             lineUpToWall(32);
         }
@@ -257,8 +259,11 @@ import java.text.DecimalFormat;
         sleep(800);
         flywheelTask.setFlywheelPow(shootPower, false);
         sleep(shootTime - 800);
-
-        coolDown();
+        if (team == Team.BLUE) {
+            flywheelTask.setFlywheelPow(-0.4);
+        } else if (team == Team.RED) {
+            coolDown();
+        }
     }
 
     public void pickUp() {
@@ -277,21 +282,18 @@ import java.text.DecimalFormat;
          */
         
         // 1.
-        flywheelTask.setFlywheelPow(-0.4);
-        int sweepTime = 1500;
+        flywheelTask.setFlywheelPow(shootPower + 0.020);
+        int sweepTime = 1000;
         powerSweeper(1, sweepTime);
-        sleep(sweepTime/2);
-        powerSweeper(0, 200);
-        sleep(sweepTime/2);
-        powerSweeper(-1, 650);
+        sleep(sweepTime);
+        //powerSweeper(-1, 650);
         //powerSweeper(-1, 250);
         // increase shootTime to account for third ball
         shootTime += 1000;
 
         // 2.
         if (shootFirst) {
-            driveTrain.teamStrafeRightNInch(1, 18, 10, false, true);
-            flywheelTask.setFlywheelPow(shootPower + 0.020);
+            driveTrain.teamStrafeRightNInch(1, 15, 10, false, true);
             // 3.
             if (team == Team.BLUE) {
                 driveTrain.rotateToAngle(wallAngle + 180, 0.25, 1.5, 6);
@@ -364,6 +366,7 @@ import java.text.DecimalFormat;
             System.out.println("Back detect, front not");
             driveTrain.moveBackNInch(0.15, 1, 2, false, true, true);
             pushButton();
+            return;
         } else if (voiFront.correctColor() && !voiBack.correctColor()) {
             // 1.
             driveTrain.moveUpNInch(0.1, 1, 2, false, true, true);
@@ -452,7 +455,7 @@ import java.text.DecimalFormat;
         // 3.
         //driveTrain.moveUpNInch(bpPower, 2, 2, false, true, true);
         if (team == Team.BLUE) {
-            //driveBitMore(60);
+            driveTrain.moveUpNInch(bpPower, 0.5, 1, false, true, true);
         }
         pushButton();
         if (far) {
@@ -519,29 +522,12 @@ import java.text.DecimalFormat;
         if (team == Team.BLUE) {
             driveTrain.rotateToAngle(wallAngle + sFarRotB);
         } else if (team == Team.RED) {
-            sFarRotR += 175;
+            sFarRotR += 180;
             driveTrain.rotateToAngle(wallAngle + sFarRotR);
         }
 
         // 3.
-        driveTrain.moveBackNInch(0.5, 30, 10, false, false, false);
-        driveTrain.powerUp(-0.5);
-        if (team == Team.RED) {
-            double target = backRight.getCurrentPosition() + 30 * MecanumDriveTrain.TICKS_PER_INCH_FORWARD;
-            while (imu.getRoll() < 0.9) {
-                if (backRight.getCurrentPosition() > target) {
-                    break;
-                }
-            }
-        } else if (team == Team.BLUE) {
-            double target = backRight.getCurrentPosition() - 30 * MecanumDriveTrain.TICKS_PER_INCH_FORWARD;
-            while (imu.getRoll() < 0.9) {
-                if (backRight.getCurrentPosition() < target) {
-                    break;
-                }
-            }
-        }
-        System.out.println(imu.getRoll());
+        driveTrain.moveBackNInch(0.5, 50, 10, false, false, false);
         driveTrain.stopAll();
 
     }
@@ -557,12 +543,28 @@ import java.text.DecimalFormat;
          * 3. Move backwards and knock the cap ball off.
          */
         buttonPusherTask.in();
-        driveTrain.moveLeftNInch(1, 15, 5, false, true);
+        driveTrain.moveLeftNInch(1, 12, 5, false, true);
         sleep(200);
         driveTrain.rotateToAngle(wallAngle);
         guide.setPosition(ButtonPusherTask.upPosition);
-
-        driveTrain.moveBackNInch(1, 90, 10, false, true, false);
+        double tiltRoll = imu.getRoll() + 10;
+        if (team == Team.BLUE) {
+            double target = backRight.getCurrentPosition() + 95 * MecanumDriveTrain.TICKS_PER_INCH_FORWARD;
+            while (opModeIsActive() && backRight.getCurrentPosition() < target) {
+                if (imu.getRoll() > tiltRoll) {
+                    sleep(1000);
+                    return;
+                }
+            }
+        } else if (team == Team.RED) {
+            double target = backRight.getCurrentPosition() - 95 * MecanumDriveTrain.TICKS_PER_INCH_FORWARD;
+            while (opModeIsActive() && backRight.getCurrentPosition() > target) {
+                if (imu.getRoll() > tiltRoll) {
+                    sleep(1000);
+                    return;
+                }
+            }
+        }
     }
 
     public void checkFirst() {
@@ -629,7 +631,9 @@ import java.text.DecimalFormat;
         // Strafing against wall to ensure alignment. Same direction regardless of color because
         // button pusher is always on the right side.
         driveTrain.stopAll();
-        driveTrain.rotateToAngle(wallAngle, 0.25, 2, 1.5);
+        if (team == Team.RED) {
+            driveTrain.rotateToAngle(wallAngle, 0.25, 2, 0.75);
+        }
         driveTrain.moveRightNInch(0.2, 5, seconds, false, true);
     }
 
@@ -683,6 +687,8 @@ import java.text.DecimalFormat;
             } else if (gamepad1.dpad_up) {
                 autoMode = AutoMode.ThreeBall;
             } else if (gamepad1.dpad_right) {
+                autoMode = AutoMode.Defensive;
+            } else if (gamepad1.dpad_down) {
                 autoMode = AutoMode.JustShoot;
             }
 
@@ -694,16 +700,10 @@ import java.text.DecimalFormat;
             }
 
             // select shoot order
-            if (gamepad1.right_trigger > 0.15) {
-                shootFirst = true;
-            } else if (gamepad1.left_trigger > 0.15) {
-                shootFirst = false;
-            }
 
             telemetry.addData("Team", team == Team.RED ? "Red" : "Blue");
             telemetry.addData("Mode", autoMode);
             telemetry.addData("Park", parkMode);
-            telemetry.addData("Shoot First", shootFirst ? "Yes" : "No");
 
             if ((gamepad1.left_stick_button && gamepad1.right_stick_button) || isStarted()){
                 telemetry.addData("Confirmed!", "");
