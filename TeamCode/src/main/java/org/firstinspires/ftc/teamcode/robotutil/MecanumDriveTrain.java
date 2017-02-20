@@ -22,8 +22,8 @@ public class MecanumDriveTrain {
     public static final double TICKS_PER_MS_RIGHT = 1.1649; //  power 1
     public static final double TICKS_PER_MS_LEFT = 0.979;
     public static final double factorFL = 1;
-    public static final double factorFR = 0.6;
-    public static final double factorBL = 0.6;
+    public static final double factorFR = 0.5;
+    public static final double factorBL = 0.5;
     public static final double factorBR = 1;
     public static final double factorBRL = 1; // 0.42
     public static final double factorBLL = 1; //0.93;
@@ -274,8 +274,8 @@ public class MecanumDriveTrain {
         return moveLeftTicksWithEncoders(power, (inches*TICKS_PER_INCH_LEFT), timeout, detectStall, stop);
     }
 
-    public boolean moveRightNInch(double power, double inches, double timeout, boolean detectStall, boolean stop) {
-        return moveRightTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_RIGHT), timeout, detectStall, stop);
+    public boolean moveRightNInch(double power, double inches, double timeout, boolean detectStall, boolean stop, boolean pid) {
+        return moveRightTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_RIGHT), timeout, detectStall, stop, pid);
     }
 
     @SuppressWarnings("UnusedAssignment")
@@ -347,7 +347,7 @@ public class MecanumDriveTrain {
     }
 
     @SuppressWarnings("UnusedAssignment")
-    private boolean moveRightTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop) {
+    private boolean moveRightTicksWithEncoders(double power, int ticks, double timeout, boolean detectStall, boolean stop, boolean pid) {
         setEncoderMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         double timeOutMS = timeout * 1000;
         int targetPosition = backRight.getCurrentPosition() + ticks;
@@ -381,7 +381,7 @@ public class MecanumDriveTrain {
 
                 }
             }
-            if (timer2.time() > 25) {
+            if (timer2.time() > 25 && pid) {
                 current = imu.getAngle();
                 double diff = VOIImu.subtractAngles(current, initAngle);
                 maxDiff = Math.max(Math.abs(diff), maxDiff);
@@ -492,17 +492,17 @@ public class MecanumDriveTrain {
         }
     }
 
-    public boolean teamStrafeLeftNInch(double power, double inches, double timeout, boolean detectStall, boolean stop) {
+    public boolean teamStrafeLeftNInch(double power, double inches, double timeout, boolean detectStall, boolean stop, boolean pid) {
         if (team == Team.BLUE) {
             return moveLeftTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_LEFT), timeout, detectStall, stop);
         } else {
-            return moveRightTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_RIGHT), timeout, detectStall, stop);
+            return moveRightTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_RIGHT), timeout, detectStall, stop, pid);
         }
     }
 
-    public boolean teamStrafeRightNInch(double power, double inches, double timeout, boolean detectStall, boolean stop) {
+    public boolean teamStrafeRightNInch(double power, double inches, double timeout, boolean detectStall, boolean stop, boolean pid) {
         if (team == Team.BLUE) {
-            return moveRightTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_RIGHT), timeout, detectStall, stop);
+            return moveRightTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_RIGHT), timeout, detectStall, stop, pid);
         } else {
             return moveLeftTicksWithEncoders(power, (int) (inches*TICKS_PER_INCH_LEFT), timeout, detectStall, stop);
         }

@@ -13,7 +13,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
  * VOIImu
  */
 
-public class VOIImu{
+public class VOIImu {
     public BNO055IMU adafruit;
     private Orientation angles;
     public VOIImu(BNO055IMU adafruit){

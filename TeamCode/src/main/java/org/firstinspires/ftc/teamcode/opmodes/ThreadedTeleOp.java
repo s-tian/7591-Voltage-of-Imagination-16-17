@@ -41,14 +41,12 @@ public class ThreadedTeleOp extends LinearOpMode {
         intakeTask.start();
         capBallTask.start();
         buttonPusherTask.start();
-        //driveTrainTask.zeroAngle = imu.getRadians();
 
         DecimalFormat df = new DecimalFormat();
         df.setMaximumFractionDigits(3);
         while(opModeIsActive()) {
             //Timer for 2 minute teleop period
             long elapsed = System.nanoTime() - startTime;
-            //driveTrainTask.gyroAngle = imu.getRadians();
 
             if (elapsed > 120 * 1000000000L) {
                 //Stop all tasks, the tasks will stop motors etc.

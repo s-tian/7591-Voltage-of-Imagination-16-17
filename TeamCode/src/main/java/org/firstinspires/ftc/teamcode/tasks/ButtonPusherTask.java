@@ -103,7 +103,10 @@ public class ButtonPusherTask extends TaskThread {
         while (timer.time() < 250 && opMode.opModeIsActive()) {
             button.setPower(inPower);
         }
-        button.setPower(zeroPower);
+        timer.reset();
+        while (timer.time() < 200 && opMode.opModeIsActive()) {
+            button.setPower(zeroPower);
+        }
     }
 
     private void outPusher() {
@@ -111,7 +114,10 @@ public class ButtonPusherTask extends TaskThread {
         while (timer.time() < outTime && opMode.opModeIsActive()) {
             button.setPower(outPower);
         }
-        button.setPower(zeroPower);
+        timer.reset();
+        while (timer.time() < 200 && opMode.opModeIsActive()) {
+            button.setPower(zeroPower);
+        }
     }
 
     private void inPusher() {
@@ -119,7 +125,10 @@ public class ButtonPusherTask extends TaskThread {
         while (timer.time() < outTime + 100 && opMode.opModeIsActive()) {
             button.setPower(inPower);
         }
-        button.setPower(zeroPower);
+        timer.reset();
+        while (timer.time() < 200 && opMode.opModeIsActive()) {
+            button.setPower(zeroPower);
+        }
 
     }
 

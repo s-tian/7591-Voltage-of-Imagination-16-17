@@ -48,7 +48,6 @@ public class CapBallTask extends TaskThread {
     public void run() {
         timer2.reset();
         while(opMode.opModeIsActive() && running) {
-
             if (opMode.gamepad1.right_bumper) {
                 setLiftPower(1);
             } else if (opMode.gamepad1.left_bumper) {
@@ -60,6 +59,7 @@ public class CapBallTask extends TaskThread {
             } else if (opMode.gamepad2.dpad_right){
                 holdPosition();
             } else {
+                holdPower = 0.01;
                 setLiftPower(0);
             }
 

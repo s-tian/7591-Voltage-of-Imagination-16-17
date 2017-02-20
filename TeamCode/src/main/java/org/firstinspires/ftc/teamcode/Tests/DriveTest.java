@@ -38,7 +38,7 @@ public class DriveTest extends LinearOpMode {
         telemetry.update();
         setPID();
         waitForStart();
-        driveTrain.moveRightNInch(1, 18, 10, false, true);
+        driveTrain.moveRightNInch(1, 18, 10, false, true, true);
         sleep(1000);
         driveTrain.rotateToAngle(initialAngle);
         sleep(1000);
@@ -170,7 +170,7 @@ public class DriveTest extends LinearOpMode {
                 driveTrain.moveBackwardNInch(power, distance, 10, false, true, false);
                 break;
             case RIGHT:
-                driveTrain.moveRightNInch(power, distance, 10, false, true);
+                driveTrain.moveRightNInch(power, distance, 10, false, true, true);
                 sleep(1000);
                 driveTrain.moveLeftNInch(power, distance, 10, false, true);
                 break;
@@ -178,7 +178,7 @@ public class DriveTest extends LinearOpMode {
             case LEFT:
                 driveTrain.moveLeftNInch(power, distance, 10, false, true);
                 sleep(1000);
-                driveTrain.moveRightNInch(power, distance, 10, false, true);
+                driveTrain.moveRightNInch(power, distance, 10, false, true, true);
 
                 break;
             case BACKWARD:

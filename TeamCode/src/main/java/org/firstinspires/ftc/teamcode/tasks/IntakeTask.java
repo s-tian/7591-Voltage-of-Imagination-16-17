@@ -56,10 +56,10 @@ public class IntakeTask extends TaskThread {
                     }
                     sweeper.setPower(-1);
                 } else if (opMode.gamepad2.dpad_left) {
-                    System.out.println("Oscillate");
+                    //System.out.println("Oscillate");
                     printed = false;
                     print2 = false;
-                    oscillate = true;
+                    //oscillate = true;
                 } else if (opMode.gamepad1.right_trigger > 0) {
                     sweeper.setPower(1);
                 } else if (opMode.gamepad1.left_trigger > 0) {

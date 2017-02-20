@@ -36,15 +36,15 @@ import java.text.DecimalFormat;
  * and "back" will always be directed back towards the start wall.
  * "correct" color references the color of the team, while "wrong" references the opposing
  * alliance's color
-            */
-    public class Autonomous extends LinearOpMode {
+ */
+public class Autonomous extends LinearOpMode {
 
     // Options
     private boolean missed = false;
     private final int frontID = 0x3c;
     private final int backID = 0x3a;
 
-    private int shootTime = 3000;
+    private int shootTime = 2500;
 
     private int betweenBeacon = 32; // far beacon distance
 
@@ -52,17 +52,16 @@ import java.text.DecimalFormat;
     private double shootRotation = 108; // first beacon shoot rotation near
     private double sralt3 = 90; // first beacons shoot rotation far
     private double wallAngle; // angle parallel to beacon wall
-    int beaconRotation = 52;
+    int beaconRotation = 48;
 
     private double sFarRotB = 42; // shoot far rotation Blue near
     private double sFarRotB2 = 42; // shoot far rotation Blue far
-    private double sFarRotR = 131; // shoot far rotation Red
+    private double sFarRotR = 129; // shoot far rotation Red
     private double sCloRotB = 108; // shoot close rotation Blue
     private double sCloRotR = 80; // shoot close rotation Red
 
     // Powers
-    private double shootPower = 0.655; // shoot first power
-    private double spalt = 0.6; // shot shoot power (from first beacon)
+    private double shootPower = 0.7; // shoot first power
     private double bpPower = 0.1; // beacon pressing driveTrain power
 
     // Hardware
@@ -79,6 +78,7 @@ import java.text.DecimalFormat;
     private static Team team = Team.BLUE;
     private static AutoMode autoMode = AutoMode.ThreeBall;
     private static ParkMode parkMode = ParkMode.Center;
+    private static int delayTime = 0;
     private static final boolean shootFirst = true;
     private FlywheelTask flywheelTask;
     private IntakeTask intakeTask;
@@ -90,6 +90,7 @@ import java.text.DecimalFormat;
     private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     private ElapsedTime gameTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     private ElapsedTime timer2 = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    private ElapsedTime colorTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
     private enum AutoMode {
         TwoBall, ThreeBall, Defensive, JustShoot
@@ -102,6 +103,8 @@ import java.text.DecimalFormat;
     @Override
     public void runOpMode() {
         initialize();
+
+
         options();
         waitForStart();
         System.out.println("Autonomous started!");
@@ -109,12 +112,13 @@ import java.text.DecimalFormat;
         flywheelTask.start();
         buttonPusherTask.start();
         intakeTask.start();
+        while (opModeIsActive() && gameTimer.time() < delayTime);
         if (autoMode == AutoMode.TwoBall || autoMode == AutoMode.ThreeBall) {
             runBalls();
         } else if (autoMode == AutoMode.JustShoot) {
             runJustShoot();
         } else if (autoMode == AutoMode.Defensive) {
-            runDefensive();
+            runJustShoot();
         }
     }
     
@@ -148,9 +152,7 @@ import java.text.DecimalFormat;
         backLeft = hardwareMap.dcMotor.get("backLeft");
         backRight = hardwareMap.dcMotor.get("backRight");
 
-
-        // Initialize with robot at the angle it would be when pressing beacons.
-        // This is very important! The robot rotates back to this angle later on.
+        shootPower = FlywheelTask.lowPow;
 
         // Bring guide position up
         guide.setPosition(ButtonPusherTask.upPosition);
@@ -220,10 +222,26 @@ import java.text.DecimalFormat;
 
     public void runJustShoot() {
         // start from far corner and shoot and knock cap ball
-        driveTrain.moveBackwardNInch(0.3, 25, 10, false, true, false);
+        driveTrain.moveBackwardNInch(0.3, 30, 10, false, true, false);
         flywheelTask.setFlywheelPow(shootPower);
         shoot();
-        driveTrain.moveBackNInch(0.3, 20, 5, false, true, false);
+        if (parkMode == ParkMode.Corner) {
+            driveTrain.rotateToAngle(VOIImu.subtractAngles(wallAngle, 80));
+            driveTrain.moveBackwardNInch(1, 75, 5, false, true, false);
+        } else if (parkMode == ParkMode.Center) {
+            driveTrain.moveBackwardNInch(0.3, 35, 5, false, true, false);
+            if (autoMode == AutoMode.Defensive) {
+                driveTrain.rotateToAngle(wallAngle);
+                while (gameTimer.time() < 10000 && opModeIsActive()) ;
+                driveTrain.moveUpNInch(1, 30, 10, false, true, false);
+                sleep(200);
+                driveTrain.rotateToAngle(wallAngle);
+                driveTrain.moveLeftNInch(1, 10, 5, false, true);
+                driveTrain.moveUpNInch(1, 40, 10, false, true, false);
+                driveTrain.holdPosition();
+                while (gameTimer.time() < 30000 & opModeIsActive()) ;
+            }
+        }
     }
 
     public void shoot() {
@@ -256,14 +274,9 @@ import java.text.DecimalFormat;
         intakeTask.power = 0;
         System.out.println("Start shooting");
         intakeTask.setPower(1);
-        sleep(800);
-        flywheelTask.setFlywheelPow(shootPower, false);
-        sleep(shootTime - 800);
-        if (team == Team.BLUE) {
-            flywheelTask.setFlywheelPow(-0.4);
-        } else if (team == Team.RED) {
-            coolDown();
-        }
+        timer.reset();
+        while (timer.time() < shootTime && opModeIsActive());
+        coolDown();
     }
 
     public void pickUp() {
@@ -282,18 +295,18 @@ import java.text.DecimalFormat;
          */
         
         // 1.
-        flywheelTask.setFlywheelPow(shootPower + 0.020);
+        flywheelTask.setFlywheelPow(shootPower + 0.015);
         int sweepTime = 1000;
         powerSweeper(1, sweepTime);
         sleep(sweepTime);
         //powerSweeper(-1, 650);
         //powerSweeper(-1, 250);
         // increase shootTime to account for third ball
-        shootTime += 1000;
+        shootTime = 4000;
 
         // 2.
         if (shootFirst) {
-            driveTrain.teamStrafeRightNInch(1, 15, 10, false, true);
+            driveTrain.teamStrafeRightNInch(1, 15, 10, false, true, true);
             // 3.
             if (team == Team.BLUE) {
                 driveTrain.rotateToAngle(wallAngle + 180, 0.25, 1.5, 6);
@@ -303,7 +316,7 @@ import java.text.DecimalFormat;
 
             // 4.
         } else {
-            driveTrain.moveRightNInch(1, 5, 5, false, true);
+            driveTrain.moveRightNInch(1, 5, 5, false, true, true);
             driveTrain.rotateToAngle(wallAngle);
         }
 
@@ -335,7 +348,11 @@ import java.text.DecimalFormat;
         sleep(50);
         driveTrain.rotateToAngle(wallAngle);
         sleep(50);
-        driveTrain.moveRightNInch(1, 60, 10, true, true);
+        if (team == Team.BLUE) {
+            driveTrain.moveRightNInch(1, 60, 10, true, true, false);
+        } else if (team == Team.RED) {
+            driveTrain.moveRightNInch(1, 60, 10, true, true, true);
+        }
         correctionStrafe();
     }
 
@@ -362,12 +379,18 @@ import java.text.DecimalFormat;
 
         int timeOut = 2000;
         timer.reset();
+        colorTimer.reset();
         if (voiBack.correctColor() &&  !voiFront.correctColor()) {
-            System.out.println("Back detect, front not");
+            System.out.println("First Condition: ");
+            System.out.println("Back Color: " + voiBack.getColor());
+            System.out.println("Front Color: " + voiFront.getColor());
             driveTrain.moveBackNInch(0.15, 1, 2, false, true, true);
             pushButton();
             return;
         } else if (voiFront.correctColor() && !voiBack.correctColor()) {
+            System.out.println("Second Condition:");
+            System.out.println("Back Color: " + voiBack.getColor());
+            System.out.println("Front Color: " + voiFront.getColor());
             // 1.
             driveTrain.moveUpNInch(0.1, 1, 2, false, true, true);
             pushButton();
@@ -382,7 +405,7 @@ import java.text.DecimalFormat;
             timer.reset();
             boolean timeAdded = false;
 
-            while (timer.time() < timeOut & opModeIsActive()) {
+            while (timer.time() < timeOut && opModeIsActive()) {
                 if (voiBack.correctColor() && !voiFront.correctColor()) {
                     System.out.println("Back detect, front not, while drive");
                     driveTrain.moveBackNInch(0.15, 1, 2, false, true, true);
@@ -394,6 +417,12 @@ import java.text.DecimalFormat;
                     // robot starts further back than expected.
                     timeOut += 1000;
                     timeAdded = true;
+                }
+                if (colorTimer.time() > 50) {
+                    System.out.println("Driving: ");
+                    System.out.println("Back Color: " + voiBack.getColor());
+                    System.out.println("Front Color: " + voiFront.getColor());
+                    colorTimer.reset();
                 }
                 // Turning because of known rotation after stopping. Temporary fix.
                 if (voiFront.correctColor()) {
@@ -423,7 +452,7 @@ import java.text.DecimalFormat;
         telemetry.addData("drivePushButton2", "");
         telemetry.update();
         int timeo = 8000;
-        double buffer = 10;
+        double buffer = 15;
         // 1.
         if (!missed) {
             driveTrain.moveUpNInch(0.4, betweenBeacon - buffer, 10, false, false, true);
@@ -439,6 +468,7 @@ import java.text.DecimalFormat;
         ElapsedTime timeout = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         timeout.reset();
         boolean far = false;
+        colorTimer.reset();
         while (!detectColor && opModeIsActive() && timeout.time() < timeo) {
             if (timer.time() > 30) {
                 // Boolean "far" determines the angle the robot turns to hit the cap ball.
@@ -446,17 +476,20 @@ import java.text.DecimalFormat;
                     far = true;
                     timeo += 1000;
                 }
+
                 detectColor = voiFront.correctColor();
                 timer.reset();
+            }
+            if (colorTimer.time() > 50) {
+                System.out.println("Driving 2: ");
+                System.out.println("Back Color: " + voiBack.getColor());
+                System.out.println("Front Color: " + voiFront.getColor());
+                colorTimer.reset();
             }
         }
 
 
         // 3.
-        //driveTrain.moveUpNInch(bpPower, 2, 2, false, true, true);
-        if (team == Team.BLUE) {
-            driveTrain.moveUpNInch(bpPower, 0.5, 1, false, true, true);
-        }
         pushButton();
         if (far) {
             sFarRotB = sFarRotB2;
@@ -548,6 +581,7 @@ import java.text.DecimalFormat;
         driveTrain.rotateToAngle(wallAngle);
         guide.setPosition(ButtonPusherTask.upPosition);
         double tiltRoll = imu.getRoll() + 10;
+        driveTrain.moveBackNInch(1, 90, 10, false, true, false);
         if (team == Team.BLUE) {
             double target = backRight.getCurrentPosition() + 95 * MecanumDriveTrain.TICKS_PER_INCH_FORWARD;
             while (opModeIsActive() && backRight.getCurrentPosition() < target) {
@@ -579,7 +613,6 @@ import java.text.DecimalFormat;
          */
         telemetry.addData("checkFirst", "");
 
-        shootPower = spalt;
         telemetry.update();
         // 1.
         driveTrain.moveBackNInch(0.3, betweenBeacon - 5, 10, false, false, true);
@@ -634,7 +667,7 @@ import java.text.DecimalFormat;
         if (team == Team.RED) {
             driveTrain.rotateToAngle(wallAngle, 0.25, 2, 0.75);
         }
-        driveTrain.moveRightNInch(0.2, 5, seconds, false, true);
+        driveTrain.moveRightNInch(0.2, 5, seconds, false, true, false);
     }
 
     public void pushButton() {
@@ -672,6 +705,8 @@ import java.text.DecimalFormat;
 
     public void options() {
         boolean confirmed = false;
+        boolean rTrigger = false;
+        boolean lTrigger = false;
         while(!confirmed){
 
             // select team
@@ -699,11 +734,24 @@ import java.text.DecimalFormat;
                 parkMode = ParkMode.Corner;
             }
 
-            // select shoot order
-
+            if (gamepad1.right_trigger > 0.15 && !rTrigger) {
+                rTrigger = true;
+                delayTime += 500;
+            }
+            if (gamepad1.left_trigger > 0.15 && !lTrigger) {
+                lTrigger = true;
+                delayTime -= 500;
+            }
+            if (gamepad1.right_trigger < 0.15) {
+                rTrigger = false;
+            }
+            if (gamepad1.left_trigger < 0.15) {
+                lTrigger = false;
+            }
             telemetry.addData("Team", team == Team.RED ? "Red" : "Blue");
             telemetry.addData("Mode", autoMode);
             telemetry.addData("Park", parkMode);
+            telemetry.addData("Delay", (double)delayTime/1000);
 
             if ((gamepad1.left_stick_button && gamepad1.right_stick_button) || isStarted()){
                 telemetry.addData("Confirmed!", "");
@@ -721,7 +769,7 @@ import java.text.DecimalFormat;
                     bpPower += 0.05;
                     wallAngle = imu.getAngle();
                 } else if (autoMode == AutoMode.TwoBall) {
-                    shootPower += 0.03;
+
                     if (team == Team.RED) {
                         wallAngle = imu.getAngle();
                     } else if (team == Team.BLUE) {
@@ -730,6 +778,9 @@ import java.text.DecimalFormat;
                 } else if (autoMode == AutoMode.ThreeBall) {
                     // same for both sides
                     wallAngle = VOIImu.addAngles(imu.getAngle(), 90);
+                } else if (autoMode == AutoMode.Defensive) {
+                    wallAngle = imu.getAngle();
+                    shootTime = 1500;
                 }
             }
             telemetry.update();

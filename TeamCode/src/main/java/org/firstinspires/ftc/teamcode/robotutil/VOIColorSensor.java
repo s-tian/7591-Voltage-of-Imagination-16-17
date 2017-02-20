@@ -85,7 +85,7 @@ public class VOIColorSensor {
     public boolean isBlue() {
         int i = 0;
         int score = 0;
-        int margin = 5;
+        int margin = 25;
         logMessageTimer.reset();
         while (i < 10 && opMode.opModeIsActive()) {
             if (logMessageTimer.time() > 3){
@@ -103,13 +103,13 @@ public class VOIColorSensor {
         int i = 0;
         int score = 0;
         logMessageTimer.reset();
-        int min = 3;
+        int margin = 19;
 
         while (i < 10 && opMode.opModeIsActive()) {
             if (logMessageTimer.time() > 3){
                 i++;
                 logMessageTimer.reset();
-                if (sensor.red() >= min && sensor.blue() < sensor.red()) {
+                if (sensor.red() - sensor.blue() > margin) {
                     score++;
                 }
             }
