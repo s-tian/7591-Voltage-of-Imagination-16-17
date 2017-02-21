@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.Tests;
 
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.ColorSensor;
@@ -10,6 +9,7 @@ import org.firstinspires.ftc.teamcode.robotutil.VOIColorSensor;
 
 /**
  * Created by Howard on 10/21/16.
+ * Color Test to determine that color sensors are working
  */
 @TeleOp(name = "Color Test", group = "Test")
 

@@ -3,12 +3,9 @@ package org.firstinspires.ftc.teamcode.vision;
 import android.app.Activity;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.vuforia.VIEW;
 
 import org.firstinspires.ftc.teamcode.R;
 import org.lasarobotics.vision.android.Cameras;
@@ -21,10 +18,10 @@ import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 import org.opencv.core.Size;
-import org.opencv.imgproc.Imgproc;
 
 /**
  * Created by Stephen on 12/23/2016.
+ * Linear OpMode Vision
  */
 
 /*

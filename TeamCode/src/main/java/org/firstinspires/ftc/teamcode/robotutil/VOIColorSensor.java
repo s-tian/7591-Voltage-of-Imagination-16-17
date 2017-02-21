@@ -2,9 +2,8 @@ package org.firstinspires.ftc.teamcode.robotutil;
 
 /**
  * Created by Stephen on 10/4/2016.
+ * Color sensor with added functionality
  */
-import android.graphics.Color;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -86,7 +85,7 @@ public class VOIColorSensor {
     public boolean isBlue() {
         int i = 0;
         int score = 0;
-        int margin = 3;
+        int margin = 25;
         logMessageTimer.reset();
         while (i < 10 && opMode.opModeIsActive()) {
             if (logMessageTimer.time() > 3){
@@ -104,13 +103,13 @@ public class VOIColorSensor {
         int i = 0;
         int score = 0;
         logMessageTimer.reset();
-        int min = 3;
+        int margin = 19;
 
         while (i < 10 && opMode.opModeIsActive()) {
             if (logMessageTimer.time() > 3){
                 i++;
                 logMessageTimer.reset();
-                if (sensor.red() >= min && sensor.blue() < sensor.red()) {
+                if (sensor.red() - sensor.blue() > margin) {
                     score++;
                 }
             }
@@ -130,5 +129,9 @@ public class VOIColorSensor {
             return isRed();
         }
         return isBlue();
+    }
+
+    public String getColor() {
+        return "R: " + getRed() + " G: " + getGreen() + " B: " + getBlue();
     }
 }

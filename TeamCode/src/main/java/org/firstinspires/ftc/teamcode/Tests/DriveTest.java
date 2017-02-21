@@ -1,16 +1,11 @@
 package org.firstinspires.ftc.teamcode.Tests;
 
-import android.widget.Button;
-
-import com.qualcomm.hardware.adafruit.AdafruitBNO055IMU;
 import com.qualcomm.hardware.adafruit.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.opmodes.MecanumDrive;
 import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
 import org.firstinspires.ftc.teamcode.robotutil.VOIImu;
 import org.firstinspires.ftc.teamcode.tasks.ButtonPusherTask;
@@ -22,6 +17,7 @@ import java.text.DecimalFormat;
 
 /**
  * Created by bunnycide on 11/21/16.
+ * Drive Test
  */
 
 @TeleOp(name = "Drive Test", group = "Test")
@@ -33,6 +29,7 @@ public class DriveTest extends LinearOpMode {
     MecanumDriveTrain driveTrain;
     static double power = 0.5, distance = 60;
     static double changeValue = 0.01;
+    double initialAngle;
     public static MecanumDriveTrain.DIRECTION dir = MecanumDriveTrain.DIRECTION.FORWARD;
     @Override
     public void runOpMode() throws InterruptedException {
@@ -41,10 +38,14 @@ public class DriveTest extends LinearOpMode {
         telemetry.update();
         setPID();
         waitForStart();
-        driveTrain.moveRightNInch(0.5, 30, 10, false, true);
-        sleep(2000);
-        driveTrain.moveLeftNInch(0.5, 30, 10, false, true);
+        driveTrain.moveRightNInch(1, 18, 10, false, true, true);
+        sleep(1000);
+        driveTrain.rotateToAngle(initialAngle);
+        sleep(1000);
+        //driveTrain.moveLeftNInch(1, 30, 10, false, true);
+        sleep(1000);
         driveTrain.rotateToAngle(0);
+
 
     }
 
@@ -62,6 +63,7 @@ public class DriveTest extends LinearOpMode {
         new ButtonPusherTask(this);
         new IntakeTask(this);
         new CapBallTask(this);
+        initialAngle = imu.getAngle();
     }
 
     public void driveBitMore(int ticks) {
@@ -168,7 +170,7 @@ public class DriveTest extends LinearOpMode {
                 driveTrain.moveBackwardNInch(power, distance, 10, false, true, false);
                 break;
             case RIGHT:
-                driveTrain.moveRightNInch(power, distance, 10, false, true);
+                driveTrain.moveRightNInch(power, distance, 10, false, true, true);
                 sleep(1000);
                 driveTrain.moveLeftNInch(power, distance, 10, false, true);
                 break;
@@ -176,7 +178,7 @@ public class DriveTest extends LinearOpMode {
             case LEFT:
                 driveTrain.moveLeftNInch(power, distance, 10, false, true);
                 sleep(1000);
-                driveTrain.moveRightNInch(power, distance, 10, false, true);
+                driveTrain.moveRightNInch(power, distance, 10, false, true, true);
 
                 break;
             case BACKWARD:

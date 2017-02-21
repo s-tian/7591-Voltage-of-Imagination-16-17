@@ -7,23 +7,23 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**
  * Created by Howard on 10/15/16.
+ * Button Pusher Task
  */
 public class ButtonPusherTask extends TaskThread {
 
-    CRServo button;
-    Servo guide;
-    double power = 0;
-    ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-    public int pushTime = 450;
-    public int outTime = 650;
+    private CRServo button;
+    private Servo guide;
+    private ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    public int pushTime = 550;
+    private int outTime = 650;
     public static final double zeroPower = 0;
     public static final double outPower = 1;
     public static final double inPower = -1;
     public static final double upPosition = 0.0;
     public static final double downPosition = 0.78;
     public volatile boolean teleOp = false;
-    public boolean guideDown = false;
-    public boolean guidePushed = false;
+    private boolean guideDown = false;
+    private boolean guidePushed = false;
     private boolean pushButton = false;
     private boolean extendButton = false;
     private boolean withdrawButton = false;
@@ -84,37 +84,51 @@ public class ButtonPusherTask extends TaskThread {
 
     }
 
-    public void guideDown() {
+    private void guideDown() {
         guide.setPosition(downPosition);
         guideDown = true;
     }
 
-    public void guideUp() {
+    private void guideUp() {
         guide.setPosition(upPosition);
         guideDown = false;
     }
 
     private void buttonPush() {
-        button.setPower(outPower);
-        sleep(pushTime);
-        button.setPower(inPower);
-        sleep(250);
-        button.setPower(zeroPower);
-        pushTime = 500;
+        timer.reset();
+        while (timer.time() < pushTime && opMode.opModeIsActive()) {
+            button.setPower(outPower);
+        }
+        timer.reset();
+        while (timer.time() < 250 && opMode.opModeIsActive()) {
+            button.setPower(inPower);
+        }
+        timer.reset();
+        while (timer.time() < 200 && opMode.opModeIsActive()) {
+            button.setPower(zeroPower);
+        }
     }
 
     private void outPusher() {
         timer.reset();
-        button.setPower(outPower);
-        sleep(outTime);
-        button.setPower(zeroPower);
+        while (timer.time() < outTime && opMode.opModeIsActive()) {
+            button.setPower(outPower);
+        }
+        timer.reset();
+        while (timer.time() < 200 && opMode.opModeIsActive()) {
+            button.setPower(zeroPower);
+        }
     }
 
     private void inPusher() {
         timer.reset();
-        button.setPower(inPower);
-        sleep(outTime +50);
-        button.setPower(zeroPower);
+        while (timer.time() < outTime + 100 && opMode.opModeIsActive()) {
+            button.setPower(inPower);
+        }
+        timer.reset();
+        while (timer.time() < 200 && opMode.opModeIsActive()) {
+            button.setPower(zeroPower);
+        }
 
     }
 

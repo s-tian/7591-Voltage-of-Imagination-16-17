@@ -8,6 +8,7 @@ import org.firstinspires.ftc.teamcode.robotutil.VEX393Encoder;
 
 /**
  * Created by Stephen on 1/22/2017.
+ * VEX Motor Encoder Test
  */
 @TeleOp(name = "VEX Encoder Test", group = "Test")
 

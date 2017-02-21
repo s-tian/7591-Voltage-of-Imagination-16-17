@@ -1,18 +1,9 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
-import android.widget.Button;
-
-import com.qualcomm.hardware.adafruit.BNO055IMU;
-import com.qualcomm.hardware.modernrobotics.ModernRoboticsI2cGyro;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.CRServo;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.robotutil.VOIImu;
-import org.firstinspires.ftc.teamcode.robotutil.VOISweeper;
 import org.firstinspires.ftc.teamcode.tasks.ButtonPusherTask;
 import org.firstinspires.ftc.teamcode.tasks.CapBallTask;
 import org.firstinspires.ftc.teamcode.tasks.DriveTrainTask;
@@ -24,19 +15,19 @@ import java.text.DecimalFormat;
 
 /**
  * Created by bunnycide on 11/4/16.
+ * TeleOp
  */
 
 @TeleOp(name="Threaded Teleop", group = "Drive")
 
 public class ThreadedTeleOp extends LinearOpMode {
 
-    Servo guide;
-    public DriveTrainTask driveTrainTask;
-    public FlywheelTask flywheelTask;
-    public CapBallTask capBallTask;
-    public IntakeTask intakeTask;
-    public ButtonPusherTask buttonPusherTask;
-    public double voltageLevel;
+    private Servo guide;
+    private DriveTrainTask driveTrainTask;
+    private FlywheelTask flywheelTask;
+    private CapBallTask capBallTask;
+    private IntakeTask intakeTask;
+    private ButtonPusherTask buttonPusherTask;
 
     @Override
     public void runOpMode() {
@@ -50,14 +41,12 @@ public class ThreadedTeleOp extends LinearOpMode {
         intakeTask.start();
         capBallTask.start();
         buttonPusherTask.start();
-        //driveTrainTask.zeroAngle = imu.getRadians();
 
         DecimalFormat df = new DecimalFormat();
         df.setMaximumFractionDigits(3);
         while(opModeIsActive()) {
             //Timer for 2 minute teleop period
             long elapsed = System.nanoTime() - startTime;
-            //driveTrainTask.gyroAngle = imu.getRadians();
 
             if (elapsed > 120 * 1000000000L) {
                 //Stop all tasks, the tasks will stop motors etc.
@@ -78,7 +67,7 @@ public class ThreadedTeleOp extends LinearOpMode {
                 telemetry.addData("Time elapsed", timeString);
                 telemetry.addData("Left error", df.format(flywheelTask.currentErrorLeft*100));
                 telemetry.addData("Right error", df.format(flywheelTask.currentErrorRight*100));
-                telemetry.addData("Flywheel state", flywheelTask.getFlywheelState());
+                telemetry.addData("Flywheel state", flywheelTask.state);
             }
             telemetry.update();
         }
@@ -87,11 +76,6 @@ public class ThreadedTeleOp extends LinearOpMode {
     public void initialize(){
         guide = hardwareMap.servo.get("guide");
         guide.setPosition(ButtonPusherTask.upPosition);
-        double mc7 = hardwareMap.voltageSensor.get("frontDrive").getVoltage();
-        double mc6 = hardwareMap.voltageSensor.get("backDrive").getVoltage();
-        double mc3 = hardwareMap.voltageSensor.get("cap").getVoltage();
-        double mc2 = hardwareMap.voltageSensor.get("flywheels").getVoltage();
-        voltageLevel = (mc7 + mc6 + mc3 + mc2) / 4;
         driveTrainTask = new DriveTrainTask(this);
         flywheelTask = new FlywheelTask(this);
         intakeTask = new IntakeTask(this);

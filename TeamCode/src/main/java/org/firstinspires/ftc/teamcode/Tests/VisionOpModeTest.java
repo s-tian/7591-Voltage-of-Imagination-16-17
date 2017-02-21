@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.Tests;
 
 import android.util.Log;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
@@ -14,7 +15,6 @@ import org.lasarobotics.vision.util.color.ColorRGBA;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfInt;
 import org.opencv.core.MatOfInt4;
 import org.opencv.core.MatOfPoint;
@@ -22,16 +22,14 @@ import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
-import org.lasarobotics.vision.util.color.Color;
-
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by Stephen on 12/23/2016.
+ * Vision OpMode Test
  */
 
 /*
@@ -39,7 +37,7 @@ import java.util.List;
  */
 
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "VisionOpModeTest", group = "Tests")
-
+@Disabled
 
 
 
