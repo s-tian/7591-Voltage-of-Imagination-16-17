@@ -17,9 +17,9 @@ public class ButtonPusherTask extends TaskThread {
     public int pushTime = 550;
     private int outTime = 650;
     public static final double zeroPower = 0;
-    private static final double outPower = 1;
-    private static final double inPower = -1;
-    public static final double upPosition = 0;
+    public static final double outPower = 1;
+    public static final double inPower = -1;
+    public static final double upPosition = 0.0;
     public static final double downPosition = 0.78;
     public volatile boolean teleOp = false;
     private boolean guideDown = false;
