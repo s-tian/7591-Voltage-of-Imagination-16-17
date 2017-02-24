@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.Tests;
 
 import android.util.Log;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
@@ -37,7 +36,7 @@ import java.util.List;
  */
 
 @com.qualcomm.robotcore.eventloop.opmode.Autonomous(name = "VisionOpModeTest", group = "Tests")
-@Disabled
+
 
 
 
@@ -60,9 +59,9 @@ public class VisionOpModeTest extends LinearOpModeVision {
 
     MecanumDriveTrain driveTrain;
 
-    static final int THRESHOLD = 600;
-    static final int IMAGE_HEIGHT = 300;       //ZTE Camera picture size
-    static final int IMAGE_WIDTH = 100;
+    static final int THRESHOLD = 10000;
+    static final int IMAGE_HEIGHT = 900;       //ZTE Camera picture size
+    static final int IMAGE_WIDTH = 1200;
     static final int NEARNESS_Y = 50;
     static final int NEARNESS_X = 50;
 
@@ -75,10 +74,11 @@ public class VisionOpModeTest extends LinearOpModeVision {
         waitForStart();
         ElapsedTime t = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         while(opModeIsActive()) {
-            telemetry.addData("Time: ", t.time());
-            telemetry.addData("Y Location", center.getY());
-            System.out.println("Y Location: " + center.getY());
-            telemetry.update();
+            //telemetry.addData("Time: ", t.time());
+            //telemetry.addData("Y Location", center.getY());
+            //telemetry.addData("X Location", center.getX());
+            //System.out.println("Y Location: " + center.getY());
+            //telemetry.update();
         }
         stopCamera();   //Tear down the camera instance
         System.out.println("Camera Stopped");
@@ -91,11 +91,12 @@ public class VisionOpModeTest extends LinearOpModeVision {
         Imgproc.cvtColor(rgba, mHsvMat, Imgproc.COLOR_BGR2HSV_FULL);
 
         //Define two color ranges to match as red because the hue for red crosses over 180 to 0
-        Core.inRange(mHsvMat, new Scalar(0, 100, 100), new Scalar(10, 255, 255), red1);
-        Core.inRange(mHsvMat, new Scalar(160, 100, 100), new Scalar(179, 255, 255), red2);
+        Core.inRange(mHsvMat, new Scalar(0, 100, 50), new Scalar(10, 255, 255), red1);
+        Core.inRange(mHsvMat, new Scalar(160, 100, 50), new Scalar(240, 255, 255), redMask);
         //OR the two masks together to produce a mask that combines the ranges
         //Core.addWeighted(red1, 1.0, red2, 1.0, 0.0, redMask);
-        Core.bitwise_or(red1, red2, redMask);
+        //Core.bitwise_or(red1, red2, redMask);
+
         initialContourList.clear();
         potentialContours.clear();
         passedFirstCheck.clear();
@@ -109,8 +110,13 @@ public class VisionOpModeTest extends LinearOpModeVision {
             Imgproc.approxPolyDP(temp2fMat, polyApprox, 0.02*perimeter, true);
             MatOfPoint polyApproxFloat = new MatOfPoint(polyApprox.toArray());
             Rect rect = Imgproc.boundingRect(polyApproxFloat);
-            int y = rect.y+rect.height;
-            int x = rect.x;
+            int y = rect.y + rect.height/2;
+            int x = rect.x + rect.width/2;
+
+            // center vortex is not very solid shape, so if actual area is greater than 40% of rect area then it can't be vortex
+            if (Imgproc.contourArea(p) > 0.4*rect.area()) {
+                continue;
+            }
 
             //if(Imgproc.contourArea(p) > THRESHOLD && !Imgproc.isContourConvex(p) && polyApproxFloat.toArray().length > 7 && x < IMAGE_HEIGHT/2) {
 //            if(Imgproc.contourArea(p) > THRESHOLD && Imgproc.contourArea(p) < 0.5*rect.area() && polyApproxFloat.toArray().length > 4 && !Imgproc.isContourConvex(p) && x < IMAGE_HEIGHT/2) {
@@ -119,8 +125,9 @@ public class VisionOpModeTest extends LinearOpModeVision {
 //                potentialContours.add(p);
 //            }
             //System.out.println(polyApproxFloat.toArray().length);
-            if(polyApproxFloat.toArray().length > 6 && x < IMAGE_HEIGHT/2) {
+            if(polyApproxFloat.toArray().length > 4 && rect.x < IMAGE_WIDTH/2) {
                 if(Imgproc.contourArea(p) > THRESHOLD) {
+                    System.out.println(Imgproc.contourArea(p));
                     Imgproc.convexHull(polyApproxFloat, convexHull);
                     if(convexHull.rows() > 2) {
                         Imgproc.convexityDefects(polyApproxFloat, convexHull, convexityDefects);
@@ -135,8 +142,9 @@ public class VisionOpModeTest extends LinearOpModeVision {
                         }
                         if (count > 0) {
                             passedFirstCheck.add(p);
+                            telemetry.update();
+                            Drawing.drawRectangle(rgba, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new ColorRGBA(255, 255, 255));
                         }
-                        System.out.println("Count: " + count + " Size: " + cdlist.size());
                     }
 
                 } else {
@@ -144,6 +152,17 @@ public class VisionOpModeTest extends LinearOpModeVision {
                 }
             }
         }
+        // take only the largest contour
+        while (passedFirstCheck.size() > 1) {
+            double size0 = Imgproc.contourArea(passedFirstCheck.get(0));
+            double size1 = Imgproc.contourArea(passedFirstCheck.get(1));
+            if (size0 > size1) {
+                passedFirstCheck.remove(1);
+            } else {
+                passedFirstCheck.remove(0);
+            }
+        }
+
 
         int leftX = IMAGE_WIDTH;
         int rightX = 0;
@@ -202,6 +221,7 @@ public class VisionOpModeTest extends LinearOpModeVision {
         Point vortexCenter = new Point((rightX + leftX)/2, (topY+bottomY)/2);
         Drawing.drawContours(rgba, resultContours, new ColorRGBA(255, 0, 0), 2);
         Drawing.drawCircle(rgba, vortexCenter, 10, new ColorRGBA(255, 255, 255));
+
         return rgba;
     }
 
