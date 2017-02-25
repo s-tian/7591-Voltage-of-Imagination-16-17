@@ -60,8 +60,8 @@ public class VisionOpModeTest extends LinearOpModeVision {
     MecanumDriveTrain driveTrain;
 
     static final int THRESHOLD = 10000;
-    static final int IMAGE_HEIGHT = 900;       //ZTE Camera picture size
-    static final int IMAGE_WIDTH = 1200;
+    static final int IMAGE_HEIGHT = 600;       //ZTE Camera picture size
+    static final int IMAGE_WIDTH = 800;
     static final int NEARNESS_Y = 50;
     static final int NEARNESS_X = 50;
 
@@ -91,8 +91,8 @@ public class VisionOpModeTest extends LinearOpModeVision {
         Imgproc.cvtColor(rgba, mHsvMat, Imgproc.COLOR_BGR2HSV_FULL);
 
         //Define two color ranges to match as red because the hue for red crosses over 180 to 0
-        Core.inRange(mHsvMat, new Scalar(0, 100, 50), new Scalar(10, 255, 255), red1);
-        Core.inRange(mHsvMat, new Scalar(160, 100, 50), new Scalar(240, 255, 255), redMask);
+        Core.inRange(mHsvMat, new Scalar(0, 50, 50), new Scalar(10, 255, 255), red1);
+        Core.inRange(mHsvMat, new Scalar(160, 50, 50), new Scalar(240, 255, 255), redMask);
         //OR the two masks together to produce a mask that combines the ranges
         //Core.addWeighted(red1, 1.0, red2, 1.0, 0.0, redMask);
         //Core.bitwise_or(red1, red2, redMask);
@@ -125,14 +125,13 @@ public class VisionOpModeTest extends LinearOpModeVision {
 //                potentialContours.add(p);
 //            }
             //System.out.println(polyApproxFloat.toArray().length);
-            if(polyApproxFloat.toArray().length > 4 && rect.x < IMAGE_WIDTH/2) {
+            if(polyApproxFloat.toArray().length > 4/* && rect.x < IMAGE_WIDTH/2*/) {
                 if(Imgproc.contourArea(p) > THRESHOLD) {
                     System.out.println(Imgproc.contourArea(p));
                     Imgproc.convexHull(polyApproxFloat, convexHull);
                     if(convexHull.rows() > 2) {
                         Imgproc.convexityDefects(polyApproxFloat, convexHull, convexityDefects);
                         List<Integer> cdlist = convexityDefects.toList();
-                        System.out.println("Points: " + convexHull.rows());
                         int count = 0;
                         for(int i = 0; i < cdlist.size(); i+=4) {
                             double depth = cdlist.get(i+3)/256.0;
@@ -142,6 +141,8 @@ public class VisionOpModeTest extends LinearOpModeVision {
                         }
                         if (count > 0) {
                             passedFirstCheck.add(p);
+                            telemetry.addData("Center X", x);
+                            telemetry.addData("Center Y", y);
                             telemetry.update();
                             Drawing.drawRectangle(rgba, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new ColorRGBA(255, 255, 255));
                         }
@@ -186,31 +187,6 @@ public class VisionOpModeTest extends LinearOpModeVision {
                 topY = gRect.y;
             }
 
-//            for(MatOfPoint q: potentialContours) {
-//                Rect mRect = Imgproc.boundingRect(q);
-//                int distY = Math.abs(mRect.y+mRect.height-gRect.y-gRect.height);
-//                int distX;
-//                if(mRect.x < gRect.x) {
-//                    distX = Math.abs(mRect.x+mRect.width-gRect.x);
-//                } else {
-//                    distX = Math.abs(gRect.x+gRect.width-mRect.x);
-//                }
-//                if(Math.abs(distY) < NEARNESS_Y && Math.abs(distX) < NEARNESS_X) {
-//                    resultContours.add(new Contour(q));
-//                    if(mRect.x+mRect.width > rightX) {
-//                        rightX = mRect.x+mRect.width;
-//                    }
-//                    if(mRect.x < leftX) {
-//                        leftX = mRect.x;
-//                    }
-//                    if(mRect.y+mRect.height > bottomY) {
-//                        bottomY = mRect.y+mRect.height;
-//                    }
-//                    if(mRect.y < topY) {
-//                        topY = mRect.y;
-//                    }
-//                }
-//            }
         }
 
         if(bottomY == 0 && topY == IMAGE_HEIGHT) {
