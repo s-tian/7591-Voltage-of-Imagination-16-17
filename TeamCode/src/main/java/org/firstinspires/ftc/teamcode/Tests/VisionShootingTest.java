@@ -11,7 +11,9 @@ import org.firstinspires.ftc.teamcode.robotutil.VortexCenterPoint;
 import org.firstinspires.ftc.teamcode.vision.LinearOpModeVision;
 import org.lasarobotics.vision.detection.objects.Contour;
 import org.lasarobotics.vision.image.Drawing;
+import org.lasarobotics.vision.util.color.Color;
 import org.lasarobotics.vision.util.color.ColorRGBA;
+import org.lasarobotics.vision.util.color.ColorSpace;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -73,14 +75,14 @@ public class VisionShootingTest extends LinearOpModeVision {
     static final double MAX_VORTEX_AREA_RATIO = 0.6;
 
     static final int ACCEPTABLE_ERROR = 50;
-    static final double MIN_PARTICLE_AREA_RATIO = 0.3;
+    static final double MIN_PARTICLE_AREA_RATIO = 0.6;
     static final double PARTICLE_MIN_THRESHOLD = 0;
-    static final double PARTICLE_MAX_THRESHOLD = 4000;
+    static final double PARTICLE_MAX_THRESHOLD = 80000;
     static final double correctPower = 0.05;
 
     MecanumDriveTrain driveTrain;
 
-    Team team = BLUE;
+    Team team = RED;
     VisionMode visMode = PARTICLES;
 
 
@@ -92,9 +94,14 @@ public class VisionShootingTest extends LinearOpModeVision {
         center = new VortexCenterPoint(-1, -1);
         initCamera();   //Start OpenCV
         initVision();   //Do a bunch of initialization for vision code
+        ColorRGBA colRGB = new ColorRGBA(222, 10, 12);
+        Color colHSV = colRGB.convertColor(ColorSpace.HSV);
+        System.out.println("RGB: " + colRGB.getScalar());
+        System.out.println("Scalar: " + colHSV.getScalar());
         //initRobot();
         waitForStart();
         ElapsedTime t = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+
         while(opModeIsActive()) {
             telemetry.addData("Time: ", t.time());
             telemetry.addData("Y Location", center.getY());
@@ -102,16 +109,8 @@ public class VisionShootingTest extends LinearOpModeVision {
             //System.out.println("Y Location: " + center.getY());
             telemetry.update();
             // too much to right is too big y, is negative power
-            System.out.println("X: " + center.getX() + " Y: " + center.getY());
-            if (center.getY() == -1) {
-                //driveTrain.startRotation(0.1);
-            } else if (center.getY() < IMAGE_HEIGHT/2 - ACCEPTABLE_ERROR) {
-                //driveTrain.startRotation(correctPower);
-            } else if (center.getY() > IMAGE_HEIGHT/2 + ACCEPTABLE_ERROR) {
-                //driveTrain.startRotation(-correctPower);
-            } else {
-                //driveTrain.stopAll();
-            }
+            //System.out.println("X: " + center.getX() + " Y: " + center.getY());
+            //rotateAim();
         }
         stopCamera();   //Tear down the camera instance
         System.out.println("Camera Stopped");
@@ -130,7 +129,7 @@ public class VisionShootingTest extends LinearOpModeVision {
             Core.bitwise_or(red1, red2, colorMask);
 
         } else if (team == BLUE) {
-            Core.inRange(mHsvMat, new Scalar(90, 25, 40), new Scalar(130, 255, 255), colorMask);
+            Core.inRange(mHsvMat, new Scalar(0, 150, 50), new Scalar(40, 255, 255), colorMask);
         }
         //OR the two masks together to produce a mask that combines the ranges
         //Core.addWeighted(red1, 1.0, red2, 1.0, 0.0, colorMask);
@@ -158,7 +157,6 @@ public class VisionShootingTest extends LinearOpModeVision {
                     //continue;
                 }
             }
-            Drawing.drawRectangle(rgba, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new ColorRGBA(255, 255, 255));
 
             double contourArea = Imgproc.contourArea(p);
 
@@ -173,7 +171,6 @@ public class VisionShootingTest extends LinearOpModeVision {
                 if (polyApproxFloat.toArray().length > 4 && rect.x < IMAGE_WIDTH / 2) {
                     if (contourArea/rect.area() < MAX_VORTEX_AREA_RATIO) {
                         Drawing.drawRectangle(rgba, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new ColorRGBA(0, 0, 255));
-                        System.out.println("Contour Area Shooting: " + contourArea);
                         Imgproc.convexHull(polyApproxFloat, convexHull);
                         if (convexHull.rows() > 2) {
                             Imgproc.convexityDefects(polyApproxFloat, convexHull, convexityDefects);
@@ -203,8 +200,8 @@ public class VisionShootingTest extends LinearOpModeVision {
                 Drawing.drawContours(rgba, resultContours, new ColorRGBA(255, 0, 0));
 
                 // if correct size
+                System.out.println("Contour area: " + contourArea);
                 if (contourArea > PARTICLE_MIN_THRESHOLD && contourArea < PARTICLE_MAX_THRESHOLD) {
-                    System.out.println(contourArea);
                     passedFirstCheck.add(p);
                     Drawing.drawRectangle(rgba, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new ColorRGBA(255, 0, 0));
                 }
@@ -259,7 +256,7 @@ public class VisionShootingTest extends LinearOpModeVision {
         Point vortexCenter = new Point(center.getX(), center.getY());
         Drawing.drawCircle(rgba, vortexCenter, 10, new ColorRGBA(255, 255, 255));
         Drawing.drawContours(rgba, resultContours, new ColorRGBA(255, 0, 0));
-        Drawing.drawRectangle(rgba, new Point(leftX, topY), new Point(rightX, bottomY), new ColorRGBA(255, 255, 255));
+        Drawing.drawRectangle(rgba, new Point(leftX, topY), new Point(rightX, bottomY), new ColorRGBA(255, 255, 0));
 
 
         return rgba;
@@ -285,6 +282,17 @@ public class VisionShootingTest extends LinearOpModeVision {
         passedFirstCheck = new ArrayList<>();
         resultContours = new ArrayList<>();
 
+    }
+    public void rotateAim() {
+        if (center.getY() == -1) {
+            driveTrain.startRotation(0.1);
+        } else if (center.getY() < IMAGE_HEIGHT/2 - ACCEPTABLE_ERROR) {
+            driveTrain.startRotation(correctPower);
+        } else if (center.getY() > IMAGE_HEIGHT/2 + ACCEPTABLE_ERROR) {
+            driveTrain.startRotation(-correctPower);
+        } else {
+            driveTrain.stopAll();
+        }
     }
 
 }
