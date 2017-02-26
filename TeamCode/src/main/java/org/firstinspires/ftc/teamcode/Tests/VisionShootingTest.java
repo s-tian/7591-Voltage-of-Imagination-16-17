@@ -77,10 +77,11 @@ public class VisionShootingTest extends LinearOpModeVision {
     static final int ACCEPTABLE_ERROR = 50;
     static final double MIN_PARTICLE_AREA_RATIO = 0.6;
     static final double PARTICLE_MIN_THRESHOLD = 0;
-    static final double PARTICLE_MAX_THRESHOLD = 80000;
+    static final double PARTICLE_MAX_THRESHOLD = 15000;
     static final double correctPower = 0.05;
 
     MecanumDriveTrain driveTrain;
+    boolean detectedTarget = false;
 
     Team team = RED;
     VisionMode visMode = PARTICLES;
@@ -98,7 +99,7 @@ public class VisionShootingTest extends LinearOpModeVision {
         Color colHSV = colRGB.convertColor(ColorSpace.HSV);
         System.out.println("RGB: " + colRGB.getScalar());
         System.out.println("Scalar: " + colHSV.getScalar());
-        //initRobot();
+        initRobot();
         waitForStart();
         ElapsedTime t = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
@@ -110,7 +111,7 @@ public class VisionShootingTest extends LinearOpModeVision {
             telemetry.update();
             // too much to right is too big y, is negative power
             //System.out.println("X: " + center.getX() + " Y: " + center.getY());
-            //rotateAim();
+            rotateAim();
         }
         stopCamera();   //Tear down the camera instance
         System.out.println("Camera Stopped");
@@ -129,7 +130,11 @@ public class VisionShootingTest extends LinearOpModeVision {
             Core.bitwise_or(red1, red2, colorMask);
 
         } else if (team == BLUE) {
-            Core.inRange(mHsvMat, new Scalar(0, 150, 50), new Scalar(40, 255, 255), colorMask);
+            if (visMode == VORTEX) {
+                Core.inRange(mHsvMat, new Scalar(0, 50, 0), new Scalar(40, 255, 255), colorMask);
+            } else if (visMode == PARTICLES) {
+                Core.inRange(mHsvMat, new Scalar(20, 100, 100), new Scalar(60, 255, 255), colorMask);
+            }
         }
         //OR the two masks together to produce a mask that combines the ranges
         //Core.addWeighted(red1, 1.0, red2, 1.0, 0.0, colorMask);
@@ -152,9 +157,9 @@ public class VisionShootingTest extends LinearOpModeVision {
             int y = rect.y + rect.height / 2;
             int x = rect.x + rect.width / 2;
 
-            if (Math.abs(x - center.getX()) > 50 || Math.abs(y - center.getY()) > 50) {
+            if (Math.abs(x - center.getX()) > 100 || Math.abs(y - center.getY()) > 100) {
                 if (detectedVortex) {
-                    //continue;
+                    continue;
                 }
             }
 
@@ -201,7 +206,7 @@ public class VisionShootingTest extends LinearOpModeVision {
 
                 // if correct size
                 System.out.println("Contour area: " + contourArea);
-                if (contourArea > PARTICLE_MIN_THRESHOLD && contourArea < PARTICLE_MAX_THRESHOLD) {
+                if (contourArea > PARTICLE_MIN_THRESHOLD && contourArea < Math.max(PARTICLE_MAX_THRESHOLD * x/IMAGE_WIDTH, 2000)) {
                     passedFirstCheck.add(p);
                     Drawing.drawRectangle(rgba, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new ColorRGBA(255, 0, 0));
                 }
@@ -226,6 +231,7 @@ public class VisionShootingTest extends LinearOpModeVision {
         int bottomY = 0;
 
         for(MatOfPoint p: passedFirstCheck) {
+            System.out.println("Area: " + Imgproc.contourArea(p));
             resultContours.add(new Contour(p));
             Rect gRect = Imgproc.boundingRect(p);
             Log.v("Y VALUE", Integer.toString(gRect.y+gRect.width));
@@ -248,10 +254,12 @@ public class VisionShootingTest extends LinearOpModeVision {
             center.setY(-1);
             center.setX(-1);
             detectedVortex = false;
+            detectedTarget = false;
         } else {
             detectedVortex = true;
             center.setY(1.0*(bottomY+topY)/2);
             center.setX((rightX + leftX)/2);
+            detectedTarget = true;
         }
         Point vortexCenter = new Point(center.getX(), center.getY());
         Drawing.drawCircle(rgba, vortexCenter, 10, new ColorRGBA(255, 255, 255));
@@ -291,7 +299,18 @@ public class VisionShootingTest extends LinearOpModeVision {
         } else if (center.getY() > IMAGE_HEIGHT/2 + ACCEPTABLE_ERROR) {
             driveTrain.startRotation(-correctPower);
         } else {
+            if (detectedTarget) {
+                driveForward();
+            }
+        }
+    }
+
+    public void driveForward() {
+        if (center.getX() > IMAGE_WIDTH * 0.9) {
             driveTrain.stopAll();
+            stop();
+        } else {
+            driveTrain.powerAllMotors(0.25);
         }
     }
 

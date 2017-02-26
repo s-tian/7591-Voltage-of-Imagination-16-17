@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.tasks;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**
  * Created by Howard on 1/22/17.
@@ -12,13 +13,11 @@ public abstract class TaskThread extends Thread{
     public volatile boolean teleOp = false;
     public static volatile double voltage = 13;
     public static final double EXPECTED_VOLTAGE = 13;
+    ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
-    public final void sleep (int ms) {
-        try {
-            Thread.sleep(ms);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+    public void sleep (int ms) {
+        timer.reset();
+        while (opMode.opModeIsActive() && timer.time() < ms);
     }
 
     public static void calculateVoltage(LinearOpMode opMode) {

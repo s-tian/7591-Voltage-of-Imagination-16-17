@@ -41,8 +41,8 @@ public class Autonomous extends LinearOpMode {
 
     // Options
     private boolean missed = false;
-    private final int frontID = 0x3c;
     private final int backID = 0x3a;
+    private final int frontID = 0x3c;
 
     private int shootTime = 2500;
 
@@ -124,13 +124,15 @@ public class Autonomous extends LinearOpMode {
     
     public void initialize(){
 
-        // Initialize color sensor
+        // Initialize color sensors
         colorBack = hardwareMap.colorSensor.get("colorBack");
         colorFront = hardwareMap.colorSensor.get("colorFront");
         colorBack.setI2cAddress(I2cAddr.create8bit(backID));
         colorFront.setI2cAddress(I2cAddr.create8bit(frontID));
         voiColorBack = new VOIColorSensor(colorBack, this);
         voiColorFront = new VOIColorSensor(colorFront, this);
+        voiColorBack.lightOn = false;
+        voiColorFront.lightOn = false;
         // Servo for guide wheels
         guide = hardwareMap.servo.get("guide");
 

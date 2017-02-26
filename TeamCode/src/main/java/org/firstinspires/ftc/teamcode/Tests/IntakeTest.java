@@ -25,10 +25,8 @@ public class IntakeTest extends LinearOpMode {
         intakeTask = new IntakeTask(this);
         waitForStart();
         intakeTask.start();
-        powerSweeper(-1, 2000);
-        sleep (2000);
-        powerSweeper(1, 1000);
-        sleep(1000);
+        powerSweeper(1, 5000);
+        sleep(5000);
     }
 
     public void powerSweeper(double power, int time) {

@@ -2,9 +2,13 @@ package org.firstinspires.ftc.teamcode.tasks;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.robotutil.VOIColorSensor;
 import org.firstinspires.ftc.teamcode.robotutil.VOISweeper;
+
+import static org.firstinspires.ftc.teamcode.robotutil.Team.RED;
 
 /**
  * Created by Howard on 10/15/16.
@@ -16,8 +20,16 @@ public class IntakeTask extends TaskThread {
     public volatile int sweepTime = 0;
     private VOISweeper sweeper;
     public volatile boolean oscillate = false;
+    private final int intakeID = 0x3e;
+    public final int rejectTime = 1000;
+
+    ColorSensor colorIntake;
+    VOIColorSensor voiColorIntake;
+
     CRServo sweeper1, sweeper2, sweeper3;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    ElapsedTime rejectTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+
 
     public IntakeTask(LinearOpMode opMode) {
         this.opMode = opMode;
@@ -26,6 +38,11 @@ public class IntakeTask extends TaskThread {
 
     @Override
     public void initialize() {
+        colorIntake = opMode.hardwareMap.colorSensor.get("colorIntake");
+        voiColorIntake = new VOIColorSensor(colorIntake, opMode);
+        voiColorIntake.lightOn = true;
+        voiColorIntake.team = RED;
+
         sweeper1 = opMode.hardwareMap.crservo.get("sweeper1");
         sweeper2 = opMode.hardwareMap.crservo.get("sweeper2");
         sweeper3 = opMode.hardwareMap.crservo.get("sweeper3");
@@ -39,7 +56,16 @@ public class IntakeTask extends TaskThread {
         boolean print2 = false;
         while(opMode.opModeIsActive() && running) {
 
+            //reject wrong color balls
+            if (voiColorIntake.wrongColor()) {
+                rejectTimer.reset();
+                sweeper.setPower(-1);
+                opMode.telemetry.addData("Wrong Ball", "!");
+                while (opMode.opModeIsActive() && rejectTimer.time() < rejectTime);
+                continue;
+            }
             // TeleOp commands
+
             if (teleOp) {
                 if (opMode.gamepad2.dpad_up) {
                     if (!printed) {
@@ -120,6 +146,19 @@ public class IntakeTask extends TaskThread {
 
     public void setPower(double power) {
         sweeper.setPower(power);
+    }
+
+    @Override
+    public void sleep (int ms) {
+        ElapsedTime sleepTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+        sleepTimer.reset();
+        while (opMode.opModeIsActive() && sleepTimer.time() < ms) {
+            if (voiColorIntake.wrongColor()) {
+                sweeper.setPower(-1);
+                rejectTimer.reset();
+                while (opMode.opModeIsActive() && timer.time() < rejectTime);
+            }
+        }
     }
 
 }
