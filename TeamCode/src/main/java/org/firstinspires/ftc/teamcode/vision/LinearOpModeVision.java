@@ -38,6 +38,7 @@ public abstract class LinearOpModeVision extends LinearOpMode implements CameraB
     public FPS fps;
     public Sensors sensors;
 
+
     public LinearOpModeVision() {
         initialized = false;
         openCVCamera = null;
@@ -116,7 +117,7 @@ public abstract class LinearOpModeVision extends LinearOpMode implements CameraB
         return new Size(width, height);
     }
 
-    public void initCamera() {
+    public void initCamera(int cameraID) {
         //Initialize camera view
         BaseLoaderCallback openCVLoaderCallback = null;
         try {
@@ -172,6 +173,7 @@ public abstract class LinearOpModeVision extends LinearOpMode implements CameraB
                 e.printStackTrace();
             }
         }
+        final int camID = cameraID;
 
         activity.runOnUiThread(new Runnable() {
             @Override
@@ -180,8 +182,7 @@ public abstract class LinearOpModeVision extends LinearOpMode implements CameraB
                 layout.setOrientation(LinearLayout.HORIZONTAL);
                 //layout.setLayoutParams(new FrameLayout.LayoutParams(
                 //        ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-
-                openCVCamera = new JavaCameraView(hardwareMap.appContext, 0);
+                openCVCamera = new JavaCameraView(hardwareMap.appContext, camID);
 
                 layout.addView(openCVCamera);
                 layout.setVisibility(View.VISIBLE);

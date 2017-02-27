@@ -16,7 +16,7 @@ import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
 
 public class IntakeTest extends LinearOpMode {
 
-    IntakeTask intakeTask;
+    private IntakeTask intakeTask;
     public ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     public boolean oscillate = false;
 
@@ -25,8 +25,7 @@ public class IntakeTest extends LinearOpMode {
         intakeTask = new IntakeTask(this);
         waitForStart();
         intakeTask.start();
-        powerSweeper(1, 5000);
-        sleep(5000);
+        sleep(20000);
     }
 
     public void powerSweeper(double power, int time) {

@@ -88,7 +88,7 @@ public class VOIColorSensor {
         int score = 0;
         int margin = 25;
         if (lightOn) {
-            //margin *= 2;
+            margin = 10;
         }
         logMessageTimer.reset();
         while (i < 10 && opMode.opModeIsActive()) {
@@ -109,7 +109,7 @@ public class VOIColorSensor {
         logMessageTimer.reset();
         int margin = 19;
         if (lightOn) {
-            //margin *= 2;
+            margin = 10;
         }
         while (i < 10 && opMode.opModeIsActive()) {
             if (logMessageTimer.time() > 3){

@@ -68,7 +68,7 @@ public class VisionOpModeTest extends LinearOpModeVision {
     @Override
     public void runOpMode() {
         center = new VortexCenterPoint(-1, -1);
-        initCamera();   //Start OpenCV
+        initCamera(0);   //Start OpenCV
         initVision();   //Do a bunch of initialization for vision code
         initRobot();
         waitForStart();

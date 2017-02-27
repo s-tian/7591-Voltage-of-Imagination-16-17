@@ -62,6 +62,7 @@ public class IntakeTask extends TaskThread {
                 sweeper.setPower(-1);
                 opMode.telemetry.addData("Wrong Ball", "!");
                 while (opMode.opModeIsActive() && rejectTimer.time() < rejectTime);
+                sweeper.setPower(0);
                 continue;
             }
             // TeleOp commands
@@ -159,6 +160,13 @@ public class IntakeTask extends TaskThread {
                 while (opMode.opModeIsActive() && timer.time() < rejectTime);
             }
         }
+    }
+
+    public boolean correctColor() {
+        return voiColorIntake.correctColor();
+    }
+    public boolean wrongColor() {
+        return voiColorIntake.wrongColor();
     }
 
 }
