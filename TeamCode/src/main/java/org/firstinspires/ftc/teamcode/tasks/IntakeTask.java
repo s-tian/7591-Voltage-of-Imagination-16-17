@@ -3,12 +3,12 @@ package org.firstinspires.ftc.teamcode.tasks;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.I2cAddr;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.robotutil.Team;
 import org.firstinspires.ftc.teamcode.robotutil.VOIColorSensor;
 import org.firstinspires.ftc.teamcode.robotutil.VOISweeper;
-
-import static org.firstinspires.ftc.teamcode.robotutil.Team.RED;
 
 /**
  * Created by Howard on 10/15/16.
@@ -24,7 +24,7 @@ public class IntakeTask extends TaskThread {
     public final int rejectTime = 1000;
 
     ColorSensor colorIntake;
-    VOIColorSensor voiColorIntake;
+    public VOIColorSensor voiColorIntake;
 
     CRServo sweeper1, sweeper2, sweeper3;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -39,9 +39,9 @@ public class IntakeTask extends TaskThread {
     @Override
     public void initialize() {
         colorIntake = opMode.hardwareMap.colorSensor.get("colorIntake");
+        colorIntake.setI2cAddress(I2cAddr.create8bit(intakeID));
         voiColorIntake = new VOIColorSensor(colorIntake, opMode);
         voiColorIntake.lightOn = true;
-        voiColorIntake.team = RED;
 
         sweeper1 = opMode.hardwareMap.crservo.get("sweeper1");
         sweeper2 = opMode.hardwareMap.crservo.get("sweeper2");
@@ -55,9 +55,10 @@ public class IntakeTask extends TaskThread {
         boolean printed = false;
         boolean print2 = false;
         while(opMode.opModeIsActive() && running) {
-
+            System.out.println(voiColorIntake.getColor());
             //reject wrong color balls
             if (voiColorIntake.wrongColor()) {
+                System.out.println("Wrong Color! E");
                 rejectTimer.reset();
                 sweeper.setPower(-1);
                 opMode.telemetry.addData("Wrong Ball", "!");
@@ -99,6 +100,12 @@ public class IntakeTask extends TaskThread {
                         printed = false;
                     }
 
+                }
+            } else {
+                if (voiColorIntake.correctColor()) {
+                    sleep(500);
+                    while (voiColorIntake.correctColor() && opMode.opModeIsActive());
+                    sweeper.setPower(0);
                 }
             }
             // Autonomous commands
@@ -165,8 +172,13 @@ public class IntakeTask extends TaskThread {
     public boolean correctColor() {
         return voiColorIntake.correctColor();
     }
+
     public boolean wrongColor() {
         return voiColorIntake.wrongColor();
+    }
+
+    public void setTeam(Team team) {
+        voiColorIntake.team = team;
     }
 
 }

@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
 
+import static org.firstinspires.ftc.teamcode.robotutil.Team.RED;
+
 /**
  * Created by Howard on 1/13/17.
  * Intake Test
@@ -23,9 +25,11 @@ public class IntakeTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         intakeTask = new IntakeTask(this);
+        intakeTask.voiColorIntake.team = RED;
         waitForStart();
         intakeTask.start();
-        sleep(20000);
+        intakeTask.setPower(1);
+        while (opModeIsActive());
     }
 
     public void powerSweeper(double power, int time) {

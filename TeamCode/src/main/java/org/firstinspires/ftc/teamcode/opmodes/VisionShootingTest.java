@@ -3,11 +3,13 @@ package org.firstinspires.ftc.teamcode.opmodes;
 
 import android.util.Log;
 
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
 import org.firstinspires.ftc.teamcode.robotutil.Team;
 import org.firstinspires.ftc.teamcode.robotutil.VortexCenterPoint;
+import org.firstinspires.ftc.teamcode.tasks.CapBallTask;
 import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
 import org.firstinspires.ftc.teamcode.vision.LinearOpModeVision;
 import org.lasarobotics.vision.detection.objects.Contour;
@@ -50,13 +52,15 @@ import static org.firstinspires.ftc.teamcode.robotutil.Team.RED;
 public class VisionShootingTest extends LinearOpModeVision {
 
     Mat mHsvMat;
+    Mat mRgbaMat;
     Mat red1;
     Mat red2;
     Mat colorMask;
     Mat grayMask;
-    Mat lowBrightMask;
+    Mat lowValMask;
     Mat lowSatMask;
     Mat blurred;
+    Mat circles;
     MatOfInt convexHull;
     MatOfPoint2f temp2fMat;
     MatOfPoint2f polyApprox;
@@ -67,10 +71,15 @@ public class VisionShootingTest extends LinearOpModeVision {
     List<Contour> resultContours;
     List<MatOfPoint> passedFirstCheck;
     VortexCenterPoint center;
+
+
     IntakeTask intakeTask;
+    Servo phoneServo;
 
     boolean detectedVortex = false;
 
+    int centX = -1;
+    int centY = -1;
 
     static final int VORTEX_THRESHOLD = 3500;
     static final int IMAGE_HEIGHT = 600;       //ZTE Camera picture size
@@ -78,27 +87,30 @@ public class VisionShootingTest extends LinearOpModeVision {
     static final double MAX_VORTEX_AREA_RATIO = 0.6;
 
     static final int ACCEPTABLE_ERROR = 50;
+    static final int PARTICLE_TARGET = 320;
     static final double MIN_PARTICLE_AREA_RATIO = 0.6;
-    static final double PARTICLE_MIN_THRESHOLD = 1000;
+    static final double PARTICLE_MIN_THRESHOLD = 500;
     static final double PARTICLE_MAX_THRESHOLD = 15000;
-    double correctPower = 0.05;
+    double correctPower = 0.03;
 
     double[] blackArray = new double[] {0, 0, 0, 0};
     Scalar blackScalar = new Scalar(0, 0, 0);
 
 
-    static int minBlueH = 80;
+    static int minBlueH = 90;
     static int maxBlueH = 110;
     static int minRedH = 160;
     static int maxRedH = 180;
-    static int minBlueSat = 150;
+    static int minBlueSat = 125;
     static int minRedSat = 50;
-    static int minBlueBright = 150;
-    static int minRedBright = 50;
+    static int minBlueVal = 100;
+    static int minRedVal = 50;
 
-    int cameraNumber = 1;
+    int cameraNumber = 0;
     MecanumDriveTrain driveTrain;
     boolean detectedTarget = false;
+    ElapsedTime rejectTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    int rejectTime = 500;
 
     Team team = BLUE;
     VisionMode visMode = PARTICLES;
@@ -113,23 +125,37 @@ public class VisionShootingTest extends LinearOpModeVision {
         center = new VortexCenterPoint(-1, -1);
         initCamera(cameraNumber);   //Start OpenCV
         initVision();   //Do a bunch of initialization for vision code
-        //initRobot();
-        //intakeTask.start();
+        initRobot();
+        //options();
+        intakeTask.start();
         waitForStart();
 
         ElapsedTime t = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
         if (cameraNumber == 1) {
             correctPower *= -1;
         }
+        String lastString = "";
         while(opModeIsActive()) {
-            telemetry.addData("Time: ", t.time());
-            telemetry.addData("Y Location", center.getY());
-            telemetry.addData("X Location", center.getX());
-            //System.out.println("Y Location: " + center.getY());
-            telemetry.update();
             // too much to right is too big y, is negative power
-            //System.out.println("X: " + center.getX() + " Y: " + center.getY());
-            //rotateAim();
+            String colorString = intakeTask.voiColorIntake.getColor();
+            if (!colorString.equals(lastString)) {
+                System.out.println("COLOR FROM T: " + colorString);
+                lastString = colorString;
+            }
+            if (intakeTask.voiColorIntake.wrongColor()) {
+                System.out.println("Wrong Color! E");
+                rejectTimer.reset();
+                intakeTask.setPower(-1);
+                while (opModeIsActive() && rejectTimer.time() < rejectTime);
+                intakeTask.setPower(0);
+                continue;
+            }
+            if (intakeTask.voiColorIntake.correctColor()) {
+                sleep(500);
+                while (intakeTask.voiColorIntake.correctColor() && opModeIsActive());
+                intakeTask.setPower(0);
+            }
+            rotateAim();
         }
         stopCamera();   //Tear down the camera instance
         System.out.println("Camera Stopped");
@@ -139,27 +165,350 @@ public class VisionShootingTest extends LinearOpModeVision {
     public Mat processFrame(Mat rgba, Mat gray) {       //Callback from OpenCV leads here
         //Do image processing for individual frames here
         //Convert image to HSV format
+        mRgbaMat = rgba;
 
-        Imgproc.GaussianBlur(rgba, rgba, new Size(15, 15), 8, 8);
+        Imgproc.GaussianBlur(rgba, rgba, new Size(11, 11), 5, 5);
 
         Imgproc.cvtColor(rgba, mHsvMat, Imgproc.COLOR_RGB2HSV);
 
         //Define two color ranges to match as red because the hue for red crosses over 180 to 0
         if (visMode == PARTICLES) {
-            tileFilter(rgba);
+            return findCircles(rgba, gray);
+        } else {
+            return rgba;
+        }
+
+    }
+
+    public void initRobot() {
+        //Initialize robot hardware and stuff here
+        driveTrain = new MecanumDriveTrain(this);
+        intakeTask = new IntakeTask(this);
+        new CapBallTask(this);
+        phoneServo = hardwareMap.servo.get("phoneServo");
+        phoneServo.setPosition(0.2);
+        sleep(1000);
+        phoneServo.setPosition(0.2);
+    }
+
+    public void initVision() {
+        mHsvMat = new Mat();
+        red1 = new Mat();
+        red2 = new Mat();
+        colorMask = new Mat();
+        blurred = new Mat();
+        convexHull = new MatOfInt();
+        temp2fMat = new MatOfPoint2f();
+        polyApprox = new MatOfPoint2f();
+        convexityDefects = new MatOfInt4();
+        initialContourList = new ArrayList<>();
+        potentialContours = new ArrayList<>();
+        passedFirstCheck = new ArrayList<>();
+        resultContours = new ArrayList<>();
+
+        grayContours = new ArrayList<>();
+        grayMask = new Mat();
+        lowValMask = new Mat();
+        lowSatMask = new Mat();
+
+    }
+    public void rotateAim() {
+
+        if (centY == -1) {
+            //intakeTask.setPower(0);
+            driveTrain.startRotation(0.1);
+        } else if (centY < PARTICLE_TARGET - ACCEPTABLE_ERROR) {
+            //intakeTask.setPower(0);
+            driveTrain.startRotation(correctPower);
+        } else if (centY > PARTICLE_TARGET + ACCEPTABLE_ERROR) {
+            //intakeTask.setPower(0);
+            driveTrain.startRotation(-correctPower);
+        } else {
+            driveTrain.stopAll();
+            sleep(500);
+            if (Math.abs(centY - PARTICLE_TARGET) < ACCEPTABLE_ERROR) {
+                driveForward();
+            }
+        }
+    }
+
+    public void driveForward() {
+        if (centX > IMAGE_WIDTH * 0.5) {
+            intakeTask.setPower(1);
+            driveTrain.powerAllMotors(0.2);
+            rejectTimer.reset();
+            while (opModeIsActive() && rejectTimer.time() < 3000) {
+                if (intakeTask.correctColor()) {
+                    driveTrain.stopAll();
+                    return;
+                }
+            }
+        } else {
+            intakeTask.setPower(1);
+            driveTrain.powerAllMotors(0.15);
+        }
+    }
+
+    public void changeCamera(int a) {
+        if (cameraNumber != a) {
+            cameraNumber = a;
+            stopCamera();
+            initCamera(a);
+            initVision();
+        }
+    }
+
+    public void tileFilter(Mat rgba) {
+        Mat lowMask = new Mat();
+        Mat highMask = new Mat();
+        Core.inRange(mHsvMat, new Scalar(0, 50, 50), new Scalar (50, 255, 255), lowMask);
+        Core.inRange(mHsvMat, new Scalar (140, 50, 50), new Scalar(180, 255, 255), highMask);
+        Core.inRange(mHsvMat, new Scalar(0, 175, 0), new Scalar(255, 255, 255), lowSatMask);
+        Core.inRange(mHsvMat, new Scalar(0, 0, 175), new Scalar(255, 255, 255), lowValMask);
+        Core.bitwise_or(lowSatMask, lowValMask, grayMask);
+        Core.bitwise_or(lowMask, grayMask, grayMask);
+        Core.bitwise_or(highMask, grayMask, grayMask);
+        Imgproc.findContours(grayMask, grayContours, new Mat(), Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+        for (int i = 0; i < grayContours.size(); i ++) {
+            MatOfPoint p = grayContours.get(i);
+            Rect rect = Imgproc.boundingRect(p);
+            int n = rect.x + rect.width/2;
+            if (Imgproc.contourArea(p) > PARTICLE_MAX_THRESHOLD) {
+                Imgproc.drawContours(rgba, grayContours, i, blackScalar, -1);
+            }
+        }
+        Drawing.drawContours(rgba, resultContours, new ColorRGBA(0, 0, 255));
+
+        resultContours.clear();
+        grayContours.clear();
+    }
+
+    void options() {
+        boolean confirmed = false;
+        boolean upPressed = false;
+        boolean downPressed = false;
+
+        int modify = 0;
+        int diff = 0;
+        while (!confirmed) {
+
+            if (gamepad1.dpad_up && !upPressed) {
+                upPressed = true;
+                diff = 2;
+            }
+            if (gamepad1.dpad_down && !downPressed) {
+                downPressed = true;
+                diff = -2;
+            }
+            if (!gamepad1.dpad_up) {
+                upPressed = false;
+            }
+            if (!gamepad1.dpad_down) {
+                downPressed = false;
+            }
+            if (gamepad1.y) {
+                modify = 0;
+            }
+            if (gamepad1.b) {
+                modify = 1;
+            }
+            if (gamepad1.a) {
+                modify = 2;
+            }
+            if (gamepad1.x) {
+                modify = 3;
+            }
+            if (gamepad1.right_bumper) {
+                modify = 4;
+            }
+            if (gamepad1.left_bumper) {
+                modify = 5;
+            }
+            if (gamepad1.right_trigger > 0.15) {
+                modify = 6;
+            }
+            if (gamepad1.left_trigger > 0.15) {
+                modify = 7;
+            }
+            if (gamepad1.right_stick_x < -0.15) {
+                visMode = VORTEX;
+            }
+            if (gamepad1.right_stick_x > 0.15) {
+                visMode = PARTICLES;
+            }
+            if (gamepad1.left_stick_x < -0.15) {
+                team = RED;
+            }
+            if (gamepad1.left_stick_x > 0.15) {
+                team = BLUE;
+            }
+            switch (modify) {
+                case 0:
+                    telemetry.addData("Modifying", "Min Blue");
+                    minBlueH += diff;
+                    diff = 0;
+                    break;
+                case 1:
+                    telemetry.addData("Modifying", "Max Blue");
+                    maxBlueH += diff;
+                    diff = 0;
+                    break;
+                case 2:
+                    telemetry.addData("Modifying", "Min Red");
+                    minRedH += diff;
+                    diff = 0;
+                    break;
+                case 3:
+                    telemetry.addData("Modifying", "Max Red");
+                    maxRedH += diff;
+                    diff = 0;
+                    break;
+                case 4:
+                    telemetry.addData("Modifying", "Min Blue Sat");
+                    minBlueSat += diff;
+                    diff = 0;
+                    break;
+                case 5:
+                    telemetry.addData("Modifying", "Min Red Sat");
+                    minRedSat += diff;
+                    diff = 0;
+                    break;
+                case 6:
+                    telemetry.addData("Modifying", "Min Blue Val");
+                    minBlueVal += diff;
+                    diff = 0;
+                    break;
+                case 7:
+                    telemetry.addData("Modifying", "Min Red Val");
+                    minRedVal += diff;
+                    diff = 0;
+                    break;
+
+            }
+
+            telemetry.addData("Min Blue", minBlueH);
+            telemetry.addData("Max Blue", maxBlueH);
+            telemetry.addData("Min Red", minRedH);
+            telemetry.addData("Max Red", maxRedH);
+            telemetry.addData("Min Blue Sat", minBlueSat);
+            telemetry.addData("Min Red Sat", minRedSat);
+            telemetry.addData("Min Blue Val", minBlueVal);
+            telemetry.addData("Min Red Val", minRedVal);
+            telemetry.addData("VisMode", visMode);
+            telemetry.addData("Team", team);
+
+            if (gamepad1.left_stick_button && gamepad1.right_stick_button) {
+                confirmed = true;
+                telemetry.addData("Confirmed!", "");
+            }
+            telemetry.update();
+
+        }
+    }
+
+    boolean possibleBall(double area, int x) {
+        if (cameraNumber == 1) {
+            x = IMAGE_WIDTH - x;
+        }
+        return area > PARTICLE_MIN_THRESHOLD && area < Math.max(PARTICLE_MAX_THRESHOLD * x/IMAGE_WIDTH, 2000);
+    }
+
+    void calibrateTiles() {
+        // Point phone at tiles so that only tiles are seen.
+        long totalHue = 0;
+        long totalSat = 0;
+        long totalVal = 0;
+        int totalPixels = mHsvMat.height() * mHsvMat.width();
+        for (int i = 0; i < mHsvMat.height(); i++) {
+            for (int j = 0; j < mHsvMat.width(); j++) {
+                double[] colArr = mHsvMat.get(i,j);
+                totalHue += colArr[0];
+                totalSat += colArr[1];
+                totalVal += colArr[2];
+            }
+        }
+    }
+
+    Mat findCircles(Mat rgba, Mat gray) {
+        List<Mat> channels = new ArrayList<>();
+        Core.split(mHsvMat, channels);
+        Mat hue = channels.get(0);
+        Mat sat = channels.get(1);
+        Mat val = channels.get(2);
+        Mat filtered = new Mat();
+        if (team == BLUE) {
+            Core.inRange(hue, new Scalar(minBlueH), new Scalar(maxBlueH), hue);
+            Core.inRange(sat, new Scalar(minBlueSat), new Scalar(255), sat);
+            Core.inRange(val, new Scalar(minBlueVal), new Scalar(255), val);
+        } else if (team == RED) {
+            Core.inRange(hue, new Scalar(minRedH), new Scalar(maxRedH), hue);
+            Core.inRange(sat, new Scalar(minRedSat), new Scalar(255), sat);
+            Core.inRange(val, new Scalar(minRedVal), new Scalar(255), val);
+        }
+        Core.bitwise_and(hue, sat, filtered);
+        Core.bitwise_and(val, filtered, filtered);
+
+        Imgproc.cvtColor(filtered.clone(), rgba, Imgproc.COLOR_GRAY2RGB);
+        Imgproc.findContours(filtered.clone(), initialContourList, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        double minCircleArea = PARTICLE_MIN_THRESHOLD;
+        for (MatOfPoint p : initialContourList) {
+            double contourArea = Imgproc.contourArea(p);
+            Rect rect = Imgproc.boundingRect(p);
+            double radius = (rect.width + rect.height)/4;
+            double circleArea = Math.PI * radius * radius;
+            int centerX = rect.x + rect.width/2;
+            int centerY = rect.y + rect.height/2;
+
+            Drawing.drawRectangle(rgba, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new ColorRGBA(0, 0, 255));
+            if (centX != -1) {
+                if (Math.abs(centerX - centX) > 100 || Math.abs(centerY - centY) > 100) {
+                    continue;
+                }
+            }
+            if ((double)rect.width/rect.height > 1.3 || (double)rect.height/rect.width > 1.3) {
+                continue;
+            }
+
+            if (contourArea/circleArea > 0.7) {
+                Drawing.drawRectangle(rgba, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new ColorRGBA(255, 255, 0));
+                Drawing.drawCircle(rgba, new Point(rect.x + rect.width/2, rect.y + rect.height/2), (int)(radius),new ColorRGBA(255, 0, 0) );
+                if (contourArea > minCircleArea) {
+                    minCircleArea = contourArea;
+                    centX = centerX;
+                    centY = centerY;
+                    passedFirstCheck.clear();
+                    passedFirstCheck.add(p);
+                }
+            }
+        }
+        if (passedFirstCheck.isEmpty()) {
+            centX = -1;
+            centY = -1;
+        } else {
+            Drawing.drawCircle(rgba,new Point(centX, centY), 10, new ColorRGBA(0, 255, 0));
+        }
+        initialContourList.clear();
+        passedFirstCheck.clear();
+        return rgba;
+    }
+
+    Mat objectDetection(Mat rgba, Mat gray) {
+        if (visMode == PARTICLES) {
+            //tileFilter(rgba);
+            //findCircles(rgba, gray);
         }
 
 
         if (team == RED) {
             //Core.inRange(mHsvMat, new Scalar(0, 50, 40), new Scalar(10, 255, 255), red1);
-            Core.inRange(mHsvMat, new Scalar(minRedH, minRedSat, minRedBright), new Scalar(maxRedH, 255, 255), colorMask);
+            Core.inRange(mHsvMat, new Scalar(minRedH, minRedSat, minRedVal), new Scalar(maxRedH, 255, 255), colorMask);
             //Core.bitwise_or(red1, red2, colorMask);
 
         } else if (team == BLUE) {
             if (visMode == VORTEX) {
-                Core.inRange(mHsvMat, new Scalar(minBlueH, minBlueSat, minBlueBright), new Scalar(maxBlueH, 255, 255), colorMask);
+                Core.inRange(mHsvMat, new Scalar(minBlueH, minBlueSat, minBlueVal), new Scalar(maxBlueH, 255, 255), colorMask);
             } else if (visMode == PARTICLES) {
-                Core.inRange(mHsvMat, new Scalar(minBlueH, minBlueSat, minBlueBright), new Scalar(maxBlueH, 255, 255), colorMask);
+                Core.inRange(mHsvMat, new Scalar(minBlueH, minBlueSat, minBlueVal), new Scalar(maxBlueH, 255, 255), colorMask);
             }
         }
         //OR the two masks together to produce a mask that combines the ranges
@@ -175,7 +524,6 @@ public class VisionShootingTest extends LinearOpModeVision {
         for(MatOfPoint p: initialContourList) {        //Go through preliminary list of contours
             p.convertTo(temp2fMat, CvType.CV_32F);      //Convert MatOfPoint to MatofPoint2f to run approxPolyDP
             double perimeter = Imgproc.arcLength(temp2fMat, true);
-            // TODO: 2/24/17 experiment with perimeter and convexity defects for restrictions
             //Approximate each contour using a polygon
             Imgproc.approxPolyDP(temp2fMat, polyApprox, 0.02*perimeter, true);
             MatOfPoint polyApproxFloat = new MatOfPoint(polyApprox.toArray());
@@ -294,227 +642,9 @@ public class VisionShootingTest extends LinearOpModeVision {
         }
         Point vortexCenter = new Point(center.getX(), center.getY());
         Drawing.drawCircle(rgba, vortexCenter, 10, new ColorRGBA(255, 255, 255));
-        Drawing.drawContours(rgba, resultContours, new ColorRGBA(255, 0, 0));
+        //Drawing.drawContours(rgba, resultContours, new ColorRGBA(255, 0, 0));
         Drawing.drawRectangle(rgba, new Point(leftX, topY), new Point(rightX, bottomY), new ColorRGBA(255, 255, 0));
-
-
         return rgba;
-
-    }
-
-    public void initRobot() {
-        //Initialize robot hardware and stuff here
-        driveTrain = new MecanumDriveTrain(this);
-        intakeTask = new IntakeTask(this);
-    }
-
-    public void initVision() {
-        mHsvMat = new Mat();
-        red1 = new Mat();
-        red2 = new Mat();
-        colorMask = new Mat();
-        blurred = new Mat();
-        convexHull = new MatOfInt();
-        temp2fMat = new MatOfPoint2f();
-        polyApprox = new MatOfPoint2f();
-        convexityDefects = new MatOfInt4();
-        initialContourList = new ArrayList<>();
-        potentialContours = new ArrayList<>();
-        passedFirstCheck = new ArrayList<>();
-        resultContours = new ArrayList<>();
-
-        grayContours = new ArrayList<>();
-        grayMask = new Mat();
-        lowBrightMask = new Mat();
-        lowSatMask = new Mat();
-
-    }
-    public void rotateAim() {
-
-        if (center.getY() == -1) {
-            driveTrain.startRotation(0.1);
-        } else if (center.getY() < IMAGE_HEIGHT/2 - ACCEPTABLE_ERROR) {
-            driveTrain.startRotation(correctPower);
-        } else if (center.getY() > IMAGE_HEIGHT/2 + ACCEPTABLE_ERROR) {
-            driveTrain.startRotation(-correctPower);
-        } else {
-            if (detectedTarget) {
-                driveForward();
-            }
-        }
-    }
-
-    public void driveForward() {
-        if (center.getX() > IMAGE_WIDTH * 0.75) {
-            driveTrain.moveForwardNInch(0.2, 10, 5, false, true, false);
-        } else {
-            intakeTask.setPower(1);
-            driveTrain.powerAllMotors(0.25);
-        }
-    }
-
-    public void changeCamera(int a) {
-        if (cameraNumber != a) {
-            cameraNumber = a;
-            stopCamera();
-            initCamera(a);
-            initVision();
-        }
-    }
-
-    public void tileFilter(Mat rgba) {
-        Mat lowMask = new Mat();
-        Mat highMask = new Mat();
-        Core.inRange(mHsvMat, new Scalar(0, 50, 50), new Scalar (50, 255, 255), lowMask);
-        Core.inRange(mHsvMat, new Scalar (140, 50, 50), new Scalar(180, 255, 255), highMask);
-        Core.inRange(mHsvMat, new Scalar(0, 175, 0), new Scalar(255, 255, 255), lowSatMask);
-        Core.inRange(mHsvMat, new Scalar(0, 0, 175), new Scalar(255, 255, 255), lowBrightMask);
-        Core.bitwise_or(lowSatMask, lowBrightMask, grayMask);
-        Core.bitwise_or(lowMask, grayMask, grayMask);
-        Core.bitwise_or(highMask, grayMask, grayMask);
-        Imgproc.findContours(grayMask, grayContours, new Mat(), Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
-        for (int i = 0; i < grayContours.size(); i ++) {
-            MatOfPoint p = grayContours.get(i);
-            Rect rect = Imgproc.boundingRect(p);
-            int n = rect.x + rect.width/2;
-            if (Imgproc.contourArea(p) > Math.max(PARTICLE_MAX_THRESHOLD * n/IMAGE_WIDTH, 2000)) {
-                Imgproc.drawContours(rgba, grayContours, i, blackScalar, -1);
-            }
-        }
-        Drawing.drawContours(rgba, resultContours, new ColorRGBA(0, 0, 255));
-
-        resultContours.clear();
-        grayContours.clear();
-    }
-
-    void options() {
-        boolean confirmed = false;
-        boolean upPressed = false;
-        boolean downPressed = false;
-
-        int modify = 0;
-        int diff = 0;
-        while (!confirmed) {
-
-            if (gamepad1.dpad_up && !upPressed) {
-                upPressed = true;
-                diff = 5;
-            }
-            if (gamepad1.dpad_down && !downPressed) {
-                downPressed = true;
-                diff = -5;
-            }
-            if (!gamepad1.dpad_up) {
-                upPressed = false;
-            }
-            if (!gamepad1.dpad_down) {
-                downPressed = false;
-            }
-            if (gamepad1.y) {
-                modify = 0;
-            }
-            if (gamepad1.b) {
-                modify = 1;
-            }
-            if (gamepad1.a) {
-                modify = 2;
-            }
-            if (gamepad1.x) {
-                modify = 3;
-            }
-            if (gamepad1.right_bumper) {
-                modify = 4;
-            }
-            if (gamepad1.left_bumper) {
-                modify = 5;
-            }
-            if (gamepad1.right_trigger > 0.15) {
-                modify = 6;
-            }
-            if (gamepad1.left_trigger > 0.15) {
-                modify = 7;
-            }
-            if (gamepad1.right_stick_x < -0.15) {
-                visMode = VORTEX;
-            }
-            if (gamepad1.right_stick_x > 0.15) {
-                visMode = PARTICLES;
-            }
-            if (gamepad1.left_stick_x < -0.15) {
-                team = RED;
-            }
-            if (gamepad1.left_stick_x > 0.15) {
-                team = BLUE;
-            }
-            switch (modify) {
-                case 0:
-                    telemetry.addData("Modifying", "Min Blue");
-                    minBlueH += diff;
-                    diff = 0;
-                    break;
-                case 1:
-                    telemetry.addData("Modifying", "Max Blue");
-                    maxBlueH += diff;
-                    diff = 0;
-                    break;
-                case 2:
-                    telemetry.addData("Modifying", "Min Red");
-                    minRedH += diff;
-                    diff = 0;
-                    break;
-                case 3:
-                    telemetry.addData("Modifying", "Max Red");
-                    maxRedH += diff;
-                    diff = 0;
-                    break;
-                case 4:
-                    telemetry.addData("Modifying", "Min Blue Sat");
-                    minBlueSat += diff;
-                    diff = 0;
-                    break;
-                case 5:
-                    telemetry.addData("Modifying", "Min Red Sat");
-                    minRedSat += diff;
-                    diff = 0;
-                    break;
-                case 6:
-                    telemetry.addData("Modifying", "Min Blue Bright");
-                    minBlueBright += diff;
-                    diff = 0;
-                    break;
-                case 7:
-                    telemetry.addData("Modifying", "Min Red Bright");
-                    minRedBright += diff;
-                    diff = 0;
-                    break;
-
-            }
-
-            telemetry.addData("Min Blue", minBlueH);
-            telemetry.addData("Max Blue", maxBlueH);
-            telemetry.addData("Min Red", minRedH);
-            telemetry.addData("Max Red", maxRedH);
-            telemetry.addData("Min Blue Sat", minBlueSat);
-            telemetry.addData("Min Red Sat", minRedSat);
-            telemetry.addData("Min Blue Bright", minBlueBright);
-            telemetry.addData("Min Red Bright", minRedBright);
-            telemetry.addData("VisMode", visMode);
-            telemetry.addData("Team", team);
-
-            if (gamepad1.left_stick_button && gamepad1.right_stick_button) {
-                confirmed = true;
-                telemetry.addData("Confirmed!", "");
-            }
-            telemetry.update();
-
-        }
-    }
-
-    boolean possibleBall(double area, int x) {
-        if (cameraNumber == 1) {
-            x = IMAGE_WIDTH - x;
-        }
-        return area > PARTICLE_MIN_THRESHOLD && area < Math.max(PARTICLE_MAX_THRESHOLD * x/IMAGE_WIDTH, 2000);
     }
 
 }
