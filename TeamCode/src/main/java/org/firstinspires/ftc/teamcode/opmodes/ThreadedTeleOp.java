@@ -22,7 +22,7 @@ import java.text.DecimalFormat;
 
 public class ThreadedTeleOp extends LinearOpMode {
 
-    private Servo guide;
+    private Servo guide, phoneServo;
     private DriveTrainTask driveTrainTask;
     private FlywheelTask flywheelTask;
     private CapBallTask capBallTask;
@@ -75,6 +75,8 @@ public class ThreadedTeleOp extends LinearOpMode {
 
     public void initialize(){
         guide = hardwareMap.servo.get("guide");
+        phoneServo = hardwareMap.servo.get("phoneServo");
+        phoneServo.setPosition(0.7);
         guide.setPosition(ButtonPusherTask.upPosition);
         driveTrainTask = new DriveTrainTask(this);
         flywheelTask = new FlywheelTask(this);
