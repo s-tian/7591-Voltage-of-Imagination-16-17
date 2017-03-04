@@ -61,8 +61,9 @@ public class ButtonPusherTask extends TaskThread {
 
             //TeleOp
             if (teleOp) {
-                if (Math.abs(opMode.gamepad2.right_stick_x) > 0.15|| Math.abs(opMode.gamepad2.left_stick_x) > 0.15) {
-                    button.setPower(opMode.gamepad2.right_stick_x+opMode.gamepad2.left_stick_x);
+                double rightStick = opMode.gamepad2.right_stick_x;
+                if (Math.abs(rightStick) > 0.25) {
+                    button.setPower(rightStick);
                     guideDown();
                 } else {
                     button.setPower(0);

@@ -619,4 +619,12 @@ public class MecanumDriveTrain {
         setEncoderMode(DcMotor.RunMode.RUN_USING_ENCODER);
         stopAll();
     }
+
+    public double getAngle() {
+        return imu.getAngle();
+    }
+
+    public double getRadians() { return imu.getRadians(); }
+
+
 }

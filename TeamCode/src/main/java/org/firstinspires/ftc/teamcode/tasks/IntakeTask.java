@@ -25,11 +25,11 @@ public class IntakeTask extends TaskThread {
 
     ColorSensor colorIntake;
     public VOIColorSensor voiColorIntake;
+    public FlywheelTask flywheelTask;
 
     CRServo sweeper1, sweeper2, sweeper3;
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     ElapsedTime rejectTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
-
 
     public IntakeTask(LinearOpMode opMode) {
         this.opMode = opMode;
@@ -55,7 +55,6 @@ public class IntakeTask extends TaskThread {
         boolean printed = false;
         boolean print2 = false;
         while(opMode.opModeIsActive() && running) {
-            System.out.println(voiColorIntake.getColor());
             //reject wrong color balls
             if (voiColorIntake.wrongColor()) {
                 System.out.println("Wrong Color! E");
@@ -70,6 +69,9 @@ public class IntakeTask extends TaskThread {
 
             if (teleOp) {
                 if (opMode.gamepad2.dpad_up) {
+                    if (flywheelTask.getTargetRate() > 0) {
+                        flywheelTask.setPhoneDown();
+                    }
                     if (!printed) {
                         System.out.println("Up");
                         printed = true;

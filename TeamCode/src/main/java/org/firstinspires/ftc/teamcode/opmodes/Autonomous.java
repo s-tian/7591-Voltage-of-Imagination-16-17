@@ -247,13 +247,13 @@ public class Autonomous extends LinearOpMode {
     }
 
     public void shoot() {
+        flywheelTask.setPhoneRest();
         System.out.println("Shoot");
         timer.reset();
         timer2.reset();
         intakeTask.oscillate = true;
         int count = -100;
         while (opModeIsActive()) {
-
             if (flywheelTask.getFlywheelState() == FlywheelTask.FlywheelState.STATE_RUNNING_NEAR_TARGET) {
                 if (flywheelTask.count == count + 2) {
                     System.out.println(flywheelTask.count + " Good");

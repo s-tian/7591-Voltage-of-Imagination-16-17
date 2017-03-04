@@ -3,11 +3,15 @@ package org.firstinspires.ftc.teamcode.tasks;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import java.text.DecimalFormat;
 
-import static org.firstinspires.ftc.teamcode.tasks.FlywheelTask.FlywheelState.*;
+import static org.firstinspires.ftc.teamcode.tasks.FlywheelTask.FlywheelState.STATE_ACCELERATING;
+import static org.firstinspires.ftc.teamcode.tasks.FlywheelTask.FlywheelState.STATE_ADJUSTING;
+import static org.firstinspires.ftc.teamcode.tasks.FlywheelTask.FlywheelState.STATE_RUNNING_NEAR_TARGET;
+import static org.firstinspires.ftc.teamcode.tasks.FlywheelTask.FlywheelState.STATE_STOPPED;
 
 /**
  * Created by Howard on 10/15/16.
@@ -15,6 +19,7 @@ import static org.firstinspires.ftc.teamcode.tasks.FlywheelTask.FlywheelState.*;
  */
 public class FlywheelTask extends TaskThread {
 
+    Servo phoneServo;
     private DcMotor flywheelRight;
     private DcMotor flywheelLeft;
     public volatile FlywheelState state;
@@ -29,6 +34,8 @@ public class FlywheelTask extends TaskThread {
     public static double KP = 0.11;     //0.004
     public static double KI = 0;        //0
     public static double KD = 0.001;    //0.0004
+
+    static final double visionPosition = 0.2, downPosition = 0, restPosition = 0.7;
 
     double voltageRatio;
     public static double lowPow = 0.68;
@@ -58,6 +65,8 @@ public class FlywheelTask extends TaskThread {
 
     @Override
     public void initialize() {
+        phoneServo = opMode.hardwareMap.servo.get("phoneServo");
+        phoneServo.setPosition(restPosition);
         flywheelRight = opMode.hardwareMap.dcMotor.get("flywheelRight");
         flywheelLeft = opMode.hardwareMap.dcMotor.get("flywheelLeft");
         flywheelRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -100,8 +109,6 @@ public class FlywheelTask extends TaskThread {
             }
 
             df.setMaximumFractionDigits(3);
-
-
 
             if(state == STATE_ACCELERATING) {
                 if(timer.time() > 1000) {//Give the flywheel 1.2 seconds to power up before adjusting speed
@@ -224,6 +231,10 @@ public class FlywheelTask extends TaskThread {
         return flywheelRight.getCurrentPosition();
     }
 
+    public double getTargetRate() {
+        return targetEncoderRate;
+    }
+
     public FlywheelState getFlywheelState() {
         sleep(50);
         return state; }
@@ -232,8 +243,16 @@ public class FlywheelTask extends TaskThread {
         return state.toString();
     }
 
-    public void setPidModify(boolean pidOn) {
-        PID_Modify = pidOn;
+    public void setPhoneVision() {
+        phoneServo.setPosition(visionPosition);
+    }
+
+    public void setPhoneRest() {
+        phoneServo.setPosition(restPosition);
+    }
+
+    public void setPhoneDown() {
+        phoneServo.setPosition(downPosition);
     }
 
 }
