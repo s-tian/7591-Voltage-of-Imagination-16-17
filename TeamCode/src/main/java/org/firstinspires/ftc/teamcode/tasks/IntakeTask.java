@@ -57,12 +57,13 @@ public class IntakeTask extends TaskThread {
         while(opMode.opModeIsActive() && running) {
             //reject wrong color balls
             if (voiColorIntake.wrongColor()) {
+                double initialPower = sweeper1.getPower();
                 System.out.println("Wrong Color! E");
                 rejectTimer.reset();
                 sweeper.setPower(-1);
                 opMode.telemetry.addData("Wrong Ball", "!");
                 while (opMode.opModeIsActive() && rejectTimer.time() < rejectTime);
-                sweeper.setPower(0);
+                sweeper.setPower(initialPower);
                 continue;
             }
             // TeleOp commands

@@ -5,9 +5,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.opmodes.ThreadedTeleOp;
-import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
-
 /**
  * Created by Howard on 10/15/16.
  */
@@ -21,6 +18,8 @@ public class DriveTrainTask extends TaskThread {
     volatile double joyStickMultiplier = 1;
     boolean dpadUpPushed = false;
     boolean xPushed = false;
+    public volatile boolean moving = false;
+    public volatile boolean aiming = false;
 
     public double zeroAngle, joyStickAngle, gyroAngle;
 
@@ -34,15 +33,18 @@ public class DriveTrainTask extends TaskThread {
         timer.reset();
         while(opMode.opModeIsActive() && running) {
             if (timer.time() > 10) {
-
                 joy1Y = -opMode.gamepad1.left_stick_y * 3/4;
                 joy1X = opMode.gamepad1.left_stick_x * 3/4;
                 joy2X = opMode.gamepad1.right_stick_x * 3/4;
-
-                frontLeft.setPower(Math.max(-1, Math.min(1, joyStickMultiplier*(joy1Y + joy2X + joy1X))));
-                backLeft.setPower(Math.max(-1, joyStickMultiplier*Math.min(1, joy1Y + joy2X - joy1X)));
-                frontRight.setPower(Math.max(-1, joyStickMultiplier*Math.min(1, joy1Y - joy2X - joy1X)));
-                backRight.setPower(Math.max(-1, joyStickMultiplier*Math.min(1, joy1Y - joy2X + joy1X)));
+                if (!aiming) {
+                    frontLeft.setPower(Math.max(-1, Math.min(1, joyStickMultiplier * (joy1Y + joy2X + joy1X))));
+                    backLeft.setPower(Math.max(-1, joyStickMultiplier * Math.min(1, joy1Y + joy2X - joy1X)));
+                    frontRight.setPower(Math.max(-1, joyStickMultiplier * Math.min(1, joy1Y - joy2X - joy1X)));
+                    backRight.setPower(Math.max(-1, joyStickMultiplier * Math.min(1, joy1Y - joy2X + joy1X)));
+                }
+                double maxPress = Math.max(Math.abs(joy1Y), Math.abs(joy1X));
+                maxPress = Math.max(Math.abs(joy2X), maxPress);
+                moving = maxPress > 0.15;
                 timer.reset();
             }
         }

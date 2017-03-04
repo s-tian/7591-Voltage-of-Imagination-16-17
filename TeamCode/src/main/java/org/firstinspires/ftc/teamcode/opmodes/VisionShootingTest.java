@@ -7,7 +7,6 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.robotutil.MecanumDriveTrain;
 import org.firstinspires.ftc.teamcode.robotutil.Team;
 import org.firstinspires.ftc.teamcode.robotutil.VOIImu;
-import org.firstinspires.ftc.teamcode.robotutil.VortexCenterPoint;
 import org.firstinspires.ftc.teamcode.tasks.CapBallTask;
 import org.firstinspires.ftc.teamcode.tasks.FlywheelTask;
 import org.firstinspires.ftc.teamcode.tasks.IntakeTask;
@@ -25,7 +24,6 @@ import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
-import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
@@ -70,7 +68,6 @@ public class VisionShootingTest extends LinearOpModeVision {
     List<MatOfPoint> grayContours;
     List<Contour> resultContours;
     List<MatOfPoint> passedFirstCheck;
-    VortexCenterPoint center;
 
     FlywheelTask flywheelTask;
     IntakeTask intakeTask;
@@ -90,7 +87,7 @@ public class VisionShootingTest extends LinearOpModeVision {
 
     static final double visionPosition = 0.2, downPostion = 0, restPosition = 0.7;
 
-    static final int ACCEPTABLE_ERROR = 50;
+    static final int ACCEPTABLE_ERROR = 40;
     static final int PARTICLE_TARGET = 320;
     static final double MIN_PARTICLE_AREA_RATIO = 0.6;
     static final double PARTICLE_MIN_THRESHOLD = 500;
@@ -105,7 +102,7 @@ public class VisionShootingTest extends LinearOpModeVision {
     static int minVortexBlueH = 96;
     static int maxVortexBlueH = 120;
     static int minVortexBlueSat = 50;
-    static int maxVortexBlueVal = 115;
+    static int maxVortexBlueVal = 200;
 
     static int minBlueH = 80;
     static int maxBlueH = 110;
@@ -127,6 +124,7 @@ public class VisionShootingTest extends LinearOpModeVision {
     VisionMode visMode = PARTICLES;
 
     boolean ballDetected = false;
+    boolean explore = true;
 
     // location stuff
     double robotX = 36;
@@ -138,6 +136,8 @@ public class VisionShootingTest extends LinearOpModeVision {
     // general autonomous stuff
     private int shootTime = 2500;
 
+    final double shootDistance = 36;
+
 
 
     public enum VisionMode {
@@ -146,13 +146,13 @@ public class VisionShootingTest extends LinearOpModeVision {
 
     @Override
     public void runOpMode() {
-        center = new VortexCenterPoint(-1, -1);
         initCamera(cameraNumber);   //Start OpenCV
         initVision();   //Do a bunch of initialization for vision code
         initRobot();
         options();
         setInitialPosition();
         waitForStart();
+        changeVisMode(PARTICLES);
         startRobot();
 
         ElapsedTime t = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
@@ -164,28 +164,30 @@ public class VisionShootingTest extends LinearOpModeVision {
             } else {
                 correctPower = 0.03;
             }
-            rotateAim();
+            if (rotateAim()) {
+                foundTarget();
+            }
         }
         stopCamera();   //Tear down the camera instance
         System.out.println("Camera Stopped");
     }
 
     @Override
-    public Mat processFrame(Mat rgba, Mat gray) {       //Callback from OpenCV leads here
+    public Mat processFrame(Mat rgba, Mat gray) {
+        //Callback from OpenCV leads here
         //Do image processing for individual frames here
         //Convert image to HSV format
-        mRgbaMat = rgba;
-        //Define two color ranges to match as red because the hue for red crosses over 180 to 0
-        if (visMode == PARTICLES) {
-            Imgproc.GaussianBlur(rgba, rgba, new Size(11, 11), 5, 5);
-            Imgproc.cvtColor(rgba, mHsvMat, Imgproc.COLOR_RGB2HSV);
-            rgba = findCircles(rgba, gray);
-        } else {
-            Imgproc.GaussianBlur(rgba, rgba, new Size(5, 5), 2, 2);
-            rgba = findVortex(rgba, gray);
+        if (explore) {
+            mRgbaMat = rgba;
+            //Define two color ranges to match as red because the hue for red crosses over 180 to 0
+            if (visMode == PARTICLES) {
+                rgba = findCircles(rgba, gray);
+            } else {
+                rgba = findVortex(rgba, gray);
+            }
+            //System.out.println("X: " + centX + " Y: " + centY);
+            Drawing.drawRectangle(rgba, new Point(1, 1), new Point(IMAGE_WIDTH - 1, IMAGE_HEIGHT - 1), new ColorRGBA(255, 255, 255));
         }
-        System.out.println("X: " + centX + " Y: " + centY);
-        Drawing.drawRectangle(rgba, new Point(1, 1), new Point(IMAGE_WIDTH - 1, IMAGE_HEIGHT - 1), new ColorRGBA(255, 255, 255));
         return rgba;
     }
 
@@ -195,8 +197,7 @@ public class VisionShootingTest extends LinearOpModeVision {
         intakeTask = new IntakeTask(this);
         new CapBallTask(this);
         flywheelTask = new FlywheelTask(this);
-        phoneServo = hardwareMap.servo.get("phoneServo");
-        phoneServo.setPosition(visionPosition);
+        flywheelTask.setPhoneVision();
         zeroAngle = driveTrain.getAngle();
         if (team == RED) {
             double temp = vortexX;
@@ -228,7 +229,7 @@ public class VisionShootingTest extends LinearOpModeVision {
 
     }
 
-    public void rotateAim() {
+    public boolean rotateAim() {
         if (centY != -1) {
             if (pauseTimer.time() < 500) {
                 driveTrain.stopAll();
@@ -246,39 +247,73 @@ public class VisionShootingTest extends LinearOpModeVision {
             ballDetected = false;
             driveTrain.startRotation(-correctPower);
         } else {
-            if (!ballDetected) {
-                driveTrain.stopAll();
+            driveTrain.stopAll();
+            return true;
+        }
+        return false;
+    }
+
+    public void foundTarget() {
+        if (!ballDetected) {
+            driveTrain.stopAll();
+        }
+        if (visMode == PARTICLES) {
+            sleep(250);
+            if (Math.abs(centY - PARTICLE_TARGET) < ACCEPTABLE_ERROR) {
+                driveForward();
             }
-            if (visMode == PARTICLES) {
-                sleep(250);
-                if (Math.abs(centY - PARTICLE_TARGET) < ACCEPTABLE_ERROR) {
-                    driveForward();
-                }
-            } else if (visMode == VORTEX) {
-                if (distanceAim())
-                    flywheelTask.setFlywheelPow(0.68);
-                    flywheelTask.setPhoneDown();
-                    shoot();
-                }
+        } else if (visMode == VORTEX) {
+            if (distanceAim()) {
+                flywheelTask.setFlywheelPow(0.68);
+                flywheelTask.setPhoneDown();
+                shoot();
             }
         }
-    
+    }
     
     public boolean distanceAim() {
-        while (opModeIsActive()) {
+        System.out.println("DISTANCE AIM");
+        System.out.println("Initial Position");
+        printPosition();
             if (centX == -1) {
                 driveTrain.stopAll();
                 return false;
-            } else if (centX > TARGET_VORTEX_HEIGHT + 50) {
-                driveTrain.powerAllMotors(0.15);
+            } /*else if (centX > TARGET_VORTEX_HEIGHT + 50) {
+                driveTrain.powerAllMotors(0.08);
             } else if (centX < TARGET_VORTEX_HEIGHT - 50) {
-                driveTrain.powerAllMotors(-0.15);
+                driveTrain.powerAllMotors(-0.08);
             } else {
                 driveTrain.stopAll();
+                while (!rotateAim() && opModeIsActive());
                 return true;
+            }*/
+            double dist = distance (robotX, vortexX, robotY, vortexY);
+            double distToDrive = dist - shootDistance;
+            if ( distToDrive > 0) {
+                double initialAngle = driveTrain.getAngle();
+                driveTrain.moveBackwardNInch(0.15, distToDrive, 5, false, true, false);
+                robotX -= distToDrive * Math.cos(initialAngle*Math.PI/180);
+                robotY -= distToDrive * Math.sin(initialAngle*Math.PI/180);
+            } else if (dist < 0){
+                double initialAngle = driveTrain.getAngle();
+                driveTrain.moveForwardNInch(0.15, Math.abs(distToDrive), 5, false, true, false);
+                robotX -= distToDrive * Math.cos(initialAngle*Math.PI/180);
+                robotY -= distToDrive * Math.sin(initialAngle*Math.PI/180);
             }
-        }
-        return false;
+            System.out.println("Final Position: ");
+            printPosition();
+            driveTrain.stopAll();
+            while (!rotateAim() && opModeIsActive());
+            printPosition();
+            return true;
+
+
+    }
+
+    double distance(double x1, double x2, double y1, double y2) {
+        double x = x1 - x2;
+        double y = y1 - y2;
+        return Math.sqrt(x*x + y*y);
     }
 
     public void driveForward() {
@@ -287,27 +322,33 @@ public class VisionShootingTest extends LinearOpModeVision {
         if (centX > IMAGE_WIDTH * 0.7) {
             int startTicks = driveTrain.backRight.getCurrentPosition();
             intakeTask.setPower(1);
-            driveTrain.powerAllMotors(0.2);
+            driveTrain.powerAllMotors(0.4);
             rejectTimer.reset();
+            explore = false;
             while (opModeIsActive() && rejectTimer.time() < 3000) {
                 if (intakeTask.correctColor()) {
                     driveTrain.stopAll();
                     changeVisMode(VORTEX);
+                    timer.reset();
                     sleep(200);
                     double finalAngle = VOIImu.subtractAngles(driveTrain.getAngle(), zeroAngle) * Math.PI / 180;
                     angle = (angle + finalAngle)/2;
                     double totalInches = (driveTrain.backRight.getCurrentPosition() - startTicks)/MecanumDriveTrain.TICKS_PER_INCH_FORWARD;
                     robotX += totalInches * Math.cos(angle);
                     robotY += totalInches * Math.sin(angle);
+                    printPosition();
                     double vortexAngle = VOIImu.subtractAngles(Math.atan2(vortexY - robotY, vortexX - robotX) * 180/Math.PI, zeroAngle);
                     printPosition();
                     System.out.println("Vortex angle: " + vortexAngle);
                     driveTrain.rotateToAngle(VOIImu.subtractAngles(180,vortexAngle));
+                    explore = true;
+                    while (timer.time() < 3500 && opModeIsActive());
                     return;
                 }
             }
+            explore = true;
         } else {
-            driveTrain.moveForwardNInch(0.2, 10, 5, false, true, false);
+            driveTrain.moveForwardNInch(0.3, 12, 5, false, true, false);
             robotX += 10*Math.cos(angle);
             robotY += 10*Math.sin(angle);
         }
@@ -469,6 +510,7 @@ public class VisionShootingTest extends LinearOpModeVision {
 
         }
         while (gamepad1.left_stick_button && gamepad1.right_stick_button);
+        zeroAngle = driveTrain.getAngle();
     }
 
     boolean possibleBall(double area, int x) {
@@ -478,24 +520,9 @@ public class VisionShootingTest extends LinearOpModeVision {
         return area > PARTICLE_MIN_THRESHOLD && area < Math.max(PARTICLE_MAX_THRESHOLD * x/IMAGE_WIDTH, 2000);
     }
 
-    void calibrateTiles() {
-        // Point phone at tiles so that only tiles are seen.
-        long totalHue = 0;
-        long totalSat = 0;
-        long totalVal = 0;
-        int totalPixels = mHsvMat.height() * mHsvMat.width();
-        for (int i = 0; i < mHsvMat.height(); i++) {
-            for (int j = 0; j < mHsvMat.width(); j++) {
-                double[] colArr = mHsvMat.get(i,j);
-                totalHue += colArr[0];
-                totalSat += colArr[1];
-                totalVal += colArr[2];
-            }
-        }
-    }
-
     void changeVisMode (VisionMode visMode) {
         if (visMode != this.visMode) {
+            centX = centY = -1;
             this.visMode = visMode;
             if (visMode == PARTICLES) {
                 changeCamera(0);
@@ -508,36 +535,22 @@ public class VisionShootingTest extends LinearOpModeVision {
     void startRobot() {
         intakeTask.start();
         flywheelTask.start();
-        phoneServo.setPosition(visionPosition);
+        flywheelTask.setPhoneVision();
     }
 
     Mat findCircles(Mat rgba, Mat gray) {
-        // List<Mat> channels = new ArrayList<>();
-        //Core.split(mHsvMat, channels);
-        // if (channels.size() < 3) {
-        // return new Mat();
-        // }
-        // Mat hue = channels.get(0);
-        // Mat sat = channels.get(1);
-        // Mat val = channels.get(2);
+        if (rgba == null) {
+            return rgba;
+        }
+        //Imgproc.GaussianBlur(rgba, rgba, new Size(11, 11), 5, 5);
+        Imgproc.cvtColor(rgba, mHsvMat, Imgproc.COLOR_RGB2HSV);
         Mat filtered = new Mat();
         if (team == BLUE) {
             Core.inRange(mHsvMat, new Scalar(minBlueH, minBlueSat, minBlueVal), new Scalar(maxBlueH, 255, 255), filtered);
-
-            /*Core.inRange(hue, new Scalar(minBlueH), new Scalar(maxBlueH), hue);
-            Core.inRange(sat, new Scalar(minBlueSat), new Scalar(255), sat);
-            Core.inRange(val, new Scalar(minBlueVal), new Scalar(255), val);*/
         } else if (team == RED) {
             Core.inRange(mHsvMat, new Scalar(minRedH, minRedSat, minRedVal), new Scalar(maxRedH, 255, 255), filtered);
-            /*Core.inRange(hue, new Scalar(minRedH), new Scalar(maxRedH), hue);
-            Core.inRange(sat, new Scalar(minRedSat), new Scalar(255), sat);
-            Core.inRange(val, new Scalar(minRedVal), new Scalar(255), val);*/
         }
-        // Core.bitwise_and(hue, sat, filtered);
-        // Core.bitwise_and(val, filtered, filtered);
-
-        //Imgproc.cvtColor(filtered.clone(), rgba, Imgproc.COLOR_GRAY2RGB);
-        Imgproc.findContours(filtered.clone(), initialContourList, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(filtered, initialContourList, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
         double minCircleArea = PARTICLE_MIN_THRESHOLD;
         for (MatOfPoint p : initialContourList) {
             double contourArea = Imgproc.contourArea(p);
@@ -549,7 +562,6 @@ public class VisionShootingTest extends LinearOpModeVision {
             if (centerX < IMAGE_WIDTH/2) {
                 continue;
             }
-
             Drawing.drawRectangle(rgba, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new ColorRGBA(0, 0, 255));
             if (centX != -1) {
                 if (Math.abs(centerX - centX) > 100 || Math.abs(centerY - centY) > 100) {
@@ -581,8 +593,7 @@ public class VisionShootingTest extends LinearOpModeVision {
             }
         }
         if (passedFirstCheck.isEmpty()) {
-            centX = -1;
-            centY = -1;
+            centX = centY = -1;
         } else {
             Drawing.drawCircle(rgba,new Point(centX, centY), 10, new ColorRGBA(0, 255, 0));
         }
@@ -592,31 +603,18 @@ public class VisionShootingTest extends LinearOpModeVision {
     }
 
     Mat findVortex(Mat rgba, Mat gray) {
-        Imgproc.cvtColor(rgba, mHsvMat, Imgproc.COLOR_RGB2HSV);
-        /*List<Mat> channels = new ArrayList<>();
-        Core.split(mHsvMat.clone(), channels);
-        if (channels.size() < 3) {
+        if (rgba == null) {
             return rgba;
         }
-        Mat hue = channels.get(0);
-        Mat sat = channels.get(1);
-        Mat val = channels.get(2);*/
+        //Imgproc.GaussianBlur(rgba, rgba, new Size(5, 5), 2, 2);
+        Imgproc.cvtColor(rgba, mHsvMat, Imgproc.COLOR_RGB2HSV);
         Mat filtered = new Mat();
         if (team == BLUE) {
-            Core.inRange(mHsvMat, new Scalar(minVortexBlueH, minVortexBlueSat, 30), new Scalar(maxVortexBlueH, 255, maxVortexBlueVal), filtered);
-            // Core.inRange(hue, new Scalar(minVortexBlueH), new Scalar(maxVortexBlueH), hue);
-            // Core.inRange(sat, new Scalar(minVortexBlueSat), new Scalar(255), sat);
-            // Core.inRange(val, new Scalar(30), new Scalar(maxVortexBlueVal), val);
+            Core.inRange(mHsvMat, new Scalar(minVortexBlueH, minVortexBlueSat, 50), new Scalar(maxVortexBlueH, 255, maxVortexBlueVal), filtered);
         } else if (team == RED) {
             Core.inRange(mHsvMat, new Scalar(minRedH, minRedSat, minRedVal), new Scalar(255, 255, 255), filtered);
-            // Core.inRange(hue, new Scalar(minRedH), new Scalar(maxRedH), hue);
-            // Core.inRange(sat, new Scalar(minRedSat), new Scalar(255), sat);
-            // Core.inRange(val, new Scalar(minRedVal), new Scalar(255), val);
         }
-        //Core.bitwise_and(hue.clone(), sat.clone(), filtered);
-        //Core.bitwise_and(val.clone(), filtered.clone(), filtered);
-        //Imgproc.cvtColor(filtered, rgba, Imgproc.COLOR_GRAY2RGB);
-        Imgproc.GaussianBlur(filtered, filtered, new Size(5, 5), 10);
+        //Imgproc.GaussianBlur(filtered, filtered, new Size(5, 5), 10);
         initialContourList.clear();
         potentialContours.clear();
         passedFirstCheck.clear();
@@ -634,17 +632,23 @@ public class VisionShootingTest extends LinearOpModeVision {
             Rect rect = Imgproc.boundingRect(polyApproxFloat);
             int y = rect.y + rect.height/2;
             int x = rect.x + rect.width/2;
+            Drawing.drawRectangle(rgba, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new ColorRGBA(0, 0, 255));
             if (centX != -1) {
                 if (Math.abs(x-centX) > 100 || Math.abs(y-centY) > 100) {
                     continue;
                 }
+            } else {
+
             }
 
-
             if(polyApproxFloat.toArray().length > 4) {
+                // Drawing.drawRectangle(rgba, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new ColorRGBA(0, 255, 0));
                 if(contourArea > minArea) {
+                    // Drawing.drawRectangle(rgba, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new ColorRGBA(255, 0, 0));
+
                     Imgproc.convexHull(polyApproxFloat, convexHull);
                     if(convexHull.rows() > 2) {
+                        // Drawing.drawRectangle(rgba, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height), new ColorRGBA(255, 255, 0));
                         Imgproc.convexityDefects(polyApproxFloat, convexHull, convexityDefects);
                         List<Integer> cdlist = convexityDefects.toList();
                         int count = 0;
@@ -707,11 +711,11 @@ public class VisionShootingTest extends LinearOpModeVision {
         zeroAngle = driveTrain.getAngle();
         while (!confirmed) {
             if (gamepad1.dpad_left && !leftPressed) {
-                robotX += 1;
+                robotX -= 1;
                 leftPressed = true;
             }
             if (gamepad1.dpad_right && !rightPressed) {
-                robotX -= 1;
+                robotX += 1;
                 rightPressed = true;
             }
             if (gamepad1.dpad_up && !upPressed) {
@@ -750,7 +754,7 @@ public class VisionShootingTest extends LinearOpModeVision {
         flywheelTask.setPhoneDown();
         System.out.println("Shoot");
         timer.reset();
-        intakeTask.oscillate = true;
+        /*intakeTask.oscillate = true;
         int count = -100;
         while (opModeIsActive()) {
             if (flywheelTask.getFlywheelState() == FlywheelTask.FlywheelState.STATE_RUNNING_NEAR_TARGET) {
@@ -772,7 +776,8 @@ public class VisionShootingTest extends LinearOpModeVision {
             }
         }
         intakeTask.oscillate = false;
-        intakeTask.power = 0;
+        intakeTask.power = 0;*/
+        sleep(3000);
         System.out.println("Start shooting");
         intakeTask.setPower(1);
         timer.reset();

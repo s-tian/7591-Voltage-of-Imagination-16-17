@@ -255,4 +255,8 @@ public class FlywheelTask extends TaskThread {
         phoneServo.setPosition(downPosition);
     }
 
+    public void aimShoot(double power) {
+
+    }
+
 }
