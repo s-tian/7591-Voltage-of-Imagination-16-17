@@ -18,12 +18,12 @@ public class MecanumDriveTrain {
     public static final double TICKS_PER_INCH_FORWARD= 42.437;
     public static final double TICKS_PER_INCH_RIGHT = 46.731;
     public static final double TICKS_PER_INCH_LEFT = 46.35;
-    public static final double TICKS_PER_MS_FORWARD = 1.4; // power 1
-    public static final double TICKS_PER_MS_RIGHT = 1.1649; //  power 1
-    public static final double TICKS_PER_MS_LEFT = 0.979;
+    public static final double TICKS_PER_MS_FORWARD = 2.14; // power 1
+    public static final double TICKS_PER_MS_RIGHT = 0.894; //  power 1
+    public static final double TICKS_PER_MS_LEFT = 0.825;
     public static final double factorFL = 1;
-    public static final double factorFR = 0.5;
-    public static final double factorBL = 0.5;
+    public static final double factorFR = 1; // 0.5
+    public static final double factorBL = 1; // 0.5
     public static final double factorBR = 1;
     public static final double factorBRL = 1; // 0.42
     public static final double factorBLL = 1; //0.93;
@@ -288,7 +288,9 @@ public class MecanumDriveTrain {
         //backRight.setPower(-1);
         //backLeft.setPower(1);
         //while (opMode.opModeIsActive() && timer.time() < stallTime);
-        strafeLeft(power);
+        while (timer.time() < 100) {
+            strafeLeft(power);
+        }
 
         timer.reset();
         timer2.reset();
@@ -359,10 +361,16 @@ public class MecanumDriveTrain {
         //while (opMode.opModeIsActive() && timer.time() < stallTime);
         timer.reset();
         timer2.reset();
-        strafeRight(power);
+        while (timer.time() < 100) {
+            strafeRight(power);
+        }
         double brPower, blPower, frPower, flPower;
-        blPower = frPower = -power * factorBL;
-        brPower = flPower = power * factorBR;
+        blPower = frPower = -power;
+        brPower = flPower = power;
+        if (pid) {
+            blPower = frPower *= factorBL;
+            brPower = flPower *= factorBR;
+        }
         double current, maxDiff = 0, prev = initAngle;
         long currentTime = System.currentTimeMillis();
         boolean startDetectingStall = false;
@@ -536,18 +544,17 @@ public class MecanumDriveTrain {
 
         switch (dir) {
             case FORWARD:
-                expected =  TICKS_PER_MS_FORWARD * 50 * 0.3;
+                expected =  TICKS_PER_MS_FORWARD * 50 * 0.12;
                 break;
             case BACKWARD:
-                expected = TICKS_PER_MS_RIGHT * 50 * 0.3;
+                expected = TICKS_PER_MS_RIGHT * 50 * 0.12;
                 break;
             case LEFT:
-                expected = TICKS_PER_MS_LEFT * 50 * 0.3;
+                expected = TICKS_PER_MS_LEFT * 50 * 0.12;
                 break;
             case RIGHT:
-                expected = TICKS_PER_MS_FORWARD * 50 * 0.3;
+                expected = TICKS_PER_MS_FORWARD * 50 * 0.12;
                 break;
-
         }
         if (ticksBackLeft < expected) BLStall = true;
         if (ticksBackRight < expected) BRStall = true;

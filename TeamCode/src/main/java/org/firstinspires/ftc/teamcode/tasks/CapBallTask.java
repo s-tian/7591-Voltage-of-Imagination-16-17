@@ -15,7 +15,7 @@ public class CapBallTask extends TaskThread {
     private DcMotor capBottom, capTop;
     private Servo forkLeft, forkRight, forkTop;
     double startLeft = 0.55, startRight = 0.14, downLeft = 0.00, downRight = 0.62; // fork lift positions
-    double topDown = 0.97, topClamp = 0.18, topUp = 0;
+    double topDown = 0.97, topClamp = 0.25, topUp = 0;
     boolean aPushed = false;
     boolean forkliftOut = false;
     double targetPower = 0;
@@ -36,6 +36,7 @@ public class CapBallTask extends TaskThread {
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     ElapsedTime timer2 = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     ElapsedTime timer3 = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
+    ElapsedTime timer4 = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
 
     public CapBallTask(LinearOpMode opMode) {
@@ -49,49 +50,59 @@ public class CapBallTask extends TaskThread {
     public void run() {
         timer2.reset();
         while(opMode.opModeIsActive() && running) {
-
+            if (timer4.time() > 500) {
+                System.out.println("CAP: " + capTop.getCurrentPosition());
+                timer4.reset();
+            }
             // set top servo position
-            if (opMode.gamepad2.left_stick_y > 0.5) {
-                forkTop.setPosition(topClamp);
-            } else if (opMode.gamepad2.left_stick_y < -0.5) {
+            if (opMode.gamepad2.left_stick_y > 0.8) {
+                forkTop.setPosition(topDown);
+            } else if (opMode.gamepad2.left_stick_y < -0.8) {
                 forkTop.setPosition(topUp);
+            } else if (opMode.gamepad2.left_stick_x < -0.8) {
+                forkTop.setPosition(topClamp);
             }
 
             // lift slides
             if (opMode.gamepad1.right_bumper) {
                 setLiftPower(1);
+                forkliftOut = true;
             } else if (opMode.gamepad1.left_bumper) {
                 setLiftPower(-0.5);
             } else if (opMode.gamepad2.right_trigger > 0.15) {
                 setLiftPower(0.5);
+                forkliftOut = true;
             } else if (opMode.gamepad2.left_trigger > 0.15) {
                 setLiftPower(-0.2);
             } else if (opMode.gamepad2.dpad_right){
-                holdPosition();
+                //holdPosition();
+                setLiftPower(0.05);
             } else {
                 holdPower = 0.01;
                 setLiftPower(0);
             }
 
 
-            if (opMode.gamepad1.dpad_down && !forkliftOut) {
+            if (opMode.gamepad1.dpad_up && !forkliftOut) {
+                setLiftPower(0.5);
+                sleep(600);
+                setLiftPower(0);
+                forkTop.setPosition(topUp);
+                sleep(200);
+                setLiftPower(-0.5);
+                sleep(350);
+                setLiftPower(0);
                 forkliftOut = true;
-                setLiftPower(1);
-                sleep(600);
-                setLiftPower(0);
-                sleep(500);
-                setLiftPower(-1);
-                sleep(600);
-                setLiftPower(0);
-                forkliftOut = false;
                 pressing = true;
             }
 
+            if (opMode.gamepad1.dpad_down && forkliftOut) {
+                forkliftOut = false;
+                foldForkLift();
+            }
             if(opMode.gamepad2.right_bumper) {
                 forkLeft.setPosition(downLeft);
                 forkRight.setPosition(downRight);
-
-                forkTop.setPosition(topDown);
                 forkliftOut = false;
             } else {
                 forkLeft.setPosition(startLeft);
@@ -130,6 +141,18 @@ public class CapBallTask extends TaskThread {
         forkLeft.setPosition(startLeft);
         forkRight.setPosition(startRight);
         forkTop.setPosition(topDown);
+        forkliftOut = false;
+    }
+
+    void foldForkLift() {
+        setLiftPower(-0.5);
+        while (opMode.opModeIsActive() && capTop.getCurrentPosition() > 1000) opMode.idle();
+        forkLeft.setPosition(downLeft);
+        forkRight.setPosition(downRight);
+        forkTop.setPosition(topDown);
+        while (opMode.opModeIsActive() && capTop.getCurrentPosition() > 200) opMode.idle();
+        setLiftPower(0);
+        setForkPosition();
     }
 
     public void setMode(DcMotor.RunMode mode) {

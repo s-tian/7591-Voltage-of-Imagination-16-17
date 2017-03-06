@@ -86,7 +86,7 @@ public class VOIColorSensor {
     public boolean isBlue() {
         int i = 0;
         int score = 0;
-        int margin = 25;
+        int margin = 10; // 20
         if (lightOn) {
             margin = 10;
         }
@@ -107,7 +107,7 @@ public class VOIColorSensor {
         int i = 0;
         int score = 0;
         logMessageTimer.reset();
-        int margin = 19;
+        int margin = 6; // 19
         if (lightOn) {
             margin = 10;
         }

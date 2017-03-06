@@ -205,7 +205,7 @@ public abstract class LinearOpModeVision extends LinearOpMode implements CameraB
                 width = openCVCamera.getFrameWidth();
                 height = openCVCamera.getFrameHeight();
                 System.out.println("Width: " + width + " Height: " + height);
-
+                Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
                 initialized = true;
                 System.out.println("Camera Set up!");
             }

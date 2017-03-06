@@ -31,9 +31,11 @@ public class IntakeTask extends TaskThread {
     ElapsedTime timer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
     ElapsedTime rejectTimer = new ElapsedTime(ElapsedTime.Resolution.MILLISECONDS);
 
+    public boolean visionOn = false;
     public IntakeTask(LinearOpMode opMode) {
         this.opMode = opMode;
         initialize();
+
     }
 
     @Override
@@ -54,6 +56,7 @@ public class IntakeTask extends TaskThread {
     public void run() {
         boolean printed = false;
         boolean print2 = false;
+        Thread.currentThread().setPriority(MIN_PRIORITY);
         while(opMode.opModeIsActive() && running) {
             //reject wrong color balls
             if (voiColorIntake.wrongColor()) {
@@ -105,7 +108,7 @@ public class IntakeTask extends TaskThread {
 
                 }
             } else {
-                if (voiColorIntake.correctColor()) {
+                if (visionOn && voiColorIntake.correctColor()) {
                     sleep(500);
                     while (voiColorIntake.correctColor() && opMode.opModeIsActive());
                     sweeper.setPower(0);
@@ -126,22 +129,6 @@ public class IntakeTask extends TaskThread {
                 sweeper.setPower(pow);
                 timer.reset();
                 while (oscillate && opMode.opModeIsActive()) {
-//                    if (teleOp) {
-//                        if (!opMode.gamepad2.dpad_left) {
-//                            System.out.println(1);
-//                            stoppedPressing = true;
-//                        }
-//                        if (opMode.gamepad2.dpad_left && stoppedPressing) {
-//                            System.out.println(2);
-//                            while (opMode.gamepad2.dpad_left);
-//                            oscillate = false;
-//                            break;
-//                        }
-//                        if (opMode.gamepad2.dpad_up || opMode.gamepad2.dpad_down) {
-//                            System.out.println(3);
-//                            oscillate = false;
-//                        }
-//                    }
                     if (timer.time() > 25) {
                         pow = -pow;
                         sweeper.setPower(pow);

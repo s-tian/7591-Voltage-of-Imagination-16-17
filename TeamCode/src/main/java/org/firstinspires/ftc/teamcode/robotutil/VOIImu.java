@@ -70,5 +70,14 @@ public class VOIImu {
         return diff1 * posNeg;
     }
 
+    public static double cosine(double angle) {
+        angle *= Math.PI/180;
+        return Math.cos(angle);
+    }
+
+    public static double sine(double angle) {
+        angle *= Math.PI/180;
+        return Math.sin(angle);
+    }
 
 }

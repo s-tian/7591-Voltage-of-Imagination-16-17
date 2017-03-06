@@ -36,15 +36,18 @@ public class DriveTest extends LinearOpMode {
         initialize();
         telemetry.addData("Ready", "");
         telemetry.update();
-        setPID();
+        //setPID();
         waitForStart();
-        driveTrain.moveRightNInch(1, 18, 10, false, true, true);
-        sleep(1000);
-        driveTrain.rotateToAngle(initialAngle);
-        sleep(1000);
-        //driveTrain.moveLeftNInch(1, 30, 10, false, true);
-        sleep(1000);
-        driveTrain.rotateToAngle(0);
+        driveTrain.setEncoderMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        driveTrain.backLeft.setPower(1);
+        driveTrain.frontLeft.setPower(1);
+        driveTrain.backRight.setPower(1);
+        driveTrain.frontRight.setPower(1);
+        sleep(750);
+        System.out.println(backRight.getCurrentPosition());
+        sleep(1500);
+        System.out.println(backRight.getCurrentPosition());
+        driveTrain.stopAll();
 
 
     }

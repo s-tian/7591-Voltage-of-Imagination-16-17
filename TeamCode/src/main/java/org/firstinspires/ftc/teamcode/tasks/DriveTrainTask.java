@@ -33,9 +33,20 @@ public class DriveTrainTask extends TaskThread {
         timer.reset();
         while(opMode.opModeIsActive() && running) {
             if (timer.time() > 10) {
-                joy1Y = -opMode.gamepad1.left_stick_y * 3/4;
-                joy1X = opMode.gamepad1.left_stick_x * 3/4;
-                joy2X = opMode.gamepad1.right_stick_x * 3/4;
+                joy1Y = -opMode.gamepad1.left_stick_y;
+                joy1X = opMode.gamepad1.left_stick_x;
+                joy2X = opMode.gamepad1.right_stick_x;
+                if (joy1X < -0.25 && joy1X > -0.7) {
+                    joy1X = -0.7;
+                } else if (joy1X > 0.25 && joy1X < 0.7) {
+                    joy1X = 0.7;
+                } else if (Math.abs(joy1X) < 0.25){
+                    joy1X = 0;
+                }
+                if (Math.abs(joy1Y) < 0.25) {
+                    joy1Y = 0;
+                }
+
                 if (!aiming) {
                     frontLeft.setPower(Math.max(-1, Math.min(1, joyStickMultiplier * (joy1Y + joy2X + joy1X))));
                     backLeft.setPower(Math.max(-1, joyStickMultiplier * Math.min(1, joy1Y + joy2X - joy1X)));

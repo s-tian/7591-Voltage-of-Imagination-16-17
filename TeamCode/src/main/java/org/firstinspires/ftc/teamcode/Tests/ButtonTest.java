@@ -27,10 +27,10 @@ public class ButtonTest extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         initialize();
-        choosePower();
+        //choosePower();
         waitForStart();
         buttonPusherTask.start();
-        buttonPusherTask.out();
+        guide.setPosition(ButtonPusherTask.downPosition);
         sleep(2000);
     }
 

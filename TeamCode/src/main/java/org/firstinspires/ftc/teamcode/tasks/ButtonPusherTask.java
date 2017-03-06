@@ -19,8 +19,8 @@ public class ButtonPusherTask extends TaskThread {
     public static final double zeroPower = 0;
     public static final double outPower = 1;
     public static final double inPower = -1;
-    public static final double upPosition = 0.0;
-    public static final double downPosition = 0.78;
+    public static final double upPosition = 0.4;
+    public static final double downPosition = 1;
     public volatile boolean teleOp = false;
     private boolean guideDown = false;
     private boolean guidePushed = false;
@@ -37,8 +37,8 @@ public class ButtonPusherTask extends TaskThread {
     public void initialize() {
         button = opMode.hardwareMap.crservo.get("button");
         guide = opMode.hardwareMap.servo.get("guide");
-        pushTime *= EXPECTED_VOLTAGE / voltage;
-        outTime *= EXPECTED_VOLTAGE / voltage;
+        pushTime *= Math.pow(EXPECTED_VOLTAGE / voltage, 2);
+        outTime *= Math.pow(EXPECTED_VOLTAGE / voltage, 2);
         button.setPower(0);
         guide.setPosition(upPosition);
     }
@@ -101,7 +101,7 @@ public class ButtonPusherTask extends TaskThread {
             button.setPower(outPower);
         }
         timer.reset();
-        while (timer.time() < 250 && opMode.opModeIsActive()) {
+        while (timer.time() < 300 && opMode.opModeIsActive()) {
             button.setPower(inPower);
         }
         timer.reset();
@@ -116,7 +116,7 @@ public class ButtonPusherTask extends TaskThread {
             button.setPower(outPower);
         }
         timer.reset();
-        while (timer.time() < 200 && opMode.opModeIsActive()) {
+        while (timer.time() < 1000 && opMode.opModeIsActive()) {
             button.setPower(zeroPower);
         }
     }
@@ -130,7 +130,7 @@ public class ButtonPusherTask extends TaskThread {
         while (timer.time() < 200 && opMode.opModeIsActive()) {
             button.setPower(zeroPower);
         }
-
+        running = false;
     }
 
     public void out() {

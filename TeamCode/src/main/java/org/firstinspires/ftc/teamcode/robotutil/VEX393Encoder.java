@@ -24,7 +24,6 @@ public class VEX393Encoder {
 
         /* The following I2C addresses come from the VEX Robotics website.
          * They can be found here: http://www.vexrobotics.com/encoder-modules.html
-         * TODO: 1/24/17 Read the website
          */
 
         public final static int I2CADDR_DEFAULT = 0x60;     //8 bit address!
