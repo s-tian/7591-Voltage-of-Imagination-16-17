@@ -113,7 +113,7 @@ public class ThreadedTeleOp extends LinearOpMode {
 
     public void setTeam() {
         boolean confirmed = false;
-        while (!confirmed) {
+        while (!confirmed && !isStopRequested()) {
             if (gamepad1.x || gamepad2.x) {
                 team = BLUE;
             } else if (gamepad1.b || gamepad2.b) {
@@ -128,5 +128,4 @@ public class ThreadedTeleOp extends LinearOpMode {
             telemetry.update();
         }
     }
-
 }

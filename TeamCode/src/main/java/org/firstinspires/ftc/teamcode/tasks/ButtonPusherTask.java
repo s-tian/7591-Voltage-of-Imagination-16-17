@@ -19,7 +19,7 @@ public class ButtonPusherTask extends TaskThread {
     public static final double zeroPower = 0;
     public static final double outPower = 1;
     public static final double inPower = -1;
-    public static final double upPosition = 0.4;
+    public static final double upPosition = 0.35;
     public static final double downPosition = 1;
     public volatile boolean teleOp = false;
     private boolean guideDown = false;

@@ -14,8 +14,8 @@ public class CapBallTask extends TaskThread {
 
     private DcMotor capBottom, capTop;
     private Servo forkLeft, forkRight, forkTop;
-    double startLeft = 0.55, startRight = 0.14, downLeft = 0.00, downRight = 0.62; // fork lift positions
-    double topDown = 0.97, topClamp = 0.25, topUp = 0;
+    double startLeft = 0.55, startRight = 0.10, downLeft = 0.00, downRight = 0.62; // fork lift positions
+    double topDown = 0.98, topClamp = 0.25, topUp = 0;
     boolean aPushed = false;
     boolean forkliftOut = false;
     double targetPower = 0;

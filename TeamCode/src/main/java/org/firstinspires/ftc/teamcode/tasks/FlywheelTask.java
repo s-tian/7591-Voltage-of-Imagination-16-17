@@ -35,7 +35,7 @@ public class FlywheelTask extends TaskThread {
     public static double KI = 0;        //0
     public static double KD = 0.001;    //0.0004
 
-    static final double visionPosition = 0.2, downPosition = 0, restPosition = 0.65;
+    static final double visionPosition = 0.2, downPosition = 0, restPosition = 0.68;
 
     double voltageRatio;
     public static double lowPow = 0.72;

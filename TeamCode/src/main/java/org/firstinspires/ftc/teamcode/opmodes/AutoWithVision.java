@@ -154,7 +154,7 @@ public class AutoWithVision extends LinearOpModeVision {
     static final int IMAGE_WIDTH = 800;
     static final double MAX_VORTEX_AREA_RATIO = 0.6;
 
-    static final double visionPosition = 0.2, downPostion = 0, restPosition = 0.7;
+    static final double visionPosition = 0.2, downPostion = 0, restPosition = 0.68;
 
     static final int ACCEPTABLE_ERROR = 50;
     static final int PARTICLE_TARGET = 320;
